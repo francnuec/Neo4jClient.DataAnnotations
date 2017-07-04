@@ -430,11 +430,11 @@ namespace Neo4jClient.DataAnnotations
             return memberNames;
         }
 
-        internal static List<Expression> ExpandComplexTypeAccess(Expression expression, out List<MemberInfo> memberInfos)
+        internal static List<Expression> ExpandComplexTypeAccess(Expression expression, out List<List<MemberInfo>> paths)
         {
             Type type = expression.Type;
 
-            memberInfos = new List<MemberInfo>();
+            paths = new List<List<MemberInfo>>();
 
             if (type == null || !type.GetTypeInfo().IsDefined(Defaults.ComplexType))
                 return new List<Expression>();
@@ -450,13 +450,13 @@ namespace Neo4jClient.DataAnnotations
                 if (IsEntityPropertyTypeScalar(prop.PropertyType))
                 {
                     result.Add(newExpr);
-                    memberInfos.Add(prop);
+                    paths.Add(new List<MemberInfo>() { prop });
                 }
                 else
                 {
                     //recursively check till we hit the last scalar property
                     result.AddRange(ExpandComplexTypeAccess(newExpr, out var members));
-                    memberInfos.AddRange(members);
+                    paths.AddRange(members.Select(ml => { ml.Add(prop); return ml; }));
                 }
             }
 

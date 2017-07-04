@@ -12,57 +12,48 @@ namespace Neo4jClient.DataAnnotations
     //
     public class EntityExpressionVisitor : ExpressionVisitor
     {
-        Dictionary<MemberInfo, Expression> memberAssignmentMap 
-            = new Dictionary<MemberInfo, Expression>();
+        public List<List<Expression>> Params { get; } = new List<List<Expression>>();
 
-        Dictionary<MemberInfo, Tuple<int, ElementInit>> memberListMap
-             = new Dictionary<MemberInfo, Tuple<int, ElementInit>>();
-
-        List<MemberBinding> memberBindings = new List<MemberBinding>();
-
-        Dictionary<object, Expression> dictionaryInit 
-            = new Dictionary<object, Expression>();
-
-        Dictionary<MemberInfo, Expression> newTypeArguments
-            = new Dictionary<MemberInfo, Expression>();
-
-        object lambdaResult = null;
-
-        bool foundItems = false;
+        public List<List<object>> ParamsPaths { get; } = new List<List<object>>();
 
         Func<object, string> serializer;
+
+        Expression rootNode;
 
         public EntityExpressionVisitor(Func<object, string> serializer)
         {
             this.serializer = serializer;
         }
 
-        protected override Expression VisitMemberInit(MemberInitExpression node)
+
+        public override Expression Visit(Expression node)
         {
-            if (!foundItems)
+            if (rootNode == null)
+                rootNode = node;
+
+            List<Expression> filtered = null;
+
+            if ((filtered = Utilities.GetValidSimpleAccessStretch(node)) != null
+                && Utilities.HasParams(filtered))
             {
-                foundItems = true;
+                //found our params call.
+                //store and replace with marker
+                Params.Add(filtered);
 
-                var bindings = node.Bindings;
-                if (bindings?.Count > 0)
-                {
-                    //harvest all members
-                    memberBindings.AddRange(bindings);
+                var getParamsExpr = Expression.Call(typeof(Utilities), "GetParams", new[] { node.Type }, Expression.Constant(Params.Count - 1));
 
-                    //create new member expression and return
-                    return Expression.MemberInit(node.NewExpression);
-                }
+                ParamsPaths.Add(new List<object>() { getParamsExpr });
+
+                return getParamsExpr;
             }
 
-            return base.VisitMemberInit(node);
+            return base.Visit(node);
         }
 
         protected override Expression VisitNew(NewExpression node)
         {
-            if (!foundItems)
+            if (rootNode == node)
             {
-                foundItems = true;
-
                 if (node.Type.IsAnonymousType())
                 {
                     if (node.Members?.Count > 0)
@@ -91,7 +82,7 @@ namespace Neo4jClient.DataAnnotations
                                 var baseMemberName = members[0];
 
                                 //check if its complex and resolve in the possible best way.
-                                var expandedArgs = Utilities.ExpandComplexTypeAccess(arguments[0], out var argMembers);
+                                var expandedArgs = Utilities.ExpandComplexTypeAccess(arguments[0], out var argPaths);
 
                                 if (expandedArgs.Count > 0)
                                 {
@@ -121,7 +112,7 @@ namespace Neo4jClient.DataAnnotations
                                         if (isComplexType)
                                         {
                                             //use appended name if complex type
-                                            memberName = $"{baseMemberName}_{argMembers[i].Name}";
+                                            memberName = $"{baseMemberName}_{argPaths[i].First().Name}";
                                         }
                                         else
                                         {
@@ -143,7 +134,7 @@ namespace Neo4jClient.DataAnnotations
                                 if (argument != null && member != null)
                                 {
                                     dictItems.Add(Expression.ElementInit
-                                        (dictAddMethod, Expression.Constant(member), 
+                                        (dictAddMethod, Expression.Constant(member),
                                         Expression.Convert(argument, Defaults.ObjectType)));
                                 }
                             }
@@ -151,92 +142,117 @@ namespace Neo4jClient.DataAnnotations
 
                         //generate dictionary expression
                         var dictExpr = Expression.ListInit(Expression.New(dictType), dictItems);
-
-                        return dictExpr;
+                        return VisitListInit(dictExpr);
                     }
                 }
             }
 
-            return base.VisitNew(node);
+            var index = ParamsPaths.Count; //do this to know which Paths to add to
+
+            var newNode = base.VisitNew(node);
+
+            if (newNode.Type.IsAnonymousType())
+            {
+                AddToParamsPaths(newNode, index);
+            }
+
+            return newNode;
         }
 
-        //protected override Expression VisitNew(NewExpression node)
-        //{
-        //    if (!foundItems)
-        //    {
-        //        foundItems = true;
-
-        //        if (node.Type.IsAnonymousType())
-        //        {
-        //            if (node.Members?.Count > 0)
-        //            {
-        //                for (int i = 0; i < node.Arguments.Count; i++)
-        //                {
-        //                    //expand members if complex type
-        //                    var arg = node.Arguments[i];
-        //                    var member = node.Members[i];
-
-        //                    memberValueMap[member] = arg; //harvest all arguments so we can get an object out first
-        //                }
-
-        //                return Expression.New(node.Constructor,
-        //                    node.Arguments
-        //                    .Select(a => memberValueMap.Values.Contains(a) ?
-        //                    Expression.Constant(a.Type.GetDefaultValue(), a.Type) : a),
-        //                    node.Members);
-        //            }
-        //        }
-        //    }
-
-        //    return base.VisitNew(node);
-        //}
+        protected override Expression VisitNewArray(NewArrayExpression node)
+        {
+            var index = ParamsPaths.Count; //do this to know which Paths to add to
+            var newNode = base.VisitNewArray(node);
+            AddToParamsPaths(newNode, index);
+            return newNode;
+        }
 
         protected override Expression VisitListInit(ListInitExpression node)
         {
-            return base.VisitListInit(node);
+            var index = ParamsPaths.Count; //do this to know which Paths to add to
+            var newNode = base.VisitListInit(node);
+            AddToParamsPaths(newNode, index);
+
+            return newNode;
         }
 
-        protected override Expression VisitLambda<T>(Expression<T> node)
+        protected override Expression VisitMemberInit(MemberInitExpression node)
         {
-            return base.VisitLambda(node);
+            var index = ParamsPaths.Count; //do this to know which Paths to add to
+            var newNode = base.VisitMemberInit(node);
+            AddToParamsPaths(newNode, index);
+            return newNode;
         }
 
-        private void SortBinding(MemberBinding binding, out MemberBinding newBinding)
+        protected override MemberAssignment VisitMemberAssignment(MemberAssignment node)
         {
-            newBinding = null;
-
-            Type type = (binding.Member as PropertyInfo)?.PropertyType ??
-                (binding.Member as FieldInfo)?.FieldType ??
-                (binding.Member as MethodInfo)?.ReturnType;
-
-            switch (binding.BindingType)
+            //we can only handle unescaped assignment bindings
+            if (!Utilities.HasNfpEscape(node.Expression))
             {
-                case MemberBindingType.Assignment:
-                    {
-                        var assignment = binding as MemberAssignment;
-                        memberAssignmentMap[binding.Member] = assignment.Expression;
+                //check if its complex and resolve in the possible best way.
+                var expanded = Utilities.ExpandComplexTypeAccess(node.Expression, out var paths);
 
-                        binding = Expression.Bind(binding.Member, Expression.Constant(type.GetDefaultValue(), type));
-                        break;
-                    }
-                case MemberBindingType.ListBinding:
+                if (expanded.Count > 0)
+                {
+                    //create child bindings for the complex type scalars
+
+                    //first sort the paths
+                    paths.ForEach((p) => p.Reverse());
+
+                    Dictionary<MemberInfo, List<MemberInfo>> combindPath
+                        = new Dictionary<MemberInfo, List<MemberInfo>>();
+
+                    foreach (var path in paths)
                     {
-                        var listBinding = binding as MemberListBinding;
-                        for (int i = 0, l = listBinding.Initializers.Count; i < l; i++)
+                        foreach (var member in path)
                         {
-                            var init = listBinding.Initializers[i];
-                            memberListMap[binding.Member] = new Tuple<int, ElementInit>(i, init);
-                        }
+                            if (!combindPath.TryGetValue(member, out var list))
+                            {
+                                list = new List<MemberInfo>();
+                                combindPath[member] = list;
+                            }
 
-                        binding = Expression.ListBind(binding.Member); //no list bindings
-                        break;
+                            var addition = path.Skip(path.IndexOf(member) + 1).FirstOrDefault();
+                            if (addition != null)
+                                list.Add(addition);
+                        }
                     }
-                case MemberBindingType.MemberBinding:
-                    {
-                        var memberBinding = binding as MemberMemberBinding;
-                        break;
-                    }
+
+                    var newExpr = Expression.New(node.Expression.Type);
+                    var init = Expression.MemberInit(newExpr, GetPathBindings(combindPath.Keys, combindPath, expanded));
+
+                    node = Expression.Bind(node.Member, init); //replace the node with a new one
+                }
             }
+
+            var index = ParamsPaths.Count; //do this to know which Paths to add to
+            var newNode = base.VisitMemberAssignment(node);
+            AddToParamsPaths(newNode, index);
+            return newNode;
+        }
+
+        protected override MemberListBinding VisitMemberListBinding(MemberListBinding node)
+        {
+            var index = ParamsPaths.Count; //do this to know which Paths to add to
+            var newNode = base.VisitMemberListBinding(node);
+            AddToParamsPaths(newNode, index);
+            return newNode;
+        }
+
+        protected override MemberMemberBinding VisitMemberMemberBinding(MemberMemberBinding node)
+        {
+            var index = ParamsPaths.Count; //do this to know which Paths to add to
+            var newNode = base.VisitMemberMemberBinding(node);
+            AddToParamsPaths(newNode, index);
+            return newNode;
+        }
+
+        protected override ElementInit VisitElementInit(ElementInit node)
+        {
+            var index = ParamsPaths.Count; //do this to know which Paths to add to
+            var newNode = base.VisitElementInit(node);
+            AddToParamsPaths(newNode, index);
+            return newNode;
         }
 
         private string GetAnonymousMemberName(Expression argument)
@@ -301,6 +317,68 @@ namespace Neo4jClient.DataAnnotations
             }
 
             return name;
+        }
+
+        private List<MemberBinding> GetPathBindings(IEnumerable<MemberInfo> members,
+            Dictionary<MemberInfo, List<MemberInfo>> combinedPath, List<Expression> expressions)
+        {
+            List<MemberBinding> bindings = new List<MemberBinding>();
+
+            foreach (var member in members)
+            {
+                MemberBinding binding = null;
+
+                var children = combinedPath[member];
+
+                if (children == null || children.Count == 0)
+                {
+                    binding = Expression.Bind(member,
+                        expressions.FirstOrDefault(ex =>
+                        member.IsEquivalentTo((ex as MemberExpression).Member)));
+                }
+
+                if (binding == null)
+                {
+                    var childBindings = GetPathBindings(children, combinedPath, expressions);
+
+                    var propInfo = member as PropertyInfo;
+                    var fieldInfo = member as FieldInfo;
+
+                    if (propInfo?.CanWrite == true || fieldInfo != null)
+                    {
+                        //assign a new instance
+                        try
+                        {
+                            binding = Expression.Bind(member, Expression.MemberInit
+                            (Expression.New(propInfo?.PropertyType ?? fieldInfo.FieldType), childBindings));
+                        }
+                        catch (Exception e)
+                        {
+                        }
+                    }
+
+                    if (binding == null)
+                    {
+                        //maybe readonly property.
+                        //take a wild shot at membermemberbinding
+                        //if it then fails (90%), user must change his code.
+
+                        binding = Expression.MemberBind(member, childBindings);
+                    }
+                }
+
+                bindings.Add(binding);
+            }
+
+            return bindings;
+        }
+
+        private void AddToParamsPaths(object node, int index)
+        {
+            for (int i = index, l = ParamsPaths.Count; i < l; i++)
+            {
+                ParamsPaths[i].Add(node);
+            }
         }
     }
 }

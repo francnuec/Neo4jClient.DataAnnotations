@@ -99,7 +99,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             //var aaSer = JsonConvert.SerializeObject(aa.Compile().Invoke(), serializerSettings);
 
             var ex = new EntityExpressionVisitor((entity) => JsonConvert.SerializeObject(entity, serializerSettings));
-            var v = ex.Visit(_f3);
+            var v = ex.Visit(_f1);
 
             //var exprs = ex.Params; //.FilteredExpressions.Where((e, i) => i >= 16 && i <= 18).ToList();
 
