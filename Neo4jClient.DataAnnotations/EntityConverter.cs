@@ -12,9 +12,7 @@ namespace Neo4jClient.DataAnnotations
     {
         public override bool CanConvert(Type objectType)
         {
-            return Neo4jAnnotations.EntityTypes.Contains(objectType)
-                || (objectType.GetTypeInfo().IsGenericType 
-                && Neo4jAnnotations.EntityTypes.Contains(objectType.GetGenericTypeDefinition()));
+            return Neo4jAnnotations.ContainsEntityType(objectType);
         }
 
         public override bool CanRead => false;

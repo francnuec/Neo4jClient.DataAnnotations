@@ -158,23 +158,26 @@ namespace Neo4jClient.DataAnnotations
             }
         }
 
-        internal static void BuildEntityPath
+        internal static void TraverseEntityPath
             (object entity, List<Expression> pathExpressions,
             ref int index, out Type lastType,
-            out List<MemberInfo> pathTraversed,
-            bool getTypeReturnedOnly = false)
+            out Dictionary<MemberInfo, Tuple<int, Type>> pathTraversed,
+            bool buildPath)
         {
             lastType = null;
 
-            pathTraversed = new List<MemberInfo>();
+            pathTraversed = new Dictionary<MemberInfo, Tuple<int, Type>>();
 
             object currentInstance = null;
             object nextInstance = entity;
 
+            MemberInfo memberInfo = null;
             PropertyInfo propInfo = null;
             FieldInfo fieldInfo = null;
 
             bool breakLoop = false;
+
+            if (index < 0) index = 0; //maybe shouldn't auto-handle this.
 
             for (int i = index, l = pathExpressions.Count; i < l; i++)
             {
@@ -185,19 +188,11 @@ namespace Neo4jClient.DataAnnotations
                     case ExpressionType.MemberAccess:
                         {
                             var memberAccessExpr = expr as MemberExpression;
-                            propInfo = memberAccessExpr.Member as PropertyInfo;
-                            fieldInfo = memberAccessExpr.Member as FieldInfo;
+                            memberInfo = memberAccessExpr.Member;
+                            propInfo = memberInfo as PropertyInfo;
+                            fieldInfo = memberInfo as FieldInfo;
 
                             lastType = propInfo?.PropertyType ?? fieldInfo?.FieldType ?? lastType;
-
-                            if (propInfo != null)
-                            {
-                                pathTraversed.Add(propInfo);
-                            }
-                            else
-                            {
-                                pathTraversed.Add(fieldInfo);
-                            }
 
                             currentInstance = nextInstance;
                             nextInstance = null;
@@ -223,13 +218,15 @@ namespace Neo4jClient.DataAnnotations
                     break;
                 }
 
+                pathTraversed[memberInfo] = new Tuple<int, Type>(i, lastType);
+
                 index = i; //update the current index always
 
-                //get the existing member instance
-                nextInstance = propInfo != null ? propInfo.GetValue(currentInstance) : fieldInfo.GetValue(currentInstance);
-
-                if (!getTypeReturnedOnly)
+                if (buildPath)
                 {
+                    //get the existing member instance
+                    nextInstance = propInfo != null ? propInfo.GetValue(currentInstance) : fieldInfo.GetValue(currentInstance);
+
                     if (!lastType.GetTypeInfo().IsInterface && !lastType.GetTypeInfo().IsAbstract)
                     {
                         var nextType = nextInstance?.GetType();
@@ -248,7 +245,7 @@ namespace Neo4jClient.DataAnnotations
                             }
                             else
                             {
-                                nextInstance = Activator.CreateInstance(lastType);
+                                nextInstance = Activator.CreateInstance(lastType);                                
                             }
 
                             //assign the instance
@@ -266,97 +263,31 @@ namespace Neo4jClient.DataAnnotations
             }
         }
 
-        //internal static string GetEntityPathName(object entity, List<Expression> expressions, 
-        //    Func<object, string> serializer, ref int currentIndex, 
-        //    out Type typeReturned, bool useResolvedJsonName = true)
-        //{
-        //    string memberJsonName = "";
-        //    Type entityType = entity.GetType();
-
-        //    BuildEntityPath(entity, expressions, ref currentIndex, out var lastType,
-        //        out var members, getTypeReturnedOnly: !useResolvedJsonName);
-
-        //    typeReturned = lastType;
-
-        //    //get the last member
-        //    var memberInfo = members.LastOrDefault();
-
-        //    if (memberInfo != null)
-        //    {
-        //        if (useResolvedJsonName)
-        //        {
-        //            //take care of the entity's complex properties and those of its children
-        //            Utilities.InitializeComplexTypedProperties(entity);
-
-        //            bool entityTypeAutoAdded = false;
-
-        //            if (entityTypeAutoAdded = !Neo4jAnnotations.EntityTypes.Contains(entityType))
-        //            {
-        //                Neo4jAnnotations.AddEntityType(entityType); //just in case it wasn't already added.
-        //            }
-
-        //            //serialize the entity so the jsonnames would be set
-        //            var serializedEntity = serializer(entity);
-
-        //            ////get the jsonName of the last member from entityInfo
-        //            //var entityInfo = Neo4jAnnotations.GetEntityTypeInfo(entityType);
-        //            //var entry = entityInfo.JsonNamePropertyMap.FirstOrDefault(pm => pm.Value.IsEquivalentTo(memberInfo));
-
-        //            //memberJsonName = entry.Key;
-        //        }
-
-        //        if (string.IsNullOrWhiteSpace(memberJsonName))
-        //        {
-        //            //operation probably not successful
-        //            //build alternate name
-        //            if (members.Count > 0)
-        //            {
-        //                string alternateName = members.Select((m, idx) =>
-        //                {
-        //                    string name = m.Name;
-        //                    if (useResolvedJsonName)
-        //                    {
-        //                        //try to get name from entity info
-        //                        Type parentType = m.DeclaringType;
-
-        //                        //we do this because MemberInfo.ReflectedType is not public yet in the .NET Core API.
-        //                        var infos = Neo4jAnnotations.GetDerivedEntityTypeInfos(parentType);
-
-        //                        var result = infos.SelectMany(info => info.JsonNamePropertyMap)
-        //                        .ExactOrEquivalentMember((pair) => pair.Value, new KeyValuePair<string, MemberInfo>("", m))
-        //                        .FirstOrDefault();
-
-        //                        name = result.Key ?? name;
-        //                    }
-
-        //                    return name;
-        //                }).Aggregate((first, second) => $"{first}.{second}");
-
-        //                memberJsonName = alternateName;
-        //            }
-        //        }
-        //    }
-
-        //    return memberJsonName;
-        //}
-
         internal static string[] GetEntityPathNames(object entity, List<Expression> expressions,
             ref int currentIndex, Func<object, string> serializer,
-            out List<MemberInfo> members, out Type lastType, bool useResolvedJsonName = true)
+            out Dictionary<MemberInfo, Tuple<int, Type>> members, out Type lastType, bool useResolvedJsonName = true)
         {
             string[] memberNames = new string[0];
 
             Type entityType = entity.GetType();
 
-            BuildEntityPath(entity, expressions, ref currentIndex, out lastType,
-                out members, getTypeReturnedOnly: !useResolvedJsonName);
+            var entityInfo = Neo4jAnnotations.GetEntityTypeInfo(entityType);
+
+            bool buildPath = useResolvedJsonName && entityInfo.JsonNamePropertyMap.Count == 0; //do this to avoid create instances every time we call this method for a particular type
+
+            int index = currentIndex; //store this index incase of a repeat
+
+            repeatBuild:
+            currentIndex = index;
+            TraverseEntityPath(entity, expressions, ref currentIndex, out lastType,
+                out members, buildPath: buildPath);
 
             if (members.Count > 0)
             {
-                if (useResolvedJsonName)
+                if (buildPath)
                 {
                     //take care of the entity's complex properties and those of its children
-                    Utilities.InitializeComplexTypedProperties(entity);
+                    InitializeComplexTypedProperties(entity);
 
                     bool entityTypeAutoAdded = false;
 
@@ -371,70 +302,99 @@ namespace Neo4jClient.DataAnnotations
                     if (entityTypeAutoAdded)
                     {
                         //remove it
-                        Neo4jAnnotations.EntityTypes.Remove(entityType);
+                        Neo4jAnnotations.RemoveEntityType(entityType);
                     }
                 }
-
-                var entityInfo = Neo4jAnnotations.GetEntityTypeInfo(entityType);
 
                 //first get the members that are not complex typed.
                 //this is because their child members would be the actual member of interest
                 //if none found, or name returns empty, try all members then.
 
-                var membersToUse = members.Where(m => !((m as PropertyInfo)?.PropertyType ?? (m as FieldInfo)?.FieldType)?
-                    .GetTypeInfo().IsDefined(Defaults.ComplexType) == true).ToList();
+                var membersToUse = members.Where(m => 
+                    !((m.Key as PropertyInfo)?.PropertyType ?? (m.Key as FieldInfo)?.FieldType)?
+                    .GetTypeInfo().IsDefined(Defaults.ComplexType) == true)
+                    .OrderBy(m => m.Value.Item1).ToList();
 
-                bool repeated = false;
+                bool repeatedMemberNames = false;
 
-                repeat:
+                repeatMemberNames:
+                bool gotoRepeatBuild = false;
+
                 memberNames = membersToUse.Select((m, idx) =>
                 {
                     string name = null;
                     if (useResolvedJsonName)
                     {
+                        Type parentType = null;
+
                         //try the entityInfo first
-                        name = entityInfo.JsonNamePropertyMap.FirstOrDefault(pm => pm.Value.IsEquivalentTo(m)).Key;
+                        name = entityInfo.JsonNamePropertyMap.FirstOrDefault(pm => pm.Value.IsEquivalentTo(m.Key)).Key;
 
                         if (string.IsNullOrWhiteSpace(name))
                         {
                             //try to get name from entity info
-                            Type parentType = m.DeclaringType;
+                            if (idx >= 1)
+                            {
+                                parentType = membersToUse[idx - 1].Value?.Item2;
+                            }
+
+                            parentType = parentType ?? //m.Value?.Item2?.DeclaringType ?? 
+                                m.Key.DeclaringType;
 
                             //we do this because MemberInfo.ReflectedType is not public yet in the .NET Core API.
                             var infos = Neo4jAnnotations.GetDerivedEntityTypeInfos(parentType);
 
                             var result = infos.SelectMany(info => info.JsonNamePropertyMap)
-                            .ExactOrEquivalentMember((pair) => pair.Value, new KeyValuePair<string, MemberInfo>("", m))
+                            .ExactOrEquivalentMember((pair) => pair.Value, new KeyValuePair<string, MemberInfo>("", m.Key))
                             .FirstOrDefault();
 
                             name = result.Key;
                         }
+
+                        if (!buildPath && (string.IsNullOrWhiteSpace(name)
+                        || (name == m.Key.Name
+                            && (parentType?.GetTypeInfo().IsDefined(Defaults.ComplexType) == true
+                            || m.Key.DeclaringType.GetTypeInfo().IsDefined(Defaults.ComplexType)
+                            || m.Value.Item2.GetTypeInfo().IsDefined(Defaults.ComplexType))))
+                        )
+                        {
+                            //maybe we were wrong and the jsonMaps are empty
+                            //or just to be sure we have the actual name,
+                            //repeat with a fully built path and serialization
+                            buildPath = true;
+                            gotoRepeatBuild = true;
+                        }
                     }
                     else
                     {
-                        name = m.Name;
+                        name = m.Key.Name;
                     }
 
                     return name;
                 }).Where(n => !string.IsNullOrWhiteSpace(n)).ToArray();
 
-                if (!repeated && memberNames.Length == 0)
+                if (gotoRepeatBuild)
+                {
+                    goto repeatBuild;
+                }
+
+                if (!repeatedMemberNames && memberNames.Length == 0)
                 {
                     //repeat with all members
-                    membersToUse = members;
-                    repeated = true;
-                    goto repeat;
+                    membersToUse = members.OrderBy(m => m.Value.Item1).ToList();
+                    repeatedMemberNames = true;
+                    goto repeatMemberNames;
                 }
             }
 
             return memberNames;
         }
 
-        internal static List<Expression> ExpandComplexTypeAccess(Expression expression, out List<List<MemberInfo>> paths)
+        internal static List<Expression> ExpandComplexTypeAccess(Expression expression, out List<List<MemberInfo>> inversePaths)
         {
             Type type = expression.Type;
 
-            paths = new List<List<MemberInfo>>();
+            inversePaths = new List<List<MemberInfo>>();
 
             if (type == null || !type.GetTypeInfo().IsDefined(Defaults.ComplexType))
                 return new List<Expression>();
@@ -450,13 +410,13 @@ namespace Neo4jClient.DataAnnotations
                 if (IsEntityPropertyTypeScalar(prop.PropertyType))
                 {
                     result.Add(newExpr);
-                    paths.Add(new List<MemberInfo>() { prop });
+                    inversePaths.Add(new List<MemberInfo>() { prop });
                 }
                 else
                 {
                     //recursively check till we hit the last scalar property
                     result.AddRange(ExpandComplexTypeAccess(newExpr, out var members));
-                    paths.AddRange(members.Select(ml => { ml.Add(prop); return ml; }));
+                    inversePaths.AddRange(members.Select(ml => { ml.Add(prop); return ml; }));
                 }
             }
 
@@ -489,11 +449,17 @@ namespace Neo4jClient.DataAnnotations
         }
 
         public static string BuildParams(List<Expression> expressions,
-            Func<object, string> serializer, out Type typeReturned, bool useResolvedJsonName = true)
+            Func<object, string> serializer, out Type typeReturned, bool? useResolvedJsonName = null)
         {
             typeReturned = null;
             if (!HasParams(expressions, out var methodExpr))
                 return null;
+
+            if (useResolvedJsonName == null)
+            {
+                //check the last expression for nfp escape
+                useResolvedJsonName = !HasNfpEscape(expressions.Last().Uncast(out var castType));
+            }
 
             var getMethod = methodExpr.Method;
 
@@ -523,7 +489,7 @@ namespace Neo4jClient.DataAnnotations
                     var entity = Activator.CreateInstance(entityType);
 
                     var memberNames = GetEntityPathNames(entity, expressions, ref currentIndex, serializer,
-                        out var members, out var lastType, useResolvedJsonName: useResolvedJsonName);
+                        out var members, out var lastType, useResolvedJsonName: useResolvedJsonName.Value);
 
                     if (memberNames.Length > 0)
                     {
@@ -562,7 +528,7 @@ namespace Neo4jClient.DataAnnotations
             {
                 int tmpIdx = currentIndex;
 
-                int? arrayIndex = null;
+                Expression arrayIndexExpr = null;
 
                 //expecting either "ElementAt" methodCall, or ArrayIndex expression
                 for (int i = currentIndex, l = expressions.Count; i < l; i++)
@@ -574,7 +540,7 @@ namespace Neo4jClient.DataAnnotations
                         case ExpressionType.ArrayIndex:
                             {
                                 var binExpr = expr as BinaryExpression;
-                                arrayIndex = binExpr.Right.ExecuteExpression<int?>();
+                                arrayIndexExpr = binExpr.Right;
 
                                 typeReturned = binExpr.Type;
                                 break;
@@ -586,8 +552,7 @@ namespace Neo4jClient.DataAnnotations
                                     && callExpr.Method.DeclaringType == typeof(Enumerable))
                                 {
                                     //found our extension method.
-                                    var argExpr = callExpr.Arguments[1]; //because it is extension method, the first argument would be the instance (this) argument. so we take the second one.
-                                    arrayIndex = argExpr.ExecuteExpression<int?>();
+                                    arrayIndexExpr = callExpr.Arguments[1]; //because it is extension method, the first argument would be the instance (this) argument. so we take the second one.
 
                                     typeReturned = callExpr.Type;
                                 }
@@ -606,13 +571,36 @@ namespace Neo4jClient.DataAnnotations
 
                     currentIndex = i; //update the current index always
 
-                    if (arrayIndex != null)
+                    if (arrayIndexExpr != null)
                         break;
                 }
 
-                if (arrayIndex != null)
+                string arrayIndexStr = null;
+
+                if (arrayIndexExpr != null)
                 {
-                    builder.Append($"[{arrayIndex}]");
+                    //try executing it first
+                    //if it fails, maybe we have a nested Params call
+                    try
+                    {
+                        var arrayIndex = arrayIndexExpr.ExecuteExpression<int?>();
+                        arrayIndexStr = arrayIndex?.ToString();
+                    }
+                    catch (NotImplementedException e) when (e.Message == Messages.ParamsGetError)
+                    {
+                        //check if params
+                        var retrievedExprs = GetSimpleMemberAccessStretch(arrayIndexExpr, out var val);
+                        if (HasParams(retrievedExprs))
+                        {
+                            //get the params string
+                            arrayIndexStr = BuildParams(retrievedExprs, serializer, out var childTypeReturned, useResolvedJsonName: null);
+                        }
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(arrayIndexStr))
+                {
+                    builder.Append($"[{arrayIndexStr}]");
                 }
                 else
                 {
@@ -645,21 +633,58 @@ namespace Neo4jClient.DataAnnotations
             return builder.ToString().Trim();
         }
 
-        public static List<Expression> GetValidSimpleAccessStretch(Expression expression)
+        public static List<Expression> GetSimpleMemberAccessStretch(Expression expression, out Expression entityBestGuess)
         {
             var filtered = new List<Expression>();
 
             var currentExpression = expression;
 
+            Expression localExpr = null, entityDisjointExpr = null, nfpExpr = null, 
+                methodExpr = null, parentEntityExpr = null, paramExpr = null;
+
             while (currentExpression != null)
             {
                 filtered.Add(currentExpression);
+
+                bool currentExprIsEntity = currentExpression.IsEntity();
+
+                if (currentExprIsEntity)
+                {
+                    if (entityDisjointExpr != null)
+                    {
+                        //this would be a lie now, because we have a parent expression that is an entity
+                        //so set to null.
+                        entityDisjointExpr = null;
+                    }
+
+                    if (currentExpression != expression)
+                        parentEntityExpr = currentExpression;
+                }
 
                 switch (currentExpression.NodeType)
                 {
                     case ExpressionType.MemberAccess:
                         {
-                            currentExpression = (currentExpression as MemberExpression).Expression;
+                            var memberExpr = (currentExpression as MemberExpression);
+
+                            if (memberExpr.IsLocalMember())
+                            {
+                                localExpr = memberExpr;
+                            }
+                            else if (memberExpr.Expression == null 
+                                || (currentExprIsEntity
+                                && !memberExpr.Expression.Type.IsAnonymousType() 
+                                && !memberExpr.Expression.IsEntity())
+                                )
+                            {
+                                entityDisjointExpr = memberExpr;
+                            }
+                            else if (memberExpr.Expression.IsEntity())
+                            {
+                                parentEntityExpr = memberExpr.Expression;
+                            }
+
+                            currentExpression = memberExpr.Expression;
                             break;
                         }
                     case ExpressionType.TypeAs:
@@ -676,11 +701,16 @@ namespace Neo4jClient.DataAnnotations
                             currentExpression = methodCallExpr.Object;
 
                             if (currentExpression == null //maybe extension method
-                                && methodCallExpr.Method.IsDefined(typeof(System.Runtime.CompilerServices.ExtensionAttribute)))
+                                && methodCallExpr.Method.IsExtensionMethod())
                             {
+                                if (HasNfpEscape(methodCallExpr))
+                                    nfpExpr = methodCallExpr;
+
                                 //pick first argument
                                 currentExpression = methodCallExpr.Arguments[0];
                             }
+
+                            methodExpr = methodCallExpr;
 
                             break;
                         }
@@ -689,9 +719,14 @@ namespace Neo4jClient.DataAnnotations
                             currentExpression = (currentExpression as BinaryExpression).Left;
                             break;
                         }
+                    case ExpressionType.Parameter:
+                        {
+                            paramExpr = currentExpression;
+                            currentExpression = null;
+                            break;
+                        }
                     default:
                         {
-                            filtered.Remove(currentExpression);
                             currentExpression = null;
                             break;
                         }
@@ -700,6 +735,9 @@ namespace Neo4jClient.DataAnnotations
 
             filtered.Reverse();
 
+            //determine where our value is by some heuristics
+            entityBestGuess = nfpExpr ?? paramExpr ?? entityDisjointExpr ?? localExpr ?? methodExpr ?? parentEntityExpr ?? filtered.FirstOrDefault();
+
             return filtered;
         }
 
@@ -707,11 +745,23 @@ namespace Neo4jClient.DataAnnotations
         /// Marker method for <see cref="Params"/> class calls in expressions.
         /// </summary>
         /// <typeparam name="TReturn">The last return type of the contiguous access stretch.</typeparam>
-        /// <param name="index">The index of the actual expression called in the store</param>
+        /// <param name="index">The index of the actual expression called in the store.</param>
         /// <returns>A default value of the return type.</returns>
         internal static TReturn GetParams<TReturn>(int index)
         {
             return (TReturn)typeof(TReturn).GetDefaultValue();
+        }
+
+        public static bool HasWith(Expression expression)
+        {
+            return HasWith(expression, out var methodExpr);
+        }
+
+        public static bool HasWith(Expression expression, out MethodCallExpression methodExpr)
+        {
+            methodExpr = null;
+            return (methodExpr = expression as MethodCallExpression) != null
+                && methodExpr.Method.IsEquivalentTo("With", Defaults.ExtensionsType);
         }
     }
 }

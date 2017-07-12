@@ -60,11 +60,11 @@ namespace Neo4jClient.DataAnnotations.Tests
             };
 
             Expression<Func<object>> _f = () => new { ar = new double[] { (double)Params.Get("wh")[""] } };
-            Expression<Func<object>> _f1 = () => new { Location = (Test.Actor.Address as AddressWithComplexType).Location._() };
+            Expression<Func<object>> _f1 = () => new { Location = (TestUtilities.Actor.Address as AddressWithComplexType).Location._() };
             Expression<Func<object>> _f2 = () => new { Location = new AddressWithComplexType() { Location = new Location() { Latitude = (double)Params.Get("wh")[""] } } };
             Expression<Func<object>> _f3 = () => new { new AddressWithComplexType() { AddressLine = Params.Get("al")["yes"] as string, Location = new Location() { Latitude = (double)Params.Get("wh")[""], Longitude = (double)Params.Get("lg")[""] } }.Location };
 
-            Expression<Func<object>> f = () => new { ar = new double[] { (double)Params.Get("wh")[""] }, Location = (Test.Actor.Address as AddressWithComplexType).Location._() };
+            Expression<Func<object>> f = () => new { ar = new double[] { (double)Params.Get("wh")[""] }, Location = (TestUtilities.Actor.Address as AddressWithComplexType).Location._() };
             Expression<Func<object>> f2 = () => new { L = 123.ToString() }; //((AddressWithComplexType)actor.Address).Location };
             Expression<Func<object>> f3 = () => new { _ = ((AddressWithComplexType)actor.Address).Location };
             Expression<Func<ActorNode, bool>> f4 =
@@ -86,20 +86,33 @@ namespace Neo4jClient.DataAnnotations.Tests
                 }
             };
 
-            //Expression<Func<object>> aa = () => new Dictionary<string, string>() { { "whatever", "yes" }, { "do", "for" } };
+            Expression<Func<object>> f9 = () => new Dictionary<string, object>() { { "new", "yes" }, { "miss", "gone" } }.With(dict => dict["miss"] as string == "fresh" && dict["new"] == (object)34);
 
-            //aa = Expression.Lambda<Func<object>>(Expression.ListInit(Expression.New(typeof(Dictionary<string, string>)), 
-            //    Expression.ElementInit(
-            //        Utilities.GetMethodInfo(() => new Dictionary<string, string>().Add(null, null)),
-            //        Expression.Constant("whatever"), Expression.Constant("yes")),
-            //    Expression.ElementInit(
-            //        Utilities.GetMethodInfo(() => new Dictionary<string, string>().Add(null, null)),
-            //        Expression.Constant("do"), Expression.Constant("for"))));
+            Expression<Func<object>> f6 = () => new { actor.Name, actor.Born, Address = actor.Address as AddressWithComplexType }
+            .With(t => t.Address == new AddressWithComplexType() { AddressLine = Params.Get<ActorNode>("shonda").Address.AddressLine, Location = new Location() { Longitude = (double)Params.Get("f")["yes"] } } &&  t.Name == "New Guy"); //actor.With(a => a.Born == Params.Get<ActorNode>("shondaRhimes").Born && a.Name == "New Guy");
 
-            //var aaSer = JsonConvert.SerializeObject(aa.Compile().Invoke(), serializerSettings);
+            Expression<Func<object>> f7 = () => new { actor.Name, actor.Born, actor.Address }
+            .With(t => t.Address.AddressLine == Params.Get<ActorNode>("shonda").Address.AddressLine && t.Name == "New Guy");
+
+            //var set = Expression.Assign(Expression.Property(null, typeof(TestObjects).GetTypeInfo().GetProperty("Email")), Expression.Constant("Whatever"));
+            //var set =  Expression.MemberInit(Expression.New(typeof(TestObjects)), Expression.Bind(typeof(TestObjects).GetTypeInfo().GetProperty("Email"), Expression.Constant("Whatever")));
+
+            //try
+            //{
+            //    var t = set.ExecuteExpression<TestObjects>();
+            //    var em = t.Email;
+            //}
+            //catch (Exception e)
+            //{
+
+            //}
+
+            //var te = new TestUtilities();
+            //te.checkvariable();
+
 
             var ex = new EntityExpressionVisitor((entity) => JsonConvert.SerializeObject(entity, serializerSettings));
-            var v = ex.Visit(_f1);
+            var v = ex.Visit(f6.Body);
 
             //var exprs = ex.Params; //.FilteredExpressions.Where((e, i) => i >= 16 && i <= 18).ToList();
 
@@ -143,51 +156,6 @@ namespace Neo4jClient.DataAnnotations.Tests
                 Assert.Equal(tokenExpected.Item1, property.Value.Type);
                 Assert.Equal(tokenExpected.Item2, property.Value.ToObject<dynamic>());
             }
-        }
-    }
-
-    public class Test
-    {
-        public static Func<object[], T> AnonymousInstantiator<T>(T example)
-        {
-            var ctor = typeof(T).GetConstructors().First();
-            var paramExpr = Expression.Parameter(typeof(object[]));
-            return Expression.Lambda<Func<object[], T>>
-            (
-                Expression.New
-                (
-                    ctor,
-                    ctor.GetParameters().Select
-                    (
-                        (x, i) => Expression.Convert
-                        (
-                            Expression.ArrayIndex(paramExpr, Expression.Constant(i)),
-                            x.ParameterType
-                        )
-                    )
-                ), paramExpr).Compile();
-        }
-
-        public static ActorNode Actor = new ActorNode<int>()
-        {
-            Name = "Ellen Pompeo",
-            Born = 1969,
-            Address = new AddressWithComplexType()
-            {
-                City = "Los Angeles",
-                State = "California",
-                Country = "US",
-                Location = new Location()
-                {
-                    Latitude = 34.0522,
-                    Longitude = -118.2437
-                }
-            }
-        };
-
-        public void GetParams(Expression expression)
-        {
-
         }
     }
 }

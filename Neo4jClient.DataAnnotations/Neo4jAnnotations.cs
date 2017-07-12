@@ -5,15 +5,26 @@ using System.Linq;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json;
 using System.Reflection;
+using System.Collections.Concurrent;
 
 namespace Neo4jClient.DataAnnotations
 {
     public class Neo4jAnnotations
     {
-        private static Dictionary<Type, EntityTypeInfo> entityTypeInfo { get; set; }
-            = new Dictionary<Type, EntityTypeInfo>();
+        private Neo4jAnnotations()
+        {
 
-        internal static List<Type> EntityTypes { get; } = new List<Type>();
+        }
+
+        //public static Neo4jAnnotations Instance { get; } = new Neo4jAnnotations();
+
+        private static ConcurrentDictionary<Type, EntityTypeInfo> entityTypeInfo { get; set; }
+            = new ConcurrentDictionary<Type, EntityTypeInfo>();
+
+        private static ConcurrentDictionary<Type, object> entityTypes 
+            = new ConcurrentDictionary<Type, object>();
+
+        internal static ICollection<Type> EntityTypes { get { return entityTypes.Keys; } }
 
         internal static EntityTypeInfo GetEntityTypeInfo(Type type)
         {
@@ -46,8 +57,27 @@ namespace Neo4jClient.DataAnnotations
         {
             if (!EntityTypes.Contains(entityType))
             {
-                EntityTypes.Add(entityType);
+                entityTypes[entityType] = null;
             }
+        }
+
+        public static void RemoveEntityType(Type entityType)
+        {
+            if (EntityTypes.Contains(entityType))
+            {
+                entityTypes.TryRemove(entityType, out var val);
+            }
+        }
+
+        public static bool ContainsEntityType(Type entityType, bool includeBaseClasses = true)
+        {
+            var ret = EntityTypes.Contains(entityType)
+                || entityType.GetTypeInfo().IsGenericType && EntityTypes.Contains(entityType.GetGenericTypeDefinition()) //search generics too
+                || (includeBaseClasses && EntityTypes.Any(baseType => baseType.IsAssignableFrom(entityType)
+                || baseType.IsGenericAssignableFrom(entityType))) //optional
+                ;
+
+            return ret;
         }
 
         internal static void Register(IGraphClient client)

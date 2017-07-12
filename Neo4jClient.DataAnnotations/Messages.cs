@@ -21,5 +21,7 @@ namespace Neo4jClient.DataAnnotations
         public const string NoContractResolvedError = "Could not resolve contract, or received bad contract for '{0}'. Please ensure you have a DefaultContractResolver object set on your JsonSerializers.";
 
         public const string ExtendLastBNewAMismatchError = "The last B node of Type: {0} does not match this new A of Type: {1}. Since you are extending the last pattern, this two should match.";
+
+        public const string ParamsGetError = "Please do not call this method directly. Use only in expressions.";
     }
 }

@@ -7,7 +7,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
     /// <summary>
     /// All-purpose class for getting parameters already declared in a Cypher query.
     /// </summary>
-    public sealed partial class Params
+    public sealed class Params
     {
         /// <summary>
         /// Gets a parameter as <see cref="CypherObject"/>. Properties of the parameter can be accessed from the <see cref="CypherObject"/> returned.
@@ -17,7 +17,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <returns></returns>
         public static CypherObject Get(string name)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.ParamsGetError);
         }
 
         /// <summary>
@@ -29,7 +29,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <returns></returns>
         public static T Get<T>(string name)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.ParamsGetError);
         }
     }
 }

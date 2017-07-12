@@ -21,6 +21,7 @@ namespace Neo4jClient.DataAnnotations
         public static readonly Type ExtensionsType = typeof(Extensions);
         public static readonly Type NeoScalarType = typeof(NeoScalarAttribute);
         public static readonly Type ObjectType = typeof(object);
+        public static Type DictionaryType = typeof(IDictionary<,>);
         #endregion
 
         public static DefaultContractResolver ContractResolver = null;
