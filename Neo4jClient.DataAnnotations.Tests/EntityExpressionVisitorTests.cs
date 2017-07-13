@@ -192,31 +192,8 @@ namespace Neo4jClient.DataAnnotations.Tests
             }
         }
 
-        public void WithNode()
-        {
-            //Expression<Func<object>> f10 = () => new { actor.Name, actor.Born, Address = actor.Address as AddressWithComplexType }
-            //.With(t => t.Address.Location.Latitude == new AddressWithComplexType()
-            //{
-            //    AddressLine = Params.Get<ActorNode>("shonda").Address.AddressLine,
-            //    Location = new Location() { Longitude = (double)Params.Get("f")["yes"] }
-            //}.Location.Longitude && t.Name == "New Guy");
-
-            //Expression<Func<object>> f9 = () => new Dictionary<string, object>() { { "new", "yes" }, { "miss", "gone" } }
-            //.With(dict => dict["miss"] as string == "fresh" && dict["new"] == (object)34);
-
-            //Expression<Func<object>> f6 = () => new { actor.Name, actor.Born, Address = actor.Address as AddressWithComplexType }
-            //.With(t => t.Address == new AddressWithComplexType() { AddressLine = Params.Get<ActorNode>("shonda").Address.AddressLine,
-            //    Location = new Location() { Longitude = (double)Params.Get("f")["yes"] } } && t.Name == "New Guy");
-
-            //Expression<Func<object>> f8 = () => new { actor.Name, actor.Born, Address = actor.Address }
-            //.With(t => t.Address.AddressLine == new AddressWithComplexType() { AddressLine = Params.Get<ActorNode>("shonda").Address.AddressLine, Location = new Location() { Longitude = (double)Params.Get("f")["yes"] } } && t.Name == "New Guy");
-
-            //Expression<Func<object>> f7 = () => new { actor.Name, actor.Born, actor.Address }
-            //.With(t => t.Address.AddressLine == Params.Get<ActorNode>("shonda").Address.AddressLine && t.Name == "New Guy");
-        }
-
         [Fact]
-        public void SimpleWith()
+        public void With()
         {
             TestUtilities.AddEntityTypes();
 
@@ -243,7 +220,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Fact]
-        public void AnonymousType_MemberAccessWith()
+        public void AnonymousTypeMemberAccessWith()
         {
             TestUtilities.AddEntityTypes();
 
@@ -274,8 +251,207 @@ namespace Neo4jClient.DataAnnotations.Tests
                 { "NewAddressName_City", null },
                 { "NewAddressName_State", null },
                 { "NewAddressName_Country", null }
-                //{ "NewAddressLine_Location_Latitude", 0.0 },
-                //{ "NewAddressLine_Location_Longitude", 0.0 }
+            };
+
+            Assert.Equal(tokensExpected.Count, result.Count);
+
+            foreach (var pair in result)
+            {
+                Assert.Equal(tokensExpected[pair.Key], pair.Value);
+            }
+        }
+
+        [Fact]
+        public void ComplexAnonymousTypeWith()
+        {
+            TestUtilities.AddEntityTypes();
+
+            Expression<Func<object>> expression = () => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, Address = TestUtilities.Actor.Address as AddressWithComplexType }
+            .With(a => a.Address == new AddressWithComplexType()
+            {   //Use this style only if you're sure all the properties here are assigned, 
+                //because this address object would replace the instance address property entirely.
+                //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
+                //This was done mainly for testing. 
+                //Use a => a.Address.Location.Longitude == (double)Params.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
+
+                AddressLine = Params.Get<ActorNode>("shondaRhimes").Address.AddressLine,
+                Location = new Location()
+                {
+                    Latitude = 4.0,
+                    Longitude = (double)Params.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
+                }
+            } && a.Name == "Shonda Rhimes");
+
+            var entityVisitor = new EntityExpressionVisitor(serializer);
+            var newExpression = entityVisitor.Visit(expression.Body);
+
+            Assert.NotNull(newExpression);
+            Assert.NotEqual(newExpression, expression.Body);
+
+            Assert.Equal(2, entityVisitor.Params.Count);
+
+            dynamic result = entityVisitor.WithPredicateNode.ExecuteExpression<Dictionary<string, object>>();
+            Assert.NotNull(result);
+
+            Dictionary<string, object> tokensExpected = new Dictionary<string, object>()
+            {
+                { "Name", "Shonda Rhimes"},
+                { "Born", 0 },
+                { "NewAddressName_AddressLine", null },
+                { "NewAddressName_City", null },
+                { "NewAddressName_State", null },
+                { "NewAddressName_Country", null },
+                { "NewAddressName_Location_Latitude", 4.0 },
+                { "NewAddressName_Location_Longitude", 0.0 }
+            };
+
+            Assert.Equal(tokensExpected.Count, result.Count);
+
+            foreach (var pair in result)
+            {
+                Assert.Equal(tokensExpected[pair.Key], pair.Value);
+            }
+        }
+
+        [Fact]
+        public void ComplexAnonymousTypeMemberAccessWith()
+        {
+            TestUtilities.AddEntityTypes();
+
+            Expression<Func<object>> expression = () => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, Address = TestUtilities.Actor.Address as AddressWithComplexType }
+            .With(a => a.Address.Location.Longitude == new AddressWithComplexType()
+            {   //Using this style, be sure that the parameters set inline here wouldn't make it to the generated pattern.
+                //This is because this MemberInit is taken as an object value since it was accessed, and then used directly
+                //This was done mainly for testing. 
+                //Use a => a.Address.Location.Longitude == (double)Params.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
+
+                AddressLine = Params.Get<ActorNode>("shondaRhimes").Address.AddressLine,
+                Location = new Location()
+                {
+                    Latitude = 4.0,
+                    Longitude = (double)Params.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
+                }
+            }.Location.Longitude && a.Name == "Shonda Rhimes");
+
+            var entityVisitor = new EntityExpressionVisitor(serializer);
+            var newExpression = entityVisitor.Visit(expression.Body);
+
+            Assert.NotNull(newExpression);
+            Assert.NotEqual(newExpression, expression.Body);
+
+            Assert.Equal(2, entityVisitor.Params.Count);
+
+            dynamic result = entityVisitor.WithPredicateNode.ExecuteExpression<Dictionary<string, object>>();
+            Assert.NotNull(result);
+
+            Dictionary<string, object> tokensExpected = new Dictionary<string, object>()
+            {
+                { "Name", "Shonda Rhimes"},
+                { "Born", 0 },
+                { "NewAddressName_AddressLine", null },
+                { "NewAddressName_City", null },
+                { "NewAddressName_State", null },
+                { "NewAddressName_Country", null },
+                { "NewAddressName_Location_Latitude", 0.0 },
+                { "NewAddressName_Location_Longitude", 0.0 }
+            };
+
+            Assert.Equal(tokensExpected.Count, result.Count);
+
+            foreach (var pair in result)
+            {
+                Assert.Equal(tokensExpected[pair.Key], pair.Value);
+            }
+        }
+
+        [Fact]
+        public void AnonymousTypeComplexMemberWith()
+        {
+            TestUtilities.AddEntityTypes();
+
+            Expression<Func<object>> expression = () => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, TestUtilities.Actor.Address }
+            .With(a => a.Address == new AddressWithComplexType()
+            {   //Use this style only if you're sure all the properties here are assigned, 
+                //because this address object would replace the instance address property entirely.
+                //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
+                //This was done mainly for testing. 
+                //Use a => a.Address.Location.Longitude == (double)Params.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
+
+                AddressLine = Params.Get<ActorNode>("shondaRhimes").Address.AddressLine,
+                Location = new Location()
+                {
+                    Latitude = 4.0,
+                    Longitude = (double)Params.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
+                }
+            } && a.Name == "Shonda Rhimes");
+
+            var entityVisitor = new EntityExpressionVisitor(serializer);
+            var newExpression = entityVisitor.Visit(expression.Body);
+
+            Assert.NotNull(newExpression);
+            Assert.NotEqual(newExpression, expression.Body);
+
+            Assert.Equal(2, entityVisitor.Params.Count);
+
+            dynamic result = entityVisitor.WithPredicateNode.ExecuteExpression<Dictionary<string, object>>();
+            Assert.NotNull(result);
+
+            Dictionary<string, object> tokensExpected = new Dictionary<string, object>()
+            {
+                { "Name", "Shonda Rhimes"},
+                { "Born", 0 },
+                { "NewAddressName_AddressLine", null },
+                { "NewAddressName_City", null },
+                { "NewAddressName_State", null },
+                { "NewAddressName_Country", null },
+                //{ "NewAddressName_Location_Latitude", 4.0 },
+                //{ "NewAddressName_Location_Longitude", 0.0 }
+            };
+
+            Assert.Equal(tokensExpected.Count, result.Count);
+
+            foreach (var pair in result)
+            {
+                Assert.Equal(tokensExpected[pair.Key], pair.Value);
+            }
+        }
+
+        [Fact]
+        public void DictionaryWith()
+        {
+            TestUtilities.AddEntityTypes();
+
+            Expression<Func<object>> expression = () => new Dictionary<string, object>()
+            {
+                { "Name", TestUtilities.Actor.Name },
+                { "Born", TestUtilities.Actor.Born },
+                { "Address", TestUtilities.Actor.Address }
+            }.With(a => a["Address"] == Params.Get<ActorNode>("ellenPompeo").Address && (int)a["Born"] == 1671 && a["Name"] == "Shonda Rhimes");
+
+            var entityVisitor = new EntityExpressionVisitor(serializer);
+            var newExpression = entityVisitor.Visit(expression.Body);
+
+            Assert.NotNull(newExpression);
+            Assert.NotEqual(newExpression, expression.Body);
+
+            Assert.Equal(4, entityVisitor.Params.Count);
+
+            Assert.Equal(4, entityVisitor.Params[0].Count);
+            Assert.Equal("Get(\"ellenPompeo\").Address", entityVisitor.Params[0][1].ToString());
+            Assert.Equal(3, entityVisitor.ParamsPaths[0].Count);
+            Assert.Equal("GetParams(0)", entityVisitor.ParamsPaths[0][0].ToString());
+
+            dynamic result = entityVisitor.WithPredicateNode.ExecuteExpression<Dictionary<string, object>>();
+            Assert.NotNull(result);
+
+            Dictionary<string, object> tokensExpected = new Dictionary<string, object>()
+            {
+                { "Name", "Shonda Rhimes"},
+                { "Born", 1671 },
+                { "NewAddressName_AddressLine", null },
+                { "NewAddressName_City", null },
+                { "NewAddressName_State", null },
+                { "NewAddressName_Country", null }
             };
 
             Assert.Equal(tokensExpected.Count, result.Count);

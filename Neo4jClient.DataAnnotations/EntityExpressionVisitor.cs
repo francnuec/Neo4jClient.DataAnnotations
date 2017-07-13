@@ -32,7 +32,6 @@ namespace Neo4jClient.DataAnnotations
         public Expression RootNode { get; private set; }
 
 
-
         public MethodCallExpression WithNode { get; private set; }
 
         public Expression WithInstanceNode { get; private set; }
@@ -242,8 +241,8 @@ namespace Neo4jClient.DataAnnotations
 
                             foreach (var assignment in WithPredicateAssignments)
                             {
-                                var retrieved = Utilities.GetSimpleMemberAccessStretch(assignment.Key, out var itemExpr);
-                                var dictKey = (itemExpr as MethodCallExpression).Arguments[0].ExecuteExpression<object>().ToString();
+                                var retrieved = Utilities.GetSimpleMemberAccessStretch(assignment.Key, out var valExpr);
+                                var dictKey = (retrieved[1] as MethodCallExpression).Arguments[0].ExecuteExpression<object>().ToString();
                                 WithPredicateDictionaryItems[dictKey] = assignment.Value;
                             }
                         }
@@ -299,6 +298,14 @@ namespace Neo4jClient.DataAnnotations
             return base.VisitMethodCall(node);
         }
 
+
+        private void AddToParamsPaths(object node, int index)
+        {
+            for (int i = index, l = ParamsPaths.Count; i < l; i++)
+            {
+                ParamsPaths[i].Add(node);
+            }
+        }
 
         private List<ElementInit> GetNewExpressionItems(NewExpression node)
         {
@@ -438,14 +445,6 @@ namespace Neo4jClient.DataAnnotations
             return bindings;
         }
 
-        private void AddToParamsPaths(object node, int index)
-        {
-            for (int i = index, l = ParamsPaths.Count; i < l; i++)
-            {
-                ParamsPaths[i].Add(node);
-            }
-        }
-
         private Dictionary<MemberInfo, Expression> GetPredicateMemberAssignments(Dictionary<Expression, Expression> assignments,
             out List<MemberInfo> rootMembers,
             out Dictionary<MemberInfo, Tuple<Type, List<MemberInfo>>> memberChildren)
@@ -489,75 +488,6 @@ namespace Neo4jClient.DataAnnotations
             return memberAssignments;
         }
 
-        //private Expression GetPredicateExpression(
-        //    ParameterExpression parameter, List<MemberBinding> bindings,
-        //    Dictionary<MemberInfo, Expression> memberAssignments)
-        //{
-        //    NewExpression newExpr = null;
-        //    Expression predicateExpression = null;
-
-        //    if (parameter.Type.IsAnonymousType())
-        //    {
-        //        //anonymous type
-        //        var constructor = parameter.Type.GetConstructors()[0];
-
-        //        //build the argument list from the anonymous type delcared properties.
-        //        //by default, the order at which they were declared on the type is the order for which they would appear in the constructor
-        //        var props = parameter.Type.GetProperties();
-        //        var arguments = new List<Expression>();
-
-        //        foreach (var prop in props)
-        //        {
-        //            var arg = bindings.Where(b => b.Member.IsEquivalentTo(prop))
-        //                .Select(b =>
-        //                {
-        //                    var memAssign = b as MemberAssignment;
-
-        //                    if (memAssign != null)
-        //                        return memAssign.Expression;
-
-        //                    //it could be membermemberbinding, which was done so because an anonymous type property would naturally be readonly
-        //                    var memMemBind = b as MemberMemberBinding;
-
-        //                    if (memMemBind == null)
-        //                        return null;
-
-        //                    //else construct a new expression
-        //                    return Expression.MemberInit(Expression.New(prop.PropertyType), memMemBind.Bindings);
-        //                }).FirstOrDefault();
-
-        //            if (arg == null)
-        //            {
-        //                //try member assignments
-        //                arg = memberAssignments.FirstOrDefault(mp => mp.Key.IsEquivalentTo(prop)).Value;
-        //            }
-
-        //            if(arg == null)
-        //            {
-        //                //finally just assign a default value.
-        //                //the belief is that by now if there was an error, an exception should have been thrown somewhere already.
-        //                arg = Expression.Constant(prop.PropertyType.GetDefaultValue());
-        //            }
-
-        //            arguments.Add(arg);
-        //        }
-
-        //        newExpr = Expression.New(constructor, arguments);
-        //        predicateExpression = newExpr; //one and the same
-        //    }
-        //    else if (parameter.Type.IsDictionaryType())
-        //    {
-        //        //build list init
-        //    }
-        //    else
-        //    {
-        //        newExpr = Expression.New(parameter.Type);
-        //        predicateExpression = Expression.MemberInit(newExpr, bindings);
-        //    }
-
-        //    return predicateExpression;
-        //}
-
         private Expression GetPredicateExpression(
             ParameterExpression parameter, List<object> bindings,
             Dictionary<MemberInfo, Expression> memberAssignments,
@@ -578,15 +508,14 @@ namespace Neo4jClient.DataAnnotations
 
                 var tuples = bindings
                         .Select(b => b as Tuple<MemberInfo, Tuple<Type, object>>) //we expect tuples here as anonymous types would naturally have readonly properties
+                        .Where(b => b != null)
                         .ToArray();
 
                 foreach (var prop in props)
                 {
                     Expression arg = null;
 
-                    try
-                    {
-                        arg = tuples
+                    arg = tuples
                         .Where(b => b.Item1.IsEquivalentTo(prop))
                         .Select(b =>
                         {
@@ -603,12 +532,7 @@ namespace Neo4jClient.DataAnnotations
 
                             return value;
                         }).FirstOrDefault();
-                    }
-                    catch
-                    {
-                        System.Diagnostics.Debugger.Launch();
-                    }
-                    
+
 
                     if (arg == null)
                     {
@@ -678,17 +602,13 @@ namespace Neo4jClient.DataAnnotations
         private ListInitExpression GetDictListInitExpression(IEnumerable<ElementInit> initializers, 
             out Dictionary<string, List<Tuple<string, List<MemberInfo>>>> dictMemberNames)
         {
-            //useClassDictMemberNames = useClassDictMemberNames && this.dictMemberNames != null;
-
             dictMemberNames = new Dictionary<string, List<Tuple<string, List<MemberInfo>>>>();
 
             //transform expression to a dictionary<string, object> expression
             List<ElementInit> dictItems = new List<ElementInit>();
 
-            foreach(var initializer in initializers) //int i = 0; i < initializers.Count; i++)
+            foreach(var initializer in initializers)
             {
-                //var initializer = initializers[i];
-
                 //expand members if complex type
                 //if there's a cast, remove it.
                 var key = initializer.Arguments[0].Uncast(out var keyCastType);

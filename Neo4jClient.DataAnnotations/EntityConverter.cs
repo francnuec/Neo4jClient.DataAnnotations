@@ -37,25 +37,25 @@ namespace Neo4jClient.DataAnnotations
 
                 //temporarily remove this converter from the main serializer to avoid an unending loop
                 List<Tuple<JsonConverter, int>> entityConverters;
-                RemoveThisConverters(serializer, out entityConverters);
+                RemoveThisConverter(serializer, out entityConverters);
 
                 //now convert to JObject
                 var valueJObject = JObject.FromObject(value, serializer);
 
                 //restore the removed converters
-                RestoreThisConverters(serializer, entityConverters);
+                RestoreThisConverter(serializer, entityConverters);
 
                 HandleComplexTypedPropsWrite(writer, serializer, value, valueJObject, entityInfo);
 
                 //remove all object tokens that may still remain
                 RemoveJsonObjectProperties(valueJObject, entityInfo);
 
-                RemoveThisConverters(serializer, out entityConverters);
+                RemoveThisConverter(serializer, out entityConverters);
 
                 //finally serialize
                 serializer.Serialize(writer, valueJObject);
 
-                RestoreThisConverters(serializer, entityConverters);
+                RestoreThisConverter(serializer, entityConverters);
             }
             else
             {
@@ -108,7 +108,7 @@ namespace Neo4jClient.DataAnnotations
             }
         }
 
-        private void RemoveThisConverters(JsonSerializer serializer, out List<Tuple<JsonConverter, int>> entityConverters)
+        private void RemoveThisConverter(JsonSerializer serializer, out List<Tuple<JsonConverter, int>> entityConverters)
         {
             entityConverters = new List<Tuple<JsonConverter, int>>();
 
@@ -129,7 +129,7 @@ namespace Neo4jClient.DataAnnotations
             }
         }
 
-        private void RestoreThisConverters(JsonSerializer serializer, List<Tuple<JsonConverter, int>> entityConverters,
+        private void RestoreThisConverter(JsonSerializer serializer, List<Tuple<JsonConverter, int>> entityConverters,
             bool clearList = true)
         {
             foreach (var converter in entityConverters)
@@ -170,7 +170,7 @@ namespace Neo4jClient.DataAnnotations
 
                 foreach (var propJsonNameMap in entityInfo.JsonNamePropertyMap)
                 {
-                    if (propJsonNameMap.Value == prop) //.Name == prop.Name)
+                    if (propJsonNameMap.Value == prop)
                     {
                         propJsonName = propJsonNameMap.Key; //use the assigned name from contract
                         break;
