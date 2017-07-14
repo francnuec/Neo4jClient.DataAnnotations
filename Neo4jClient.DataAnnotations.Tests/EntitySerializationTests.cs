@@ -2,6 +2,7 @@
 using Neo4jClient.DataAnnotations.Tests.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using NSubstitute;
 using System;
 using System.Collections.Generic;
@@ -22,7 +23,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actor = new ActorNode();
 
-            var ex = Assert.Throws<InvalidOperationException>(() => TestUtilities.SerializerWithResolver(actor));
+            var ex = Assert.Throws<InvalidOperationException>(() => TestUtilities.SerializeWithResolver(actor));
 
             Assert.Equal(string.Format(Messages.NullComplexTypePropertyError, "Address", "PersonNode"), ex.Message);
         }
@@ -111,7 +112,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             ////var paramText = Utilities.BuildParams(exprs, (entity) => JsonConvert.SerializeObject(entity, serializerSettings),
             ////    out var typeRet);
 
-            var serialized = TestUtilities.SerializerWithResolver(actor);
+            var serialized = TestUtilities.SerializeWithResolver(actor);
 
             Dictionary<string, Tuple<JTokenType, dynamic>> tokensExpected = new Dictionary<string, Tuple<JTokenType, dynamic>>()
             {
@@ -135,7 +136,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             Assert.Equal(tokensExpected.Count, jToken.Count);
 
-            foreach(var jChild in jToken.Children())
+            foreach (var jChild in jToken.Children())
             {
                 Assert.Equal(JTokenType.Property, jChild.Type);
 
@@ -147,6 +148,54 @@ namespace Neo4jClient.DataAnnotations.Tests
 
                 Assert.Equal(tokenExpected.Item1, property.Value.Type);
                 Assert.Equal(tokenExpected.Item2, property.Value.ToObject<dynamic>());
+            }
+        }
+
+        [Fact]
+        public void EntityResolverRead()
+        {
+            Dictionary<string, dynamic> actorTokens = new Dictionary<string, dynamic>()
+            {
+                { "Name", "Ellen Pompeo" },
+                { "Born", 1969 },
+                { "Roles", null},
+                { "NewAddressName_AddressLine", null },
+                { "NewAddressName_City", "Los Angeles" },
+                { "NewAddressName_State", "California" },
+                { "NewAddressName_Country", "US" },
+                { "NewAddressName_Location_Latitude", 34.0522 },
+                { "NewAddressName_Location_Longitude", -118.2437 },
+                { "NewAddressName_complex_prop", 14859 },
+                { "NewAddressName_own", "something_owned" },
+                { "TestForeignKeyId", 0 },
+                { "TestMarkedFK", 0 },
+                { "TestGenericForeignKeyId", null },
+            };
+
+            TestUtilities.AddEntityTypes();
+
+            var actorJObject = JObject.FromObject(actorTokens);
+
+            var actor = actorJObject.ToObject<ActorNode<int>>(JsonSerializer.CreateDefault(TestUtilities.SerializerSettingsWithResolver));
+
+            Assert.NotNull(actor);
+
+            var actorContract = TestUtilities.Resolver.ResolveContract(actor.GetType());
+
+            var jsonProperties = (actorContract as JsonObjectContract)?.Properties;
+
+            Assert.NotNull(jsonProperties);
+            Assert.InRange(jsonProperties.Count, actorTokens.Count, int.MaxValue); //the amount of properties returned can't be less than the token sent in
+
+            foreach (var token in actorTokens)
+            {
+                var jsonProp = jsonProperties.Where(jp => jp.PropertyName == token.Key).SingleOrDefault(); //has to be just one
+
+                Assert.NotNull(jsonProp);
+
+                var jsonPropValue = jsonProp.ValueProvider.GetValue(actor);
+
+                Assert.Equal(token.Value, jsonPropValue);
             }
         }
     }

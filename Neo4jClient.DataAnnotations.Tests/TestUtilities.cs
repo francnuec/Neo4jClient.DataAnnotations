@@ -1,6 +1,7 @@
 ﻿using Neo4jClient.DataAnnotations.Tests.Models;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -11,6 +12,14 @@ namespace Neo4jClient.DataAnnotations.Tests
     {
         public static EntityResolver Resolver { get; } = new EntityResolver();
 
+        public static EntityConverter Converter { get; } = new EntityConverter();
+
+        public static JsonSerializerSettings SerializerSettingsWithConverter = new JsonSerializerSettings()
+        {
+            Converters = new List<JsonConverter>() { Converter },
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+        };
+
         public static JsonSerializerSettings SerializerSettingsWithResolver = new JsonSerializerSettings()
         {
             //Converters = new List<JsonConverter>() { new EntityConverter() },
@@ -18,7 +27,11 @@ namespace Neo4jClient.DataAnnotations.Tests
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
         };
 
-        public static Func<object, string> SerializerWithResolver = (entity) => JsonConvert.SerializeObject(entity, SerializerSettingsWithResolver);
+        public static Func<object, string> SerializeWithResolver = (entity) => JsonConvert.SerializeObject(entity, SerializerSettingsWithResolver);
+
+        public static Func<object, string> SerializeWithConverter = (entity) => JsonConvert.SerializeObject(entity, SerializerSettingsWithConverter);
+
+        public static Func<string, Type, object> DeserializeWithResolver = (value, type) => JsonConvert.DeserializeObject(value, type, SerializerSettingsWithResolver);
 
         public static ActorNode Actor = new ActorNode<int>()
         {

@@ -85,7 +85,13 @@ namespace Neo4jClient.DataAnnotations
             var existing = EntityTypes.Where(type => baseType.IsAssignableFrom(type)
             || baseType.IsGenericAssignableFrom(type));
 
-            return existing?.ToList();
+            var list = existing?.ToList();
+
+            if (list != null)
+                //sort them
+                list.Sort((x, y) => x.IsGenericAssignableFrom(y) ? -1 : (y.IsGenericAssignableFrom(x) ? 1 : (x.Name.CompareTo(y.Name))));
+
+            return list;
         }
 
         internal static void Register(IGraphClient client)

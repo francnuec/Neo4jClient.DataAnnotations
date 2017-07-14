@@ -292,5 +292,10 @@ namespace Neo4jClient.DataAnnotations
         {
             return Neo4jAnnotations.ContainsEntityType(expression.Type);
         }
+
+        public static bool IsScalar(this Type type)
+        {
+            return Utilities.IsTypeScalar(type);
+        }
     }
 }

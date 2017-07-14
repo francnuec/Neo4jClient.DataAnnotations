@@ -14,15 +14,15 @@ namespace Neo4jClient.DataAnnotations
         {
             var _props = base.CreateProperties(type, memberSerialization);
 
-            var properties = new JsonPropertyCollection(type);
-
-            foreach (var prop in _props)
+            if (Neo4jAnnotations.ContainsEntityType(type) && _props.Count > 0)
             {
-                properties.Add(prop);
-            }
+                var properties = new JsonPropertyCollection(type);
 
-            if (properties.Count > 0)
-            {
+                foreach (var prop in _props)
+                {
+                    properties.Add(prop);
+                }
+
                 var typeInfo = Neo4jAnnotations.GetEntityTypeInfo(type);
 
                 //check for complextypes
@@ -54,9 +54,6 @@ namespace Neo4jClient.DataAnnotations
                             derivedTypes = new List<Type>() { complexTypedProp.Key.PropertyType };
                         }
 
-                        //sort them
-                        derivedTypes.Sort((x, y) => x.IsGenericAssignableFrom(y) ? -1 : (y.IsGenericAssignableFrom(x) ? 1 : (x.Name.CompareTo(y.Name))));
-
                         foreach (var derivedType in derivedTypes)
                         {
                             var childProperties = (ResolveContract(derivedType) as JsonObjectContract)?
@@ -84,9 +81,11 @@ namespace Neo4jClient.DataAnnotations
                 //assign and resolve these properties
                 typeInfo.JsonResolver = this;
                 typeInfo.JsonProperties = new List<JsonProperty>(properties);
+
+                _props = properties.OrderBy(p => p.Order ?? -1).ToList();
             }
 
-            return properties.OrderBy(p => p.Order ?? -1).ToList();
+            return _props;
         }
 
         protected virtual JsonProperty GetJsonPropertyDuplicate(JsonProperty prop)
@@ -162,20 +161,6 @@ namespace Neo4jClient.DataAnnotations
                 isAssignable = isAssignable || parentReflectedType == parentValueType;
 
                 return isAssignable && (childShouldSerialize == null || childShouldSerialize(parentValue) == true);
-            };
-
-            newChild.ShouldDeserialize = (entity) =>
-            {
-                var propertyInfo = entity.GetType().GetProperty(parentActualName);
-                var parentValue = propertyInfo.GetValue(entity);
-                Utilities.CheckIfComplexTypeInstanceIsNull(parentValue, parentActualName, propertyInfo.DeclaringType);
-
-                var parentValueType = parentValue.GetType();
-
-                var isAssignable = parentType.IsGenericAssignableFrom(parentValueType);
-                isAssignable = isAssignable || parentReflectedType == parentValueType;
-
-                return isAssignable && (childShouldDeserialize == null || childShouldDeserialize(parentValue) == true);
             };
 
             return newChild;

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Reflection;
 using System.Text;
 
 namespace Neo4jClient.DataAnnotations
@@ -31,5 +32,7 @@ namespace Neo4jClient.DataAnnotations
             typeof(string), typeof(Uri), typeof(Guid),
             typeof(DateTime), typeof(DateTimeOffset), typeof(TimeSpan)
         };
+
+        public const BindingFlags MemberSearchBindingFlags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
     }
 }

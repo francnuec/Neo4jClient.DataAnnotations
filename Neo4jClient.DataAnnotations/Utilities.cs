@@ -94,27 +94,27 @@ namespace Neo4jClient.DataAnnotations
                 type.GetGenericArguments().FirstOrDefault() : null);
         }
 
-        public static bool IsEntityPropertyTypeScalar(Type propType)
+        public static bool IsTypeScalar(Type type)
         {
             repeat:
-            if (propType != null && !(Defaults.ScalarTypes.Contains(propType)
-                || propType.GetTypeInfo().IsPrimitive
-                || propType.GetTypeInfo().IsDefined(Defaults.NeoScalarType)))
+            if (type != null && !(Defaults.ScalarTypes.Contains(type)
+                || type.GetTypeInfo().IsPrimitive
+                || type.GetTypeInfo().IsDefined(Defaults.NeoScalarType)))
             {
                 //check if it's an array/iEnumerable before concluding
                 Type genericType = null;
 
-                if ((genericType = GetEnumerableGenericType(propType)) != null
-                    || (genericType = GetNullableUnderlyingType(propType)) != null)
+                if ((genericType = GetEnumerableGenericType(type)) != null
+                    || (genericType = GetNullableUnderlyingType(type)) != null)
                 {
-                    propType = genericType;
+                    type = genericType;
                     goto repeat;
                 }
 
                 return false;
             }
 
-            return propType != null;
+            return type != null;
         }
 
         public static MethodInfo GetMethodInfo(Expression<Action> expression)
@@ -243,6 +243,10 @@ namespace Neo4jClient.DataAnnotations
 
                                 nextInstance = Array.CreateInstance(lastType.GetElementType(), lengths);
                             }
+                            else if (IsTypeScalar(lastType))
+                            {
+                                nextInstance = lastType.GetDefaultValue();
+                            }
                             else
                             {
                                 nextInstance = Activator.CreateInstance(lastType);
@@ -270,12 +274,13 @@ namespace Neo4jClient.DataAnnotations
         {
             string[] memberNames = new string[0];
 
-            bool buildPath = useResolvedJsonName && resolver == null; //do this to avoid create instances every time we call this method for a particular type
-
-            int index = currentIndex; //store this index incase of a repeat
-
             entityType = entityType ?? entity.GetType();
             var entityInfo = Neo4jAnnotations.GetEntityTypeInfo(entityType);
+
+            //do this to avoid create instances every time we call this method for a particular type
+            bool buildPath = useResolvedJsonName && resolver == null && entityInfo.JsonNamePropertyMap.Count == 0;
+
+            int index = currentIndex; //store this index incase of a repeat
 
             repeatBuild:
             if (buildPath && entity == null)
@@ -431,7 +436,7 @@ namespace Neo4jClient.DataAnnotations
             {
                 var newExpr = Expression.MakeMemberAccess(expression, prop);
 
-                if (IsEntityPropertyTypeScalar(prop.PropertyType))
+                if (IsTypeScalar(prop.PropertyType))
                 {
                     result.Add(newExpr);
                     inversePaths.Add(new List<MemberInfo>() { prop });

@@ -341,43 +341,39 @@ namespace Neo4jClient.DataAnnotations
 
             var retrievedExprs = Utilities.GetSimpleMemberAccessStretch(argument, out var entityExpr);
 
-            ////get the entity object
-            //var entityExpr = argVal;
+            object entity = null;
 
-            //object entity = null;
-
-            //try
-            //{
-            //    entity = entityExpr.ExecuteExpression<object>();
-            //}
-            //catch
-            //{
-            //    //something went wrong.
-            //    //that shouldn't deter us now to get memberName
-            //    //try activating manually
-
-            //    try
-            //    {
-            //        entity = Activator.CreateInstance(entityExpr.Type);
-            //    }
-            //    catch
-            //    {
-
-            //    }
-            //}
-
-            if (Resolver != null || Serializer != null)
+            if (Resolver == null && Serializer != null)
             {
-                object entity = null;
+                //get the entity object
+                try
+                {
+                    entity = entityExpr.ExecuteExpression<object>();
+                }
+                catch
+                {
+                    //something went wrong.
+                    //that shouldn't deter us now to get memberName
+                    //try activating manually
 
-                //get the names
-                var currentIndex = retrievedExprs.IndexOf(entityExpr) + 1;
-                var memberNames = Utilities.GetEntityPathNames
-                    (ref entity, entityExpr.Type, retrievedExprs, ref currentIndex, Resolver, Serializer,
-                    out var entityMembers, out var lastType, useResolvedJsonName: true);
+                    try
+                    {
+                        entity = Activator.CreateInstance(entityExpr.Type);
+                    }
+                    catch
+                    {
 
-                name = memberNames?.LastOrDefault(); //we are only interested in the last member name.
+                    }
+                }
             }
+
+            //get the names
+            var currentIndex = retrievedExprs.IndexOf(entityExpr) + 1;
+            var memberNames = Utilities.GetEntityPathNames
+                (ref entity, entityExpr.Type, retrievedExprs, ref currentIndex, Resolver, Serializer,
+                out var entityMembers, out var lastType, useResolvedJsonName: true);
+
+            name = memberNames?.LastOrDefault(); //we are only interested in the last member name.
 
             return name;
         }

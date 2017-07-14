@@ -54,7 +54,7 @@ namespace Neo4jClient.DataAnnotations
             {
                 return allProperties ?? 
                     (allProperties = Type.GetProperties
-                    (BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public)?.ToList() 
+                    (Defaults.MemberSearchBindingFlags)?.ToList() 
                     ?? new List<PropertyInfo>());
             }
         }
@@ -168,7 +168,7 @@ namespace Neo4jClient.DataAnnotations
                 foreach (var propInfo in propertiesNotConsidered)
                 {
                     if ((propInfo.Name.EndsWith("Id") || propInfo.Name.ToLower().EndsWith("_id"))
-                        && Utilities.IsEntityPropertyTypeScalar(propInfo.PropertyType)) //it must be scalar to be considered
+                        && Utilities.IsTypeScalar(propInfo.PropertyType)) //it must be scalar to be considered
                     {
                         var fkName = propInfo.Name.Substring(0, propInfo.Name.Length - 2).TrimEnd('_');
 
@@ -211,7 +211,7 @@ namespace Neo4jClient.DataAnnotations
         private void AssignForeignKey(ForeignKeyProperty property, PropertyInfo propertyInfo)
         {
             //check if its scalar
-            if (Utilities.IsEntityPropertyTypeScalar(propertyInfo.PropertyType))
+            if (Utilities.IsTypeScalar(propertyInfo.PropertyType))
             {
                 //only assign if scalar property hasn't been earlier on assigned.
                 //if it has been assigned, skip. it may mean the propertyinfo has nothing to do with foreignkeys and was just a coincedence.
@@ -235,7 +235,7 @@ namespace Neo4jClient.DataAnnotations
             {
                 return navigationProps ?? (navigationProps = 
                     AllProperties
-                    .Where(p => !Utilities.IsEntityPropertyTypeScalar(p.PropertyType))
+                    .Where(p => !Utilities.IsTypeScalar(p.PropertyType))
                     .Except(ComplexTypedProperties)
                     .ToList());
             }
@@ -324,7 +324,7 @@ namespace Neo4jClient.DataAnnotations
                     .Select(p => new
                     {
                         JsonProperty = p,
-                        MemberInfo = p.DeclaringType.GetMember(p.UnderlyingName, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)
+                        MemberInfo = p.DeclaringType.GetMember(p.UnderlyingName, Defaults.MemberSearchBindingFlags)
                         .Where(m => m.IsEquivalentTo(p.UnderlyingName, p.DeclaringType, p.PropertyType)).FirstOrDefault()
                     })
                     .Where(np => np.MemberInfo != null)
