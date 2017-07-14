@@ -105,9 +105,6 @@ namespace Neo4jClient.DataAnnotations
             }
         }
 
-        //public Dictionary<string, PropertyInfo> JsonNameComplexTypeScalarPropertyMap { get; private set; } 
-        //    = new Dictionary<string, PropertyInfo>();
-
         private Dictionary<string, MemberInfo> jsonNamePropertyMap;
 
         public Dictionary<string, MemberInfo> JsonNamePropertyMap
@@ -116,7 +113,7 @@ namespace Neo4jClient.DataAnnotations
             private set { jsonNamePropertyMap = value; }
         }
 
-        public List<string> IgnoredJsonProperties { get; private set; } = new List<string>();
+        //public List<string> IgnoredJsonProperties { get; private set; } = new List<string>();
 
         private List<ForeignKeyProperty> foreignKeyProperties;
 
@@ -270,16 +267,33 @@ namespace Neo4jClient.DataAnnotations
             get { return GetForeignKeysWithAttribute(Defaults.ColumnType); }
         }
 
-        public WeakReference<DefaultContractResolver> JsonResolver { get; private set; }
+        public DefaultContractResolver JsonResolver { get; internal set; }
 
-        public JsonObjectContract JsonContract { get; private set; }
+        private JsonObjectContract JsonContract { get; set; }
 
-        public List<JsonProperty> JsonProperties { get; private set; }
+        private List<JsonProperty> _jsonProps = null;
+
+        public List<JsonProperty> JsonProperties
+        {
+            get
+            {
+                return _jsonProps;
+            }
+            internal set
+            {
+                if (value == null || _jsonProps == null || value.Count != _jsonProps.Count 
+                    || value.Any(np => !_jsonProps.Contains(np)))
+                {
+                    //something has changed
+                    _jsonProps = value;
+                    ResolveJsonProperties();
+                }
+            }
+        }
 
         public void WithJsonResolver(DefaultContractResolver resolver)
         {
-            DefaultContractResolver lastResolver = null;
-            if (JsonResolver?.TryGetTarget(out lastResolver) == false || lastResolver != resolver)
+            if (JsonResolver != resolver)
             {
                 var contract = resolver?.ResolveContract(Type) as JsonObjectContract;
 
@@ -288,35 +302,36 @@ namespace Neo4jClient.DataAnnotations
                     throw new InvalidOperationException(string.Format(Messages.NoContractResolvedError, Type.FullName));
                 }
 
-                JsonResolver = new WeakReference<DefaultContractResolver>(resolver);
+                JsonResolver = resolver;
                 JsonContract = contract;
 
                 JsonProperties = new List<JsonProperty>(contract.Properties);
-
-                //map the properties
-                MapJsonProperties();
-
-                //ignore properties that have been marked with relevant attributes
-                IgnoreJsonProperties();
             }
         }
 
-        private void MapJsonProperties()
+        internal void ResolveJsonProperties()
+        {
+            //map the properties
+            MapJsonProperties();
+
+            //ignore properties that have been marked with relevant attributes
+            IgnoreJsonProperties();
+        }
+
+        internal void MapJsonProperties()
         {
             JsonNamePropertyMap = JsonProperties?
                     .Select(p => new
                     {
                         JsonProperty = p,
-                        MemberInfo = (AllProperties?.Where(pi => pi.Name == p.UnderlyingName).SingleOrDefault() ??
-                        Type
-                        .GetMember(p.UnderlyingName, BindingFlags.NonPublic |
-                        BindingFlags.Public | BindingFlags.Instance)?.SingleOrDefault())
+                        MemberInfo = p.DeclaringType.GetMember(p.UnderlyingName, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)
+                        .Where(m => m.IsEquivalentTo(p.UnderlyingName, p.DeclaringType, p.PropertyType)).FirstOrDefault()
                     })
                     .Where(np => np.MemberInfo != null)
                     .ToDictionary(np => np.JsonProperty.PropertyName, np => np.MemberInfo);
         }
 
-        private void IgnoreJsonProperties()
+        internal void IgnoreJsonProperties()
         {
             if (JsonProperties != null)
             {
@@ -329,15 +344,15 @@ namespace Neo4jClient.DataAnnotations
                     if (allPropsToIgnore.Any(p => p.Name == property.UnderlyingName))
                     {
                         property.Ignored = true;
-                        IgnoredJsonProperties.Add(property.PropertyName);
+                        //IgnoredJsonProperties.Add(property.PropertyName);
                     }
                     else
                     {
-                        IgnoredJsonProperties.Remove(property.PropertyName);
+                        //IgnoredJsonProperties.Remove(property.PropertyName);
                     }
                 }
 
-                IgnoredJsonProperties = IgnoredJsonProperties.Distinct().ToList();
+                //IgnoredJsonProperties = IgnoredJsonProperties.Distinct().ToList();
             }
         }
     }

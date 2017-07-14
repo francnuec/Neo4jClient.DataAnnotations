@@ -13,28 +13,24 @@ using Xunit;
 
 namespace Neo4jClient.DataAnnotations.Tests
 {
-    public class EntityConverterTests
+    public class EntitySerializationTests
     {
         [Fact]
-        public void NullComplexTypePropertyWrite_InvalidOperationException()
+        public void NullComplexTypePropertyResolverWrite_InvalidOperationException()
         {
-            Neo4jAnnotations.AddEntityType(typeof(ActorNode));
+            TestUtilities.AddEntityTypes();
 
             var actor = new ActorNode();
 
-            var ex = Assert.Throws<InvalidOperationException>(() => JsonConvert.SerializeObject(actor, new JsonSerializerSettings()
-            {
-                Converters = new List<JsonConverter>() { new EntityConverter() },
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-            }));
+            var ex = Assert.Throws<InvalidOperationException>(() => TestUtilities.SerializerWithResolver(actor));
 
             Assert.Equal(string.Format(Messages.NullComplexTypePropertyError, "Address", "PersonNode"), ex.Message);
         }
 
         [Fact]
-        public void EntityWrite()
+        public void EntityResolverWrite()
         {
-            Neo4jAnnotations.AddEntityType(typeof(ActorNode<>));
+            TestUtilities.AddEntityTypes();
 
             var actor = new ActorNode<int>()
             {
@@ -42,6 +38,8 @@ namespace Neo4jClient.DataAnnotations.Tests
                 Born = 1969,
                 Address = new AddressWithComplexType()
                 {
+                    //While crude functionality to handle polymorphic instance of complex types is in place, it is advised to not subclass a complex type.
+                    //this is because there may be an issue at deserialization.
                     City = "Los Angeles",
                     State = "California",
                     Country = "US",
@@ -51,12 +49,6 @@ namespace Neo4jClient.DataAnnotations.Tests
                         Longitude = -118.2437
                     }
                 }
-            };
-
-            var serializerSettings = new JsonSerializerSettings()
-            {
-                Converters = new List<JsonConverter>() { new EntityConverter() },
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
             };
 
             //Expression<Func<object>> _f = () => new { ar = new double[] { (double)Params.Get("wh")[""] } };
@@ -119,7 +111,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             ////var paramText = Utilities.BuildParams(exprs, (entity) => JsonConvert.SerializeObject(entity, serializerSettings),
             ////    out var typeRet);
 
-            var serialized = JsonConvert.SerializeObject(actor, serializerSettings);
+            var serialized = TestUtilities.SerializerWithResolver(actor);
 
             Dictionary<string, Tuple<JTokenType, dynamic>> tokensExpected = new Dictionary<string, Tuple<JTokenType, dynamic>>()
             {

@@ -28,4 +28,18 @@ namespace Neo4jClient.DataAnnotations.Tests.Models
     {
         public Location Location { get; set; }
     }
+
+    [ComplexType]
+    public class AddressThirdLevel : AddressWithComplexType
+    {
+        public someComplexType complex { get; set; }
+
+        public string own { get; set; }
+    }
+
+    [ComplexType]
+    public class someComplexType
+    {
+        public int prop { get; set; }
+    }
 }

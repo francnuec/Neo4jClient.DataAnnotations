@@ -245,7 +245,7 @@ namespace Neo4jClient.DataAnnotations
                             }
                             else
                             {
-                                nextInstance = Activator.CreateInstance(lastType);                                
+                                nextInstance = Activator.CreateInstance(lastType);
                             }
 
                             //assign the instance
@@ -263,22 +263,30 @@ namespace Neo4jClient.DataAnnotations
             }
         }
 
-        internal static string[] GetEntityPathNames(object entity, List<Expression> expressions,
-            ref int currentIndex, Func<object, string> serializer,
+        internal static string[] GetEntityPathNames(ref object entity, Type entityType,
+            List<Expression> expressions,
+            ref int currentIndex, EntityResolver resolver, Func<object, string> serializer,
             out Dictionary<MemberInfo, Tuple<int, Type>> members, out Type lastType, bool useResolvedJsonName = true)
         {
             string[] memberNames = new string[0];
 
-            Type entityType = entity.GetType();
-
-            var entityInfo = Neo4jAnnotations.GetEntityTypeInfo(entityType);
-
-            bool buildPath = useResolvedJsonName && entityInfo.JsonNamePropertyMap.Count == 0; //do this to avoid create instances every time we call this method for a particular type
+            bool buildPath = useResolvedJsonName && resolver == null; //do this to avoid create instances every time we call this method for a particular type
 
             int index = currentIndex; //store this index incase of a repeat
 
+            entityType = entityType ?? entity.GetType();
+            var entityInfo = Neo4jAnnotations.GetEntityTypeInfo(entityType);
+
             repeatBuild:
+            if (buildPath && entity == null)
+            {
+                //most likely using the EntityConverter
+                //create new instance
+                entity = Activator.CreateInstance(entityType);
+            }
+
             currentIndex = index;
+
             TraverseEntityPath(entity, expressions, ref currentIndex, out lastType,
                 out members, buildPath: buildPath);
 
@@ -304,6 +312,12 @@ namespace Neo4jClient.DataAnnotations
                         //remove it
                         Neo4jAnnotations.RemoveEntityType(entityType);
                     }
+                }
+
+                if (resolver != null)
+                {
+                    //force the propertymap to be set
+                    entityInfo.WithJsonResolver(resolver);
                 }
 
                 //first get the members that are not complex typed.
@@ -344,6 +358,14 @@ namespace Neo4jClient.DataAnnotations
                             //we do this because MemberInfo.ReflectedType is not public yet in the .NET Core API.
                             var infos = Neo4jAnnotations.GetDerivedEntityTypeInfos(parentType);
 
+                            if (resolver != null)
+                            {
+                                foreach (var info in infos)
+                                {
+                                    info.WithJsonResolver(resolver);
+                                }
+                            }
+
                             var result = infos.SelectMany(info => info.JsonNamePropertyMap)
                             .ExactOrEquivalentMember((pair) => pair.Value, new KeyValuePair<string, MemberInfo>("", m.Key))
                             .FirstOrDefault();
@@ -351,7 +373,9 @@ namespace Neo4jClient.DataAnnotations
                             name = result.Key;
                         }
 
-                        if (!buildPath && (string.IsNullOrWhiteSpace(name)
+                        if (!buildPath 
+                        && resolver == null //don't doubt the result if the EntityResolver was present
+                        && (string.IsNullOrWhiteSpace(name)
                         || (name == m.Key.Name
                             && (parentType?.GetTypeInfo().IsDefined(Defaults.ComplexType) == true
                             || m.Key.DeclaringType.GetTypeInfo().IsDefined(Defaults.ComplexType)
@@ -448,7 +472,7 @@ namespace Neo4jClient.DataAnnotations
                 && methodExpr.Method.IsEquivalentTo("Get", Defaults.ParamsType);
         }
 
-        public static string BuildParams(List<Expression> expressions,
+        public static string BuildParams(List<Expression> expressions, EntityResolver resolver,
             Func<object, string> serializer, out Type typeReturned, bool? useResolvedJsonName = null)
         {
             typeReturned = null;
@@ -486,9 +510,9 @@ namespace Neo4jClient.DataAnnotations
                 {
                     //most likely the generic method was called
                     //build the entity through its members accessed
-                    var entity = Activator.CreateInstance(entityType);
+                    object entity = null; //Activator.CreateInstance(entityType);
 
-                    var memberNames = GetEntityPathNames(entity, expressions, ref currentIndex, serializer,
+                    var memberNames = GetEntityPathNames(ref entity, entityType, expressions, ref currentIndex, resolver, serializer,
                         out var members, out var lastType, useResolvedJsonName: useResolvedJsonName.Value);
 
                     if (memberNames.Length > 0)
@@ -593,7 +617,7 @@ namespace Neo4jClient.DataAnnotations
                         if (HasParams(retrievedExprs))
                         {
                             //get the params string
-                            arrayIndexStr = BuildParams(retrievedExprs, serializer, out var childTypeReturned, useResolvedJsonName: null);
+                            arrayIndexStr = BuildParams(retrievedExprs, resolver, serializer, out var childTypeReturned, useResolvedJsonName: null);
                         }
                     }
                 }
@@ -762,6 +786,15 @@ namespace Neo4jClient.DataAnnotations
             methodExpr = null;
             return (methodExpr = expression as MethodCallExpression) != null
                 && methodExpr.Method.IsEquivalentTo("With", Defaults.ExtensionsType);
+        }
+
+        public static void CheckIfComplexTypeInstanceIsNull(object instance, string propertyName, Type declaringType)
+        {
+            if (instance == null)
+            {
+                //Complex types cannot be null. A value must be provided always.
+                throw new InvalidOperationException(string.Format(Messages.NullComplexTypePropertyError, propertyName, declaringType.Name));
+            }
         }
     }
 }

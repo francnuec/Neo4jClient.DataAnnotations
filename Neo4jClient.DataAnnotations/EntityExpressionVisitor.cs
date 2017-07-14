@@ -29,6 +29,8 @@ namespace Neo4jClient.DataAnnotations
 
         public Func<object, string> Serializer { get; private set; }
 
+        public EntityResolver Resolver { get; private set; }
+
         public Expression RootNode { get; private set; }
 
 
@@ -51,9 +53,10 @@ namespace Neo4jClient.DataAnnotations
         public bool WithUsePredicateOnly { get; private set; }
 
 
-        public EntityExpressionVisitor(Func<object, string> serializer)
+        public EntityExpressionVisitor(EntityResolver resolver, Func<object, string> serializer)
         {
-            this.Serializer = serializer;
+            Resolver = resolver;
+            Serializer = serializer;
         }
 
 
@@ -336,39 +339,41 @@ namespace Neo4jClient.DataAnnotations
         {
             string name = null;
 
-            var retrievedExprs = Utilities.GetSimpleMemberAccessStretch(argument, out var argVal);
+            var retrievedExprs = Utilities.GetSimpleMemberAccessStretch(argument, out var entityExpr);
 
-            //get the entity object
-            var entityExpr = argVal;
+            ////get the entity object
+            //var entityExpr = argVal;
 
-            object entity = null;
+            //object entity = null;
 
-            try
+            //try
+            //{
+            //    entity = entityExpr.ExecuteExpression<object>();
+            //}
+            //catch
+            //{
+            //    //something went wrong.
+            //    //that shouldn't deter us now to get memberName
+            //    //try activating manually
+
+            //    try
+            //    {
+            //        entity = Activator.CreateInstance(entityExpr.Type);
+            //    }
+            //    catch
+            //    {
+
+            //    }
+            //}
+
+            if (Resolver != null || Serializer != null)
             {
-                entity = entityExpr.ExecuteExpression<object>();
-            }
-            catch
-            {
-                //something went wrong.
-                //that shouldn't deter us now to get memberName
-                //try activating manually
+                object entity = null;
 
-                try
-                {
-                    entity = Activator.CreateInstance(entityExpr.Type);
-                }
-                catch
-                {
-
-                }
-            }
-
-            if (entity != null)
-            {
                 //get the names
-                var currentIndex = retrievedExprs.IndexOf(argVal) + 1;
+                var currentIndex = retrievedExprs.IndexOf(entityExpr) + 1;
                 var memberNames = Utilities.GetEntityPathNames
-                    (entity, retrievedExprs, ref currentIndex, Serializer,
+                    (ref entity, entityExpr.Type, retrievedExprs, ref currentIndex, Resolver, Serializer,
                     out var entityMembers, out var lastType, useResolvedJsonName: true);
 
                 name = memberNames?.LastOrDefault(); //we are only interested in the last member name.

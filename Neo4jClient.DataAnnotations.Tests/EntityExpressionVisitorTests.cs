@@ -12,14 +12,6 @@ namespace Neo4jClient.DataAnnotations.Tests
 {
     public class EntityExpressionVisitorTests
     {
-        private static JsonSerializerSettings serializerSettings = new JsonSerializerSettings()
-        {
-            Converters = new List<JsonConverter>() { new EntityConverter() },
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-        };
-
-        private static Func<object, string> serializer = (entity) => JsonConvert.SerializeObject(entity, serializerSettings);
-
         public static List<object[]> ParamsData = new List<object[]>()
         {
             new object[] { (Expression<Func<ActorNode>>)(() => Params.Get<ActorNode>("actor")), "actor" },
@@ -55,7 +47,8 @@ namespace Neo4jClient.DataAnnotations.Tests
             Assert.Equal(true, Utilities.HasParams(retrievedMembers));
 
             var paramText = Utilities
-                .BuildParams(retrievedMembers, serializer, out var typeReturned, useResolvedJsonName: useResolvedJsonName);
+                .BuildParams(retrievedMembers, TestUtilities.Resolver, TestUtilities.SerializerWithResolver,
+                out var typeReturned, useResolvedJsonName: useResolvedJsonName);
 
             //if (expectedText != paramText)
             //    System.Diagnostics.Debugger.Launch();
@@ -73,7 +66,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 new { Name = "Ellen Pompeo", Born = Params.Get<ActorNode>("shondaRhimes").Born,
                     Roles = new string[] { "Meredith Grey" }, Age = 47.ToString() };
 
-            var entityVisitor = new EntityExpressionVisitor(serializer);
+            var entityVisitor = new EntityExpressionVisitor(TestUtilities.Resolver, TestUtilities.SerializerWithResolver);
             var newExpression = entityVisitor.Visit(expression.Body);
 
             Assert.NotNull(newExpression);
@@ -119,7 +112,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 }
             }.Location };
 
-            var entityVisitor = new EntityExpressionVisitor(serializer);
+            var entityVisitor = new EntityExpressionVisitor(TestUtilities.Resolver, TestUtilities.SerializerWithResolver);
             var newExpression = entityVisitor.Visit(expression.Body);
 
             Assert.NotNull(newExpression);
@@ -162,7 +155,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                     (double)Params.Get("shondaRhimes")["NewAddressName_Location_Longitude"] }
             };
 
-            var entityVisitor = new EntityExpressionVisitor(serializer);
+            var entityVisitor = new EntityExpressionVisitor(TestUtilities.Resolver, TestUtilities.SerializerWithResolver);
             var newExpression = entityVisitor.Visit(expression.Body);
 
             Assert.NotNull(newExpression);
@@ -199,7 +192,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             Expression<Func<object>> expression = () => TestUtilities.Actor.With(a => a.Born == Params.Get<ActorNode>("ellenPompeo").Born && a.Name == "Shonda Rhimes");
 
-            var entityVisitor = new EntityExpressionVisitor(serializer);
+            var entityVisitor = new EntityExpressionVisitor(TestUtilities.Resolver, TestUtilities.SerializerWithResolver);
             var newExpression = entityVisitor.Visit(expression.Body);
 
             Assert.NotNull(newExpression);
@@ -227,7 +220,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             Expression<Func<object>> expression = () => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, TestUtilities.Actor.Address }
                 .With(a => a.Address.AddressLine == Params.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes");
 
-            var entityVisitor = new EntityExpressionVisitor(serializer);
+            var entityVisitor = new EntityExpressionVisitor(TestUtilities.Resolver, TestUtilities.SerializerWithResolver);
             var newExpression = entityVisitor.Visit(expression.Body);
 
             Assert.NotNull(newExpression);
@@ -282,7 +275,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 }
             } && a.Name == "Shonda Rhimes");
 
-            var entityVisitor = new EntityExpressionVisitor(serializer);
+            var entityVisitor = new EntityExpressionVisitor(TestUtilities.Resolver, TestUtilities.SerializerWithResolver);
             var newExpression = entityVisitor.Visit(expression.Body);
 
             Assert.NotNull(newExpression);
@@ -333,7 +326,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 }
             }.Location.Longitude && a.Name == "Shonda Rhimes");
 
-            var entityVisitor = new EntityExpressionVisitor(serializer);
+            var entityVisitor = new EntityExpressionVisitor(TestUtilities.Resolver, TestUtilities.SerializerWithResolver);
             var newExpression = entityVisitor.Visit(expression.Body);
 
             Assert.NotNull(newExpression);
@@ -385,7 +378,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 }
             } && a.Name == "Shonda Rhimes");
 
-            var entityVisitor = new EntityExpressionVisitor(serializer);
+            var entityVisitor = new EntityExpressionVisitor(TestUtilities.Resolver, TestUtilities.SerializerWithResolver);
             var newExpression = entityVisitor.Visit(expression.Body);
 
             Assert.NotNull(newExpression);
@@ -428,7 +421,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 { "Address", TestUtilities.Actor.Address }
             }.With(a => a["Address"] == Params.Get<ActorNode>("ellenPompeo").Address && (int)a["Born"] == 1671 && a["Name"] == "Shonda Rhimes");
 
-            var entityVisitor = new EntityExpressionVisitor(serializer);
+            var entityVisitor = new EntityExpressionVisitor(TestUtilities.Resolver, TestUtilities.SerializerWithResolver);
             var newExpression = entityVisitor.Visit(expression.Body);
 
             Assert.NotNull(newExpression);
