@@ -38,19 +38,36 @@ namespace Neo4jClient.DataAnnotations
             return info;
         }
 
-        internal static List<EntityTypeInfo> GetDerivedEntityTypeInfos(Type baseType)
+        internal static List<EntityTypeInfo> GetDerivedEntityTypeInfos(Type baseType, bool getFromEntityTypesToo = false)
         {
             var existing = entityTypeInfo.Where(pair => baseType.IsAssignableFrom(pair.Key)
             || baseType.IsGenericAssignableFrom(pair.Key)).ToDictionary(pair => pair.Key, pair => pair.Value);
 
             existing = existing ?? new Dictionary<Type, EntityTypeInfo>();
 
-            if(existing.Count == 0 || !existing.ContainsKey(baseType))
+            if (existing.Count == 0 || !existing.ContainsKey(baseType))
             {
                 existing[baseType] = GetEntityTypeInfo(baseType);
             }
 
-            return existing.Values.ToList();
+            if (getFromEntityTypesToo)
+            {
+                //check entity types
+                var derivedTypes = GetDerivedEntityTypes(baseType);
+                foreach (var derivedType in derivedTypes)
+                {
+                    if (!existing.ContainsKey(derivedType))
+                        existing[derivedType] = GetEntityTypeInfo(derivedType);
+                }
+            }
+            
+            var list = existing.Values.ToList();
+
+            if (list != null)
+                //sort them
+                list.Sort((x, y) => x.Type.IsGenericAssignableFrom(y.Type) ? -1 : (y.Type.IsGenericAssignableFrom(x.Type) ? 1 : (x.Type.Name.CompareTo(y.Type.Name))));
+
+            return list;
         }
 
         public static void AddEntityType(Type entityType)

@@ -267,14 +267,14 @@ namespace Neo4jClient.DataAnnotations
             }
         }
 
-        internal static string[] GetEntityPathNames(ref object entity, Type entityType,
+        internal static string[] GetEntityPathNames(ref object entity, ref Type entityType,
             List<Expression> expressions,
             ref int currentIndex, EntityResolver resolver, Func<object, string> serializer,
             out Dictionary<MemberInfo, Tuple<int, Type>> members, out Type lastType, bool useResolvedJsonName = true)
         {
             string[] memberNames = new string[0];
 
-            entityType = entityType ?? entity.GetType();
+            entityType = entity?.GetType() ?? entityType;
             var entityInfo = Neo4jAnnotations.GetEntityTypeInfo(entityType);
 
             //do this to avoid create instances every time we call this method for a particular type
@@ -517,7 +517,7 @@ namespace Neo4jClient.DataAnnotations
                     //build the entity through its members accessed
                     object entity = null; //Activator.CreateInstance(entityType);
 
-                    var memberNames = GetEntityPathNames(ref entity, entityType, expressions, ref currentIndex, resolver, serializer,
+                    var memberNames = GetEntityPathNames(ref entity, ref entityType, expressions, ref currentIndex, resolver, serializer,
                         out var members, out var lastType, useResolvedJsonName: useResolvedJsonName.Value);
 
                     if (memberNames.Length > 0)
@@ -800,6 +800,61 @@ namespace Neo4jClient.DataAnnotations
                 //Complex types cannot be null. A value must be provided always.
                 throw new InvalidOperationException(string.Format(Messages.NullComplexTypePropertyError, propertyName, declaringType.Name));
             }
+        }
+
+        public static object GetComplexTypeInstance(
+            string name, ref Type type, Type declaringType,
+            object existingInstance, out bool isNew,
+            bool hasComplexChild = false, string childName = null,
+            Type childType = null, Type childDeclaringType = null)
+        {
+            type = childDeclaringType ?? type;
+
+            isNew = false;
+
+            var instance = existingInstance;
+
+            if (instance == null)
+            {
+                instance = Activator.CreateInstance(type);
+                isNew = true;
+            }
+
+            if (!isNew && hasComplexChild)
+            {
+                var members = instance.GetType().GetMembers(Defaults.MemberSearchBindingFlags).Where(m => m is FieldInfo || m is PropertyInfo);
+
+                //check if the instance has the child as a member
+                if (members?.Where(m => m.IsEquivalentTo(childName, childDeclaringType,
+                    childType)).FirstOrDefault() == null)
+                {
+                    //it doesn't, so create new instance from child declaring type
+                    existingInstance = instance;
+                    instance = Activator.CreateInstance(type);
+                    isNew = true;
+
+                    //now copy the values from old instance unto this new one
+                    foreach (var member in members)
+                    {
+                        var field = member as FieldInfo;
+                        var property = member as PropertyInfo;
+
+                        try
+                        {
+                            if (property?.CanWrite == true)
+                                property.SetValue(instance, property.GetValue(existingInstance));
+                            else
+                                field?.SetValue(instance, field.GetValue(existingInstance));
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+                }
+            }
+
+            return instance;
         }
     }
 }

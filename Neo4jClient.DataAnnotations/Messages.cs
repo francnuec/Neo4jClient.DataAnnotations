@@ -23,5 +23,7 @@ namespace Neo4jClient.DataAnnotations
         public const string ExtendLastBNewAMismatchError = "The last B node of Type: {0} does not match this new A of Type: {1}. Since you are extending the last pattern, this two should match.";
 
         public const string ParamsGetError = "Please do not call this method directly. Use only in expressions.";
+
+        public const string ComplexTypedPropertyMatchingTypeNotFoundError = "No matching type found for Complex Typed Property: {0}, in Class: {1}.";
     }
 }

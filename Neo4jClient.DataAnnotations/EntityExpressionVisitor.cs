@@ -369,8 +369,14 @@ namespace Neo4jClient.DataAnnotations
 
             //get the names
             var currentIndex = retrievedExprs.IndexOf(entityExpr) + 1;
+            Type cast = null;
+            var entityType = entity?.GetType() ??
+                (currentIndex < retrievedExprs.Count //check if the next expression to entity expression was just a cast, and instead use the cast type as entity type
+                && retrievedExprs[currentIndex]?.Uncast(out cast) == entityExpr
+                && cast != null ? cast : entityExpr.Type);
+
             var memberNames = Utilities.GetEntityPathNames
-                (ref entity, entityExpr.Type, retrievedExprs, ref currentIndex, Resolver, Serializer,
+                (ref entity, ref entityType, retrievedExprs, ref currentIndex, Resolver, Serializer,
                 out var entityMembers, out var lastType, useResolvedJsonName: true);
 
             name = memberNames?.LastOrDefault(); //we are only interested in the last member name.

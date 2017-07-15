@@ -16,20 +16,34 @@ namespace Neo4jClient.DataAnnotations.Tests
 {
     public class EntitySerializationTests
     {
-        [Fact]
-        public void NullComplexTypePropertyResolverWrite_InvalidOperationException()
+        public static List<object[]> SerializerData { get; } = new List<object[]>()
+        {
+            new object[] { TestUtilities.SerializeWithConverter, "ConverterSerializer" },
+            new object[] { TestUtilities.SerializeWithResolver, "ResolverSerializer" },
+        };
+
+        public static List<object[]> DeserializerData { get; } = new List<object[]>()
+        {
+            new object[] { TestUtilities.SerializerSettingsWithConverter, "ConverterSerializerSettings" },
+            new object[] { TestUtilities.SerializerSettingsWithResolver, "ResolverSerializerSettings" },
+        };
+
+        [Theory]
+        [MemberData("SerializerData", MemberType = typeof(EntitySerializationTests))]
+        public void NullComplexTypePropertyWrite_InvalidOperationException(Func<object, string> serializer, string name = null)
         {
             TestUtilities.AddEntityTypes();
 
             var actor = new ActorNode();
 
-            var ex = Assert.Throws<InvalidOperationException>(() => TestUtilities.SerializeWithResolver(actor));
+            var ex = Assert.Throws<InvalidOperationException>(() => serializer(actor));
 
             Assert.Equal(string.Format(Messages.NullComplexTypePropertyError, "Address", "PersonNode"), ex.Message);
         }
 
-        [Fact]
-        public void EntityResolverWrite()
+        [Theory]
+        [MemberData("SerializerData", MemberType = typeof(EntitySerializationTests))]
+        public void EntityWrite(Func<object, string> serializer, string name = null)
         {
             TestUtilities.AddEntityTypes();
 
@@ -52,67 +66,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 }
             };
 
-            //Expression<Func<object>> _f = () => new { ar = new double[] { (double)Params.Get("wh")[""] } };
-            //Expression<Func<object>> _f1 = () => new { Location = (TestUtilities.Actor.Address as AddressWithComplexType).Location._() };
-            //Expression<Func<object>> _f2 = () => new { Location = new AddressWithComplexType() { Location = new Location() { Latitude = (double)Params.Get("wh")[""] } } };
-            //Expression<Func<object>> _f3 = () => new { new AddressWithComplexType() { AddressLine = Params.Get("al")["yes"] as string, Location = new Location() { Latitude = (double)Params.Get("wh")[""], Longitude = (double)Params.Get("lg")[""] } }.Location };
-
-            //Expression<Func<object>> f = () => new { ar = new double[] { (double)Params.Get("wh")[""] }, Location = (TestUtilities.Actor.Address as AddressWithComplexType).Location._() };
-            //Expression<Func<object>> f2 = () => new { L = 123.ToString() }; //((AddressWithComplexType)actor.Address).Location };
-            //Expression<Func<object>> f3 = () => new { _ = ((AddressWithComplexType)actor.Address).Location };
-            //Expression<Func<ActorNode, bool>> f4 =
-            //    (a) => a == Params.Get<ActorNode>("actor")
-            //    && (a.Address as AddressWithComplexType).Location.Latitude == (double)Params.Get("actor")["address_location_latitude"]
-            //    && a.Roles[0] == ((string[])Params.Get("actor")["roles"])[0]
-            //    && a.Roles[0] == (Params.Get("actor")["roles"] as string[])[0]
-            //    && a.Roles.ElementAt(0) == Params.Get<ActorNode>("actor").Roles.ElementAt(2)
-            //    && (a.Address as AddressWithComplexType).Location == (Params.Get<ActorNode>("actor").Address as AddressWithComplexType).Location
-            //    && ((AddressWithComplexType)a.Address).Location.Latitude == (Params.Get<ActorNode>("actor").Address as AddressWithComplexType).Location.Latitude;
-            //Expression<Func<object>> f5 = () => new ActorNode()
-            //{
-            //    Address = new AddressWithComplexType()
-            //    {
-            //        Location = new Location()
-            //        {
-            //            Latitude = 0.0
-            //        }
-            //    }
-            //};
-
-            //Expression<Func<object>> f9 = () => new Dictionary<string, object>() { { "new", "yes" }, { "miss", "gone" } }.With(dict => dict["miss"] as string == "fresh" && dict["new"] == (object)34);
-
-            //Expression<Func<object>> f6 = () => new { actor.Name, actor.Born, Address = actor.Address as AddressWithComplexType }
-            //.With(t => t.Address == new AddressWithComplexType() { AddressLine = Params.Get<ActorNode>("shonda").Address.AddressLine, Location = new Location() { Longitude = (double)Params.Get("f")["yes"] } } &&  t.Name == "New Guy"); //actor.With(a => a.Born == Params.Get<ActorNode>("shondaRhimes").Born && a.Name == "New Guy");
-
-            //Expression<Func<object>> f7 = () => new { actor.Name, actor.Born, actor.Address }
-            //.With(t => t.Address.AddressLine == Params.Get<ActorNode>("shonda").Address.AddressLine && t.Name == "New Guy");
-
-            ////var set = Expression.Assign(Expression.Property(null, typeof(TestObjects).GetTypeInfo().GetProperty("Email")), Expression.Constant("Whatever"));
-            ////var set =  Expression.MemberInit(Expression.New(typeof(TestObjects)), Expression.Bind(typeof(TestObjects).GetTypeInfo().GetProperty("Email"), Expression.Constant("Whatever")));
-
-            ////try
-            ////{
-            ////    var t = set.ExecuteExpression<TestObjects>();
-            ////    var em = t.Email;
-            ////}
-            ////catch (Exception e)
-            ////{
-
-            ////}
-
-            ////var te = new TestUtilities();
-            ////te.checkvariable();
-
-
-            //var ex = new EntityExpressionVisitor((entity) => JsonConvert.SerializeObject(entity, serializerSettings));
-            //var v = ex.Visit(f6.Body);
-
-            ////var exprs = ex.Params; //.FilteredExpressions.Where((e, i) => i >= 16 && i <= 18).ToList();
-
-            ////var paramText = Utilities.BuildParams(exprs, (entity) => JsonConvert.SerializeObject(entity, serializerSettings),
-            ////    out var typeRet);
-
-            var serialized = TestUtilities.SerializeWithResolver(actor);
+            var serialized = serializer(actor);
 
             Dictionary<string, Tuple<JTokenType, dynamic>> tokensExpected = new Dictionary<string, Tuple<JTokenType, dynamic>>()
             {
@@ -151,8 +105,9 @@ namespace Neo4jClient.DataAnnotations.Tests
             }
         }
 
-        [Fact]
-        public void EntityResolverRead()
+        [Theory]
+        [MemberData("DeserializerData", MemberType = typeof(EntitySerializationTests))]
+        public void EntityRead(JsonSerializerSettings deserializerSettings, string name = null)
         {
             Dictionary<string, dynamic> actorTokens = new Dictionary<string, dynamic>()
             {
@@ -165,8 +120,8 @@ namespace Neo4jClient.DataAnnotations.Tests
                 { "NewAddressName_Country", "US" },
                 { "NewAddressName_Location_Latitude", 34.0522 },
                 { "NewAddressName_Location_Longitude", -118.2437 },
-                { "NewAddressName_complex_prop", 14859 },
-                { "NewAddressName_own", "something_owned" },
+                { "NewAddressName_ComplexProperty_Property", 14859 },
+                { "NewAddressName_SomeOtherProperty", "something" },
                 { "TestForeignKeyId", 0 },
                 { "TestMarkedFK", 0 },
                 { "TestGenericForeignKeyId", null },
@@ -176,9 +131,11 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actorJObject = JObject.FromObject(actorTokens);
 
-            var actor = actorJObject.ToObject<ActorNode<int>>(JsonSerializer.CreateDefault(TestUtilities.SerializerSettingsWithResolver));
+            var actor = actorJObject.ToObject<ActorNode<int>>(JsonSerializer.CreateDefault(deserializerSettings));
 
             Assert.NotNull(actor);
+
+            Assert.Equal(typeof(ActorNode<int>), actor.GetType());
 
             var actorContract = TestUtilities.Resolver.ResolveContract(actor.GetType());
 

@@ -33,6 +33,8 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         public static Func<string, Type, object> DeserializeWithResolver = (value, type) => JsonConvert.DeserializeObject(value, type, SerializerSettingsWithResolver);
 
+        public static Func<string, Type, object> DeserializeWithConverter = (value, type) => JsonConvert.DeserializeObject(value, type, SerializerSettingsWithConverter);
+
         public static ActorNode Actor = new ActorNode<int>()
         {
             Name = "Ellen Pompeo",
@@ -53,7 +55,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         public static void AddEntityTypes()
         {
             var entityTypes = new Type[] { typeof(PersonNode), typeof(DirectorNode), typeof(MovieNode), typeof(MovieExtraNode),
-                typeof(ActorNode), typeof(Address), typeof(AddressWithComplexType), typeof(Location), typeof(AddressThirdLevel), typeof(someComplexType) };
+                typeof(ActorNode), typeof(Address), typeof(AddressWithComplexType), typeof(Location), typeof(AddressThirdLevel), typeof(SomeComplexType) };
 
             foreach (var entityType in entityTypes)
                 Neo4jAnnotations.AddEntityType(entityType);

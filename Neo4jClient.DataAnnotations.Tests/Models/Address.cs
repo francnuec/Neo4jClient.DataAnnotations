@@ -32,14 +32,14 @@ namespace Neo4jClient.DataAnnotations.Tests.Models
     [ComplexType]
     public class AddressThirdLevel : AddressWithComplexType
     {
-        public someComplexType complex { get; set; }
+        public SomeComplexType ComplexProperty { get; set; }
 
-        public string own { get; set; }
+        public string SomeOtherProperty { get; set; }
     }
 
     [ComplexType]
-    public class someComplexType
+    public class SomeComplexType
     {
-        public int prop { get; set; }
+        public int Property { get; set; }
     }
 }
