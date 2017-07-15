@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 using System.Linq;
 using System.Reflection;
 
-namespace Neo4jClient.DataAnnotations
+namespace Neo4jClient.DataAnnotations.Serialization
 {
     public class EntityResolver : DefaultContractResolver
     {

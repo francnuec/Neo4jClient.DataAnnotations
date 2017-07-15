@@ -6,6 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using Neo4jClient.DataAnnotations.Cypher;
 using System.Text;
+using Neo4jClient.DataAnnotations.Serialization;
 
 namespace Neo4jClient.DataAnnotations
 {

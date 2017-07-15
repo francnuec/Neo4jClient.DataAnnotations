@@ -6,8 +6,9 @@ using System.Text;
 using System.Linq;
 using Neo4jClient.Serialization;
 using Newtonsoft.Json.Linq;
+using Neo4jClient.DataAnnotations.Serialization;
 
-namespace Neo4jClient.DataAnnotations
+namespace Neo4jClient.DataAnnotations.Expressions
 {
     //
     public class EntityExpressionVisitor : ExpressionVisitor

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 
-namespace Neo4jClient.DataAnnotations
+namespace Neo4jClient.DataAnnotations.Expressions
 {
     public class PredicateExpressionVisitor : ExpressionVisitor
     {

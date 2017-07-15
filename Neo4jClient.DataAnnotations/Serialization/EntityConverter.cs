@@ -6,7 +6,7 @@ using System.Linq;
 using Newtonsoft.Json.Linq;
 using System.Reflection;
 
-namespace Neo4jClient.DataAnnotations
+namespace Neo4jClient.DataAnnotations.Serialization
 {
     public class EntityConverter : JsonConverter
     {

@@ -5,7 +5,7 @@ using System.Text;
 using System.Reflection;
 using System.Linq;
 
-namespace Neo4jClient.DataAnnotations
+namespace Neo4jClient.DataAnnotations.Serialization
 {
     public class ComplexTypedPropertyValueProvider : IValueProvider
     {

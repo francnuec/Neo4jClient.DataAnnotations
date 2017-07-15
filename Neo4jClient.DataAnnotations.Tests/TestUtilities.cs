@@ -1,4 +1,5 @@
-﻿using Neo4jClient.DataAnnotations.Tests.Models;
+﻿using Neo4jClient.DataAnnotations.Serialization;
+using Neo4jClient.DataAnnotations.Tests.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
