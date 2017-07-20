@@ -237,9 +237,9 @@ namespace Neo4jClient.DataAnnotations
         }
 
         /// <summary>
-        /// Allows you to expressively assign new values (especially <see cref="Params"/>) to select properties of an existing instance without cloning.
+        /// Allows you to expressively assign new values (especially <see cref="Params"/>) to select properties of an existing instance without cloning or modifying the original instance.
         /// These new values would be used in place of the old ones on the instance.
-        /// E.g. () =&gt; ellenPompeo.With(actor =&gt; actor.Born == Params.Get&lt;Actor&gt;("shondaRhimes").Born);
+        /// E.g. () =&gt; ellenPompeo.Set(actor =&gt; actor.Born == Params.Get&lt;Actor&gt;("shondaRhimes").Born);
         /// NOTE: The member selection must always be on the left, and new values on the right of a logical equal-to ('==') operation. Use '&&' for more properties.
         /// Also note that this method does not modify this instance, but overrides its final properties written to cypher.
         /// </summary>
@@ -247,12 +247,12 @@ namespace Neo4jClient.DataAnnotations
         /// <param name="instance"></param>
         /// <param name="predicate"></param>
         /// <returns></returns>
-        public static T With<T>(this T instance, Expression<Func<T, bool>> predicate)
+        public static T Set<T>(this T instance, Expression<Func<T, bool>> predicate)
         {
-            return With(instance, predicate, usePredicateOnly: false);
+            return Set(instance, predicate, usePredicateOnly: false);
         }
          
-        internal static T With<T>(this T instance, Expression<Func<T, bool>> predicate, bool usePredicateOnly)
+        internal static T Set<T>(this T instance, Expression<Func<T, bool>> predicate, bool usePredicateOnly)
         {
             return instance;
         }

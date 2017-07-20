@@ -150,11 +150,11 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(EntityExpressionVisitorTests))]
-        public void With(EntityResolver resolver, Func<object, string> serializer)
+        public void Set(EntityResolver resolver, Func<object, string> serializer)
         {
             TestUtilities.AddEntityTypes();
 
-            Expression<Func<object>> expression = () => TestUtilities.Actor.With(a => a.Born == Params.Get<ActorNode>("ellenPompeo").Born && a.Name == "Shonda Rhimes");
+            Expression<Func<object>> expression = () => TestUtilities.Actor.Set(a => a.Born == Params.Get<ActorNode>("ellenPompeo").Born && a.Name == "Shonda Rhimes");
 
             var entityVisitor = new EntityExpressionVisitor(resolver, serializer);
             var newExpression = entityVisitor.Visit(expression.Body);
@@ -168,7 +168,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             Assert.Equal("Get(\"ellenPompeo\").Born", entityVisitor.SpecialNodes[0].Filtered[1].ToString());
             Assert.Equal(3, entityVisitor.SpecialNodePaths[0].Item1.Count);
 
-            var result = entityVisitor.WithPredicateNode.ExecuteExpression<ActorNode>();
+            var result = entityVisitor.SetPredicateNode.ExecuteExpression<ActorNode>();
             Assert.NotNull(result);
 
             Assert.Equal("Shonda Rhimes", result.Name);
@@ -177,12 +177,12 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(EntityExpressionVisitorTests))]
-        public void AnonymousTypeMemberAccessWith(EntityResolver resolver, Func<object, string> serializer)
+        public void AnonymousTypeMemberAccessSet(EntityResolver resolver, Func<object, string> serializer)
         {
             TestUtilities.AddEntityTypes();
 
             Expression<Func<object>> expression = () => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, TestUtilities.Actor.Address }
-                .With(a => a.Address.AddressLine == Params.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes");
+                .Set(a => a.Address.AddressLine == Params.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes");
 
             var entityVisitor = new EntityExpressionVisitor(resolver, serializer);
             var newExpression = entityVisitor.Visit(expression.Body);
@@ -196,7 +196,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             Assert.Equal("Get(\"shondaRhimes\").Address", entityVisitor.SpecialNodes[1].Filtered[1].ToString());
             Assert.Equal(3, entityVisitor.SpecialNodePaths[0].Item1.Count);
 
-            dynamic result = entityVisitor.WithPredicateNode.ExecuteExpression<Dictionary<string, object>>();
+            dynamic result = entityVisitor.SetPredicateNode.ExecuteExpression<Dictionary<string, object>>();
             Assert.NotNull(result);
 
             Dictionary<string, object> tokensExpected = new Dictionary<string, object>()
@@ -219,12 +219,12 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(EntityExpressionVisitorTests))]
-        public void ComplexAnonymousTypeWith(EntityResolver resolver, Func<object, string> serializer)
+        public void ComplexAnonymousTypeSet(EntityResolver resolver, Func<object, string> serializer)
         {
             TestUtilities.AddEntityTypes();
 
             Expression<Func<object>> expression = () => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, Address = TestUtilities.Actor.Address as AddressWithComplexType }
-            .With(a => a.Address == new AddressWithComplexType()
+            .Set(a => a.Address == new AddressWithComplexType()
             {   //Use this style only if you're sure all the properties here are assigned, 
                 //because this address object would replace the instance address property entirely.
                 //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
@@ -247,7 +247,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             Assert.Equal(3, entityVisitor.SpecialNodes.Count);
 
-            dynamic result = entityVisitor.WithPredicateNode.ExecuteExpression<Dictionary<string, object>>();
+            dynamic result = entityVisitor.SetPredicateNode.ExecuteExpression<Dictionary<string, object>>();
             Assert.NotNull(result);
 
             Dictionary<string, object> tokensExpected = new Dictionary<string, object>()
@@ -272,12 +272,12 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(EntityExpressionVisitorTests))]
-        public void ComplexAnonymousTypeMemberAccessWith(EntityResolver resolver, Func<object, string> serializer)
+        public void ComplexAnonymousTypeMemberAccessSet(EntityResolver resolver, Func<object, string> serializer)
         {
             TestUtilities.AddEntityTypes();
 
             Expression<Func<object>> expression = () => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, Address = TestUtilities.Actor.Address as AddressWithComplexType }
-            .With(a => a.Address.Location.Longitude == new AddressWithComplexType()
+            .Set(a => a.Address.Location.Longitude == new AddressWithComplexType()
             {   //Using this style, parameters set inline of a member access may or may not make it to the generated pattern, or even throw an exception.
                 //This is because this MemberInit may be taken as an object value, since it was accessed, and then used directly.
                 //This was done mainly for testing. 
@@ -299,7 +299,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             Assert.Equal(4, entityVisitor.SpecialNodes.Count);
 
-            dynamic result = entityVisitor.WithPredicateNode.ExecuteExpression<Dictionary<string, object>>();
+            dynamic result = entityVisitor.SetPredicateNode.ExecuteExpression<Dictionary<string, object>>();
             Assert.NotNull(result);
 
             Dictionary<string, object> tokensExpected = new Dictionary<string, object>()
@@ -324,12 +324,12 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(EntityExpressionVisitorTests))]
-        public void AnonymousTypeComplexMemberWith(EntityResolver resolver, Func<object, string> serializer)
+        public void AnonymousTypeComplexMemberSet(EntityResolver resolver, Func<object, string> serializer)
         {
             TestUtilities.AddEntityTypes();
 
             Expression<Func<object>> expression = () => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, TestUtilities.Actor.Address }
-                .With(a => (a.Address as AddressWithComplexType).AddressLine == Params.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes");
+                .Set(a => (a.Address as AddressWithComplexType).AddressLine == Params.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes");
 
             var entityVisitor = new EntityExpressionVisitor(resolver, serializer);
             var newExpression = entityVisitor.Visit(expression.Body);
@@ -343,7 +343,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             Assert.Equal("Get(\"shondaRhimes\").Address", entityVisitor.SpecialNodes[1].Filtered[1].ToString());
             Assert.Equal(3, entityVisitor.SpecialNodePaths[0].Item1.Count);
 
-            dynamic result = entityVisitor.WithPredicateNode.ExecuteExpression<Dictionary<string, object>>();
+            dynamic result = entityVisitor.SetPredicateNode.ExecuteExpression<Dictionary<string, object>>();
             Assert.NotNull(result);
 
             Dictionary<string, object> tokensExpected = new Dictionary<string, object>()
@@ -368,12 +368,12 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(EntityExpressionVisitorTests))]
-        public void AnonymousTypeComplexMemberWith2(EntityResolver resolver, Func<object, string> serializer)
+        public void AnonymousTypeComplexMemberSet2(EntityResolver resolver, Func<object, string> serializer)
         {
             TestUtilities.AddEntityTypes();
 
             Expression<Func<object>> expression = () => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, TestUtilities.Actor.Address }
-            .With(a => a.Address == new AddressWithComplexType()
+            .Set(a => a.Address == new AddressWithComplexType()
             {   //Use this style only if you're sure all the properties here are assigned, 
                 //because this address object would replace the instance address property entirely.
                 //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
@@ -396,7 +396,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             Assert.Equal(3, entityVisitor.SpecialNodes.Count);
 
-            dynamic result = entityVisitor.WithPredicateNode.ExecuteExpression<Dictionary<string, object>>();
+            dynamic result = entityVisitor.SetPredicateNode.ExecuteExpression<Dictionary<string, object>>();
             Assert.NotNull(result);
 
             Dictionary<string, object> tokensExpected = new Dictionary<string, object>()
@@ -421,7 +421,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(EntityExpressionVisitorTests))]
-        public void DictionaryWith(EntityResolver resolver, Func<object, string> serializer)
+        public void DictionarySet(EntityResolver resolver, Func<object, string> serializer)
         {
             TestUtilities.AddEntityTypes();
 
@@ -430,7 +430,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 { "Name", TestUtilities.Actor.Name },
                 { "Born", TestUtilities.Actor.Born },
                 { "Address", TestUtilities.Actor.Address }
-            }.With(a => a["Address"] == Params.Get<ActorNode>("ellenPompeo").Address && (int)a["Born"] == 1671 && a["Name"] == "Shonda Rhimes");
+            }.Set(a => a["Address"] == Params.Get<ActorNode>("ellenPompeo").Address && (int)a["Born"] == 1671 && a["Name"] == "Shonda Rhimes");
 
             var entityVisitor = new EntityExpressionVisitor(resolver, serializer);
             var newExpression = entityVisitor.Visit(expression.Body);
@@ -444,7 +444,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             Assert.Equal("Get(\"ellenPompeo\").Address", entityVisitor.SpecialNodes[0].Filtered[1].ToString());
             Assert.Equal(3, entityVisitor.SpecialNodePaths[0].Item1.Count);
 
-            dynamic result = entityVisitor.WithPredicateNode.ExecuteExpression<Dictionary<string, object>>();
+            dynamic result = entityVisitor.SetPredicateNode.ExecuteExpression<Dictionary<string, object>>();
             Assert.NotNull(result);
 
             Dictionary<string, object> tokensExpected = new Dictionary<string, object>()

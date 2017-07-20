@@ -45,6 +45,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         RelationshipDirection? Direction { get; }
         
-        bool isExtension { get; }
+        bool IsExtension { get; }
     }
 }

@@ -36,23 +36,23 @@ namespace Neo4jClient.DataAnnotations.Expressions
         public Expression Source { get; private set; }
 
 
-        public MethodCallExpression WithNode { get; private set; }
+        public MethodCallExpression SetNode { get; private set; }
 
-        public Expression WithInstanceNode { get; private set; }
+        public Expression SetInstanceNode { get; private set; }
 
-        public Expression WithPredicateNode { get; private set; }
+        public Expression SetPredicateNode { get; private set; }
 
-        public Dictionary<Expression, Expression> WithPredicateAssignments { get; private set; }
+        public Dictionary<Expression, Expression> SetPredicateAssignments { get; private set; }
 
-        public Dictionary<MemberInfo, Expression> WithPredicateMemberAssignments { get; private set; }
+        public Dictionary<MemberInfo, Expression> SetPredicateMemberAssignments { get; private set; }
 
-        public Dictionary<string, Expression> WithPredicateDictionaryAssignments { get; private set; }
+        public Dictionary<string, Expression> SetPredicateDictionaryAssignments { get; private set; }
 
-        public List<object> WithPredicateBindings { get; private set; }
+        public List<object> SetPredicateBindings { get; private set; }
 
-        public ParameterExpression WithPredicateParameter { get; private set; }
+        public ParameterExpression SetPredicateParameter { get; private set; }
 
-        public bool WithUsePredicateOnly { get; private set; }
+        public bool SetUsePredicateOnly { get; private set; }
 
         private bool isVisitingPredicate = false;
 
@@ -216,9 +216,9 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
-            if (WithNode == null && Utilities.HasWith(node))
+            if (SetNode == null && Utilities.HasSet(node))
             {
-                WithNode = node;
+                SetNode = node;
 
                 bool isAnonymousType = node.Type.IsAnonymousType();
                 bool isDictionaryType = node.Type.IsDictionaryType();
@@ -229,7 +229,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 if (node.Arguments.Count == 3)
                 {
                     //variant method
-                    WithUsePredicateOnly = node.Arguments[2].ExecuteExpression<bool>();
+                    SetUsePredicateOnly = node.Arguments[2].ExecuteExpression<bool>();
                 }
 
                 var predicate = node.Arguments[1].ExecuteExpression<LambdaExpression>();
@@ -238,12 +238,12 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 //do instance visit early on
                 if (RootNode == node)
                 {
-                    //try to exclude 'with' from the normal process.
+                    //try to exclude 'set' from the normal process.
                     //so that if the first argument is an anonymous type, it will continue accordingly
                     RootNode = instanceExpr;
                 }
 
-                WithInstanceNode = Visit(instanceExpr);
+                SetInstanceNode = Visit(instanceExpr);
 
 
                 //sort out predicate
@@ -255,39 +255,39 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     var predicateVisitor = new PredicateExpressionVisitor();
                     predicateVisitor.Visit(predicate.Body);
 
-                    WithPredicateAssignments = predicateVisitor.Assignments;
+                    SetPredicateAssignments = predicateVisitor.Assignments;
 
-                    if (WithPredicateAssignments.Count > 0)
+                    if (SetPredicateAssignments.Count > 0)
                     {
-                        WithPredicateParameter = predicate.Parameters[0];
+                        SetPredicateParameter = predicate.Parameters[0];
 
                         if (!isDictionaryType)
                         {
-                            WithPredicateMemberAssignments = GetPredicateMemberAssignments
-                                (WithPredicateAssignments, out var rootMembers, out var memberChildren);
+                            SetPredicateMemberAssignments = GetPredicateMemberAssignments
+                                (SetPredicateAssignments, out var rootMembers, out var memberChildren);
 
-                            WithPredicateBindings = GetPathBindings(rootMembers.Where(m => m != null), memberChildren, WithPredicateMemberAssignments);
+                            SetPredicateBindings = GetPathBindings(rootMembers.Where(m => m != null), memberChildren, SetPredicateMemberAssignments);
                         }
                         else
                         {
-                            WithPredicateDictionaryAssignments = new Dictionary<string, Expression>();
+                            SetPredicateDictionaryAssignments = new Dictionary<string, Expression>();
 
-                            foreach (var assignment in WithPredicateAssignments)
+                            foreach (var assignment in SetPredicateAssignments)
                             {
                                 var retrieved = Utilities.GetSimpleMemberAccessStretch(assignment.Key, out var valExpr);
                                 var dictKey = (retrieved[1] as MethodCallExpression).Arguments[0].ExecuteExpression<object>().ToString();
-                                WithPredicateDictionaryAssignments[dictKey] = assignment.Value;
+                                SetPredicateDictionaryAssignments[dictKey] = assignment.Value;
                             }
                         }
 
                         //all sorted. lets generate the expression
-                        predicateExpression = GetPredicateExpression(WithPredicateParameter, WithPredicateBindings,
-                            WithPredicateMemberAssignments, WithPredicateDictionaryAssignments);
+                        predicateExpression = GetPredicateExpression(SetPredicateParameter, SetPredicateBindings,
+                            SetPredicateMemberAssignments, SetPredicateDictionaryAssignments);
                     }
                 }
                 
                 //perform predicate visit
-                if (WithUsePredicateOnly)
+                if (SetUsePredicateOnly)
                 {
                     //reassign or clear everything
                     //root node would change now
@@ -314,10 +314,10 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 }
 
                 isVisitingPredicate = true;
-                WithPredicateNode = Visit(predicateExpression);
+                SetPredicateNode = Visit(predicateExpression);
                 isVisitingPredicate = false;
 
-                return WithUsePredicateOnly ? WithPredicateNode : WithInstanceNode;
+                return SetUsePredicateOnly ? SetPredicateNode : SetInstanceNode;
             }
 
             return base.VisitMethodCall(node);
@@ -1055,7 +1055,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         protected internal bool IsPredicateAssignmentValue(Expression expression)
         {
-            return WithPredicateAssignments != null && WithPredicateAssignments.Values.Contains(expression);
+            return SetPredicateAssignments != null && SetPredicateAssignments.Values.Contains(expression);
         }
     }
 }

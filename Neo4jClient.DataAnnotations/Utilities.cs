@@ -138,7 +138,7 @@ namespace Neo4jClient.DataAnnotations
             throw new ArgumentException("Expression is not a method", "expression");
         }
 
-        public static void InitializeComplexTypedProperties(object entity)
+        internal static void InitializeComplexTypedProperties(object entity)
         {
             var entityInfo = Neo4jAnnotations.GetEntityTypeInfo(entity.GetType());
 
@@ -870,16 +870,16 @@ namespace Neo4jClient.DataAnnotations
             return (TReturn)typeof(TReturn).GetDefaultValue();
         }
 
-        public static bool HasWith(Expression expression)
+        public static bool HasSet(Expression expression)
         {
-            return HasWith(expression, out var methodExpr);
+            return HasSet(expression, out var methodExpr);
         }
 
-        public static bool HasWith(Expression expression, out MethodCallExpression methodExpr)
+        public static bool HasSet(Expression expression, out MethodCallExpression methodExpr)
         {
             methodExpr = null;
             return (methodExpr = expression as MethodCallExpression) != null
-                && methodExpr.Method.IsEquivalentTo("With", Defaults.ExtensionsType);
+                && methodExpr.Method.IsEquivalentTo("Set", Defaults.ExtensionsType);
         }
 
         public static void CheckIfComplexTypeInstanceIsNull(object instance, string propertyName, Type declaringType)
@@ -957,9 +957,10 @@ namespace Neo4jClient.DataAnnotations
                 var entityVisitor = new EntityExpressionVisitor(resolver, serializer);
 
                 var instanceExpr = entityVisitor.Visit(lambdaExpr.Body);
-                var predicateExpr = entityVisitor.WithPredicateNode;
-                var predicateMemberAssignments = entityVisitor.WithPredicateMemberAssignments;
-                var predicateDictionaryAssignments = entityVisitor.WithPredicateDictionaryAssignments;
+                var predicateExpr = entityVisitor.SetPredicateNode;
+                var predicateMemberAssignments = entityVisitor.SetPredicateMemberAssignments;
+                var predicateDictionaryAssignments = entityVisitor.SetPredicateDictionaryAssignments;
+                var usePredicateOnly = entityVisitor.SetUsePredicateOnly;
 
                 //get the instance
                 var instance = instanceExpr.ExecuteExpression<object>();
@@ -987,6 +988,13 @@ namespace Neo4jClient.DataAnnotations
                     {
                         try
                         {
+                            if (usePredicateOnly)
+                            {
+                                //initialize complex properties in case they were omitted
+                                //however, avoid initilizing on behalf of the user unless it's a predicate
+                                InitializeComplexTypedProperties(instance);
+                            }
+
                             //serialize the instance to force converter to enumerate jsonNames
                             instanceJson = serializer(instance);
                         }
@@ -1008,10 +1016,10 @@ namespace Neo4jClient.DataAnnotations
                 object predicateInstance = null;
                 JObject predicateJObject = null;
 
-                //check if it has a with node
+                //check if it has a "set" node
                 if (predicateExpr != null)
                 {
-                    if (!entityVisitor.WithUsePredicateOnly)
+                    if (!usePredicateOnly)
                     {
                         //has a separate predicate instance
                         predicateInstance = predicateExpr.ExecuteExpression<object>();

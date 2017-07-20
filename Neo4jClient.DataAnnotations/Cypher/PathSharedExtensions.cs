@@ -343,7 +343,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         private static void FinishPathExtensionSet(Pattern current, Pattern old)
         {
-            current.isExtension = true;
+            current.IsExtension = true;
 
             Type lastBType = old.BType;
 
@@ -353,9 +353,34 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 current.AType = lastBType;
             }
 
-            current.AParameter = old.BParameter ?? current.AParameter;
-        }
+            var oldBParam = old.BParameter;
+            var currentAParam = current.AParameter;
 
+            if (!old.BParamIsAuto)
+            {
+                //swap
+                currentAParam = oldBParam;
+                oldBParam = null;
+            }
+            else if (!current.AParamIsAuto)
+            {
+                //swap
+                //replace the old with the new
+                oldBParam = currentAParam;
+                currentAParam = null;
+            }
+            else
+            {
+                oldBParam = null;
+                currentAParam = null;
+            }
+
+            if (currentAParam != null)
+                current.AParameter = currentAParam;
+
+            if (oldBParam != null)
+                old.BParameter = oldBParam;
+        }
         #endregion
 
         #region Shortest

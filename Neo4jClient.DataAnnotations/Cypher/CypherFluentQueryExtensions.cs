@@ -32,11 +32,17 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         public static ICypherFluentQuery Match(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathable>>[] patterns)
         {
-            query.Match((p) => p.Pattern<string>("").Label(null).Constrain((a) => a == (object)12).Shortest()
-            //.Extend(RelationshipDirection.Outgoing).Label(null).Constrain(null)
-            //.ThenExtend(RelationshipDirection.Incoming).Label(null).Constrain(null)
-            //.Assign()
-            );
+            query.Match((p) => p
+            .Pattern<string>("").Label(null).Constrain((a) => a == (object)12)
+            .Extend(RelationshipDirection.Outgoing).Label(null).Constrain(null)
+            .ThenExtend(RelationshipDirection.Incoming).Label(null).Constrain(null)
+            .Assign());
+
+            query.Match((p) => p
+            .P("").L(null).C((a) => a == (object)12)
+            .E(RelationshipDirection.Outgoing).L(null).C(null)
+            .TE(RelationshipDirection.Incoming).L(null).C(null)
+            .A());
 
             return null;
         }

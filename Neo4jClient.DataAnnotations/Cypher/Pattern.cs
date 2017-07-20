@@ -16,26 +16,41 @@ namespace Neo4jClient.DataAnnotations.Cypher
 {
     public class Pattern : Annotated, IPattern
     {
-        public Pattern(IPathExtent path, ICypherFluentQuery query)
+        public Pattern(IPathExtent path, ICypherFluentQuery query,
+            PatternBuildStrategy buildStrategy = PatternBuildStrategy.NoParams)
             : base(query)
         {
             Path = path;
+            BuildStrategy = buildStrategy;
         }
+
+        private EntityResolver entityResolver;
+        private EntityConverter entityConverter;
+        private ISerializer serializer;
+        private Func<object, string> actualSerializer;
+        private IGraphClient client;
 
         public IPathExtent Path { get; protected internal set; }
 
+        public PatternBuildStrategy BuildStrategy { get; set; }
 
-        private string aParam, rParam, bParam;
+        internal string aParam, rParam, bParam;
+        private bool aParamIsAuto, rParamIsAuto, bParamIsAuto;
 
         public string AParameter
         {
             get
             {
-                return aParam ?? (aParam = AParamExpression?.Name);
+                return aParam ?? 
+                    (aParam = (abSelector ?? arSelector)?.Parameters[0].Name) ?? 
+                    GetParameter("A", ref aParam, ref aParamIsAuto);
             }
 
             protected internal set
             {
+                if (value != aParam)
+                    aParamIsAuto = false;
+
                 aParam = !string.IsNullOrWhiteSpace(value) ? value : null;
             }
         }
@@ -44,11 +59,16 @@ namespace Neo4jClient.DataAnnotations.Cypher
         {
             get
             {
-                return rParam ?? (rParam = RParamExpression?.Name);
+                return rParam ?? 
+                    (rParam = rbSelector?.Parameters[0].Name) ?? 
+                    GetParameter("R", ref rParam, ref rParamIsAuto);
             }
 
             protected internal set
             {
+                if (value != rParam)
+                    rParamIsAuto = false;
+
                 rParam = !string.IsNullOrWhiteSpace(value) ? value : null;
             }
         }
@@ -57,14 +77,24 @@ namespace Neo4jClient.DataAnnotations.Cypher
         {
             get
             {
-                return bParam;
+                return bParam ?? GetParameter("B", ref bParam, ref bParamIsAuto);
             }
 
             protected internal set
             {
+                if (value != bParam)
+                    bParamIsAuto = false;
+
                 bParam = !string.IsNullOrWhiteSpace(value) ? value : null;
             }
         }
+
+
+        public bool AParamIsAuto { get => AParameter != null && aParamIsAuto; }
+
+        public bool RParamIsAuto { get => RParameter != null && rParamIsAuto; }
+
+        public bool BParamIsAuto { get => BParameter != null && bParamIsAuto; }
 
 
         public bool HasAType { get { return AType != null && AType != Defaults.CypherObjectType; } }
@@ -76,7 +106,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         internal Type aType, rType, bType;
         internal bool aTypeSet, rTypeSet, bTypeSet;
-        //internal bool aIsOmitted, rIsOmitted, bIsOmmited;
 
         public Type AType
         {
@@ -94,8 +123,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
                         var type = GetOtherNodeFromRAndKnownNode(RType, BType, findingA: true, direction: ref direction);
                         aType = type ?? aType;
                     }
-
-
                 }
 
                 return aType;
@@ -205,8 +232,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                             BNavProperty = inverseProp ?? bNavProp;
 
                             //create expression
-                            abSelector = CreateNavigationPropertySelector(AType, navigationProp,
-                                aParam ?? GetRandomParameterFor("A"));
+                            abSelector = CreateNavigationPropertySelector(AType, navigationProp, AParameter);
                         }
                     }
                 }
@@ -249,8 +275,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                             ANavProperty = navigationProperty;
 
                             //create expression
-                            arSelector = CreateNavigationPropertySelector(AType, navigationProperty,
-                                aParam ?? GetRandomParameterFor("A"));
+                            arSelector = CreateNavigationPropertySelector(AType, navigationProperty, AParameter);
                         }
                     }
                 }
@@ -290,10 +315,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
                         {
                             //set navprops
                             BNavProperty = inverseProp ?? bNavProp;
-
+                            
                             //create expression
-                            rbSelector = CreateNavigationPropertySelector(RType, navigationProp,
-                                rParam ?? GetRandomParameterFor("R"));
+                            rbSelector = CreateNavigationPropertySelector(RType, navigationProp, RParameter);
                         }
                     }
                 }
@@ -373,107 +397,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
                     rTypesSet = true;
 
-                    if (!UseGivenRTypesOnly && RType != Defaults.CypherObjectType)
-                    {
-                        //RELATIONSHIP TYPE(declaring class takes precedence over relationship class)
-                        //1. Column Attribute Name on only one side of the relationship.
-                        //2. ForeignKey Attribute Name on only one side of the relationship that doesn't point to any property on the class.
-                        //3. First Table Attribute Name on the relationship class inheritance hierarchy starting from the class itself to all base classes.
-                        //4. Name of navigation property with direction considered, and/ or the class name of a provided relationship class
-                        //   (which should also be the same type as the relationship property type).
-
-                        var additionalTypes = new List<string>();
-
-                        //get the navs.
-                        var aNavProp = ANavProperty; var bNavProp = BNavProperty;
-                        if (aNavProp != null || bNavProp != null)
-                        {
-                            //1. Column Attribute Name on only one side of the relationship.
-                            Attribute aAttr = aNavProp?.GetCustomAttribute(Defaults.ColumnType);
-                            Attribute bAttr = bNavProp?.GetCustomAttribute(Defaults.ColumnType);
-
-                            var attrArray = new[] { aAttr, bAttr };
-
-                            ColumnAttribute columnAttr = attrArray.Where(a => a != null
-                            && !string.IsNullOrWhiteSpace(((ColumnAttribute)a).Name))
-                            .SingleOrDefault() as ColumnAttribute; //we expect just one attribute to be defined on the relationship. two would create confusion.
-
-                            if (columnAttr != null)
-                            {
-                                additionalTypes.Add(columnAttr.Name);
-                            }
-
-                            //2. ForeignKey Attribute Name on only one side of the relationship that doesn't point to any property on the class.
-                            if (additionalTypes.Count == 0)
-                            {
-                                attrArray[0] = aNavProp != null ? ATypeInfo.ForeignKeyProperties.Where(fk =>
-                                fk.NavigationProperty == aNavProp && !fk.IsAttributeAutoCreated && !fk.IsAttributePointingToProperty)
-                                .Select(fk => fk.Attribute).FirstOrDefault() : null;
-
-                                attrArray[1] = bNavProp != null ? BTypeInfo.ForeignKeyProperties.Where(fk =>
-                                fk.NavigationProperty == bNavProp && !fk.IsAttributeAutoCreated && !fk.IsAttributePointingToProperty)
-                                .Select(fk => fk.Attribute).FirstOrDefault() : null;
-
-                                var fkAttr = attrArray.Where(a => a != null).SingleOrDefault() as ForeignKeyAttribute;
-
-                                if (fkAttr != null && !string.IsNullOrWhiteSpace(fkAttr.Name))
-                                {
-                                    additionalTypes.Add(fkAttr.Name);
-                                }
-                            }
-                        }
-
-                        //3. First Table Attribute Name on the relationship class inheritance hierarchy starting from the class itself to all base classes.
-                        if (additionalTypes.Count == 0 && HasRType)
-                        {
-                            var label = RTypeInfo.Labels.FirstOrDefault();
-                            if (!string.IsNullOrWhiteSpace(label))
-                                additionalTypes.Add(label);
-                        }
-
-                        //last try
-                        //4. Name of navigation property with direction considered, and/ or the class name of a provided relationship class
-                        //   (which should also be the same type as the relationship property type).
-                        if (additionalTypes.Count == 0)
-                        {
-                            var direction = Direction;
-
-                            switch (direction)
-                            {
-                                case RelationshipDirection.Outgoing:
-                                    {
-                                        if (ANavProperty != null)
-                                        {
-                                            additionalTypes.Add(ANavProperty.Name);
-                                        }
-                                        break;
-                                    }
-                                case RelationshipDirection.Incoming:
-                                    {
-                                        if (BNavProperty != null)
-                                        {
-                                            additionalTypes.Add(BNavProperty.Name);
-                                        }
-                                        break;
-                                    }
-                                default:
-                                    {
-                                        if (ANavProperty != null || BNavProperty != null)
-                                        {
-                                            additionalTypes.Add((ANavProperty ?? BNavProperty).Name);
-                                        }
-                                        break;
-                                    }
-                            }
-
-                            if (HasRType)
-                            {
-                                additionalTypes.Add(RType.Name);
-                            }
-                        }
-
-                        rTypes.AddRange(additionalTypes);
-                    }
+                    ResolveRTypes(rTypes);
 
                     rTypes = rTypes.Distinct().Where(t => !string.IsNullOrWhiteSpace(t)).ToList();
                 }
@@ -616,7 +540,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
 
-        public bool isExtension { get; protected internal set; }
+        public bool IsExtension { get; protected internal set; }
 
 
         private JObject aFinalProps, rFinalProps, bFinalProps;
@@ -664,64 +588,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 }
 
                 return bFinalProps;
-            }
-        }
-
-
-        //private PropertyInfo rSelProperty, bSelProperty;
-
-        //protected PropertyInfo RSelectedProperty
-        //{
-        //    get
-        //    {
-        //        return rSelProperty ?? 
-        //            (ARSelector != null ? 
-        //            (rSelProperty = GetPropertyInfo(ARSelector, AType, RType)) :
-        //            null);
-        //    }
-        //    set
-        //    {
-        //        rSelProperty = value;
-        //    }
-        //}
-
-        //protected PropertyInfo BSelectedProperty
-        //{
-        //    get
-        //    {
-        //        return bSelProperty ??
-        //            (
-        //            ABSelector != null ?
-        //            (bSelProperty = GetPropertyInfo(ABSelector, AType, BType)) :
-        //            (RBSelector != null ?
-        //            (bSelProperty = GetPropertyInfo(RBSelector, RType, BType)) :
-        //            null)
-        //            );
-        //    }
-        //    set
-        //    {
-        //        bSelProperty = value;
-        //    }
-        //}
-
-
-        private ParameterExpression aParamExpr, rParamExpr;
-
-        protected internal ParameterExpression AParamExpression
-        {
-            get
-            {
-                //if A is null, check AB selector, then AR selector
-                return aParamExpr ?? (aParamExpr = (ABSelector ?? ARSelector)?.Parameters[0]);
-            }
-        }
-
-        protected internal ParameterExpression RParamExpression
-        {
-            get
-            {
-                //if R is null, check RB selector
-                return rParamExpr ?? (rParamExpr = RBSelector?.Parameters[0]);
             }
         }
 
@@ -824,14 +690,328 @@ namespace Neo4jClient.DataAnnotations.Cypher
             //CHECK LIST
             //Parameters
             //Labels
-            //hops
-            //Constraints
-            //Properties
+            //Hops
+            //FinalProperties
             //Direction
 
-            return null;
+            StringBuilder builder = new StringBuilder();
+
+            string A = null, R = null, B = null;
+
+            if (!IsExtension)
+            {
+                //Build A
+                A = BuildNode(this, aParam, aParamIsAuto, AParameter, ALabels, AFinalProperties);
+
+                builder.Append(A);
+            }
+
+            //Build R
+            R = BuildRelationship(this, rParam, rParamIsAuto, RParameter, RTypes, RHops, RFinalProperties);
+            if (R == "[]")
+                R = null; //just omit the empty ones
+
+            //Build B
+            B = BuildNode(this, bParam, bParamIsAuto, BParameter, BLabels, BFinalProperties);
+
+            if (R != null || HasBType || (B != null && B != "()"))
+            {
+                if (Direction == RelationshipDirection.Incoming)
+                {
+                    builder.Append("<");
+                }
+
+                builder.Append("-");
+
+                if (R != null)
+                {
+                    builder.Append(R);
+                }
+
+                builder.Append("-");
+
+                if (Direction == RelationshipDirection.Outgoing)
+                {
+                    builder.Append(">");
+                }
+
+                builder.Append(B);
+            }
+
+            return builder.ToString();
         }
 
+        public override string ToString()
+        {
+            try
+            {
+                return Build();
+            }
+            catch
+            {
+
+            }
+
+            return base.ToString();
+        }
+
+
+        private void ResolveRTypes(List<string> rTypes)
+        {
+            if (!UseGivenRTypesOnly && RType != Defaults.CypherObjectType)
+            {
+                //RELATIONSHIP TYPE(declaring class takes precedence over relationship class)
+                //1. Column Attribute Name on only one side of the relationship.
+                //2. ForeignKey Attribute Name on only one side of the relationship that doesn't point to any property on the class.
+                //3. First Table Attribute Name on the relationship class inheritance hierarchy starting from the class itself to all base classes.
+                //4. Name of navigation property with direction considered, and/ or the class name of a provided relationship class
+                //   (which should also be the same type as the relationship property type).
+
+                var additionalTypes = new List<string>();
+
+                //get the navs.
+                var aNavProp = ANavProperty; var bNavProp = BNavProperty;
+                if (aNavProp != null || bNavProp != null)
+                {
+                    //1. Column Attribute Name on only one side of the relationship.
+                    Attribute aAttr = aNavProp?.GetCustomAttribute(Defaults.ColumnType);
+                    Attribute bAttr = bNavProp?.GetCustomAttribute(Defaults.ColumnType);
+
+                    var attrArray = new[] { aAttr, bAttr };
+
+                    ColumnAttribute columnAttr = attrArray.Where(a => a != null
+                    && !string.IsNullOrWhiteSpace(((ColumnAttribute)a).Name))
+                    .SingleOrDefault() as ColumnAttribute; //we expect just one attribute to be defined on the relationship. two would create confusion.
+
+                    if (columnAttr != null)
+                    {
+                        additionalTypes.Add(columnAttr.Name);
+                    }
+
+                    //2. ForeignKey Attribute Name on only one side of the relationship that doesn't point to any property on the class.
+                    if (additionalTypes.Count == 0)
+                    {
+                        attrArray[0] = aNavProp != null ? ATypeInfo.ForeignKeyProperties.Where(fk =>
+                        fk.NavigationProperty == aNavProp && !fk.IsAttributeAutoCreated && !fk.IsAttributePointingToProperty)
+                        .Select(fk => fk.Attribute).FirstOrDefault() : null;
+
+                        attrArray[1] = bNavProp != null ? BTypeInfo.ForeignKeyProperties.Where(fk =>
+                        fk.NavigationProperty == bNavProp && !fk.IsAttributeAutoCreated && !fk.IsAttributePointingToProperty)
+                        .Select(fk => fk.Attribute).FirstOrDefault() : null;
+
+                        var fkAttr = attrArray.Where(a => a != null).SingleOrDefault() as ForeignKeyAttribute;
+
+                        if (fkAttr != null && !string.IsNullOrWhiteSpace(fkAttr.Name))
+                        {
+                            additionalTypes.Add(fkAttr.Name);
+                        }
+                    }
+                }
+
+                //3. First Table Attribute Name on the relationship class inheritance hierarchy starting from the class itself to all base classes.
+                if (additionalTypes.Count == 0 && HasRType)
+                {
+                    var label = RTypeInfo.Labels.FirstOrDefault();
+                    if (!string.IsNullOrWhiteSpace(label))
+                        additionalTypes.Add(label);
+                }
+
+                //last try
+                //4. Name of navigation property with direction considered, and/ or the class name of a provided relationship class
+                //   (which should also be the same type as the relationship property type).
+                if (additionalTypes.Count == 0)
+                {
+                    var direction = Direction;
+
+                    switch (direction)
+                    {
+                        case RelationshipDirection.Outgoing:
+                            {
+                                if (ANavProperty != null)
+                                {
+                                    additionalTypes.Add(ANavProperty.Name);
+                                }
+                                break;
+                            }
+                        case RelationshipDirection.Incoming:
+                            {
+                                if (BNavProperty != null)
+                                {
+                                    additionalTypes.Add(BNavProperty.Name);
+                                }
+                                break;
+                            }
+                        default:
+                            {
+                                if (ANavProperty != null || BNavProperty != null)
+                                {
+                                    additionalTypes.Add((ANavProperty ?? BNavProperty).Name);
+                                }
+                                break;
+                            }
+                    }
+
+                    if (HasRType)
+                    {
+                        additionalTypes.Add(RType.Name);
+                    }
+                }
+
+                rTypes.AddRange(additionalTypes);
+            }
+        }
+
+        internal static string BuildNode(Pattern pattern,
+            string param, bool paramIsAuto, string Parameter, //NOTE: this call order is important, and method signature should not be reshuffled.
+            IEnumerable<string> labels, JObject finalProperties)
+        {
+            //e.g. (param:labels {finalProperties})
+
+            StringBuilder builder = new StringBuilder();
+
+            if (!paramIsAuto && param != null)
+            {
+                builder.Append(param);
+            }
+
+            if (labels?.Count() > 0)
+            {
+                builder.Append(":" + labels.Aggregate((first, second) => $"{first}:{second}"));
+            }
+
+            if (finalProperties?.Count > 0)
+            {
+                string value = null;
+
+                switch (pattern.BuildStrategy)
+                {
+                    case PatternBuildStrategy.WithParams:
+                    case PatternBuildStrategy.WithParamsForValues:
+                        {
+                            pattern.InternalCypherQuery.WithParam(Parameter, finalProperties);
+
+                            value = Parameter;
+
+                            if (pattern.BuildStrategy == PatternBuildStrategy.WithParamsForValues)
+                            {
+                                value = finalProperties.Properties()
+                                    .Select(jp => $"{jp.Name}: {{{Parameter}}}.{jp.Name}")
+                                    .Aggregate((first, second) => $"{first}, {second}");
+                            }
+                            break;
+                        }
+                    case PatternBuildStrategy.NoParams:
+                        {
+                            ResolveClientAndSerializers(pattern);
+
+                            value = finalProperties.Properties()
+                                    .Select(jp => $"{jp.Name}: {pattern.actualSerializer(jp.Value)}")
+                                    .Aggregate((first, second) => $"{first}, {second}");
+                            break;
+                        }
+                }
+
+                if (value != null)
+                    builder.Append($" {{ {value} }}");
+            }
+
+            return $"({builder.ToString()})";
+        }
+
+        internal static string BuildRelationship(Pattern pattern,
+            string param, bool paramIsAuto, string Parameter, //NOTE: this call order is important, and method signature should not be reshuffled.
+            IEnumerable<string> types, Tuple<int?, int?> hops, JObject finalProperties)
+        {
+            //e.g. (param:types*hops {finalProperties})
+
+            StringBuilder builder = new StringBuilder();
+
+            if (!paramIsAuto && param != null)
+            {
+                builder.Append(param);
+            }
+
+            if (types?.Count() > 0)
+            {
+                builder.Append(":" + types.Aggregate((first, second) => $"{first}|{second}"));
+            }
+
+            if (hops != null)
+            {
+                builder.Append("*");
+
+                if (hops.Item1 != null || hops.Item2 != null)
+                {
+                    if (hops.Item1 == hops.Item2)
+                    {
+                        builder.Append(hops.Item1);
+                    }
+                    else
+                    {
+                        if (hops.Item1 != null)
+                        {
+                            builder.Append(hops.Item1);
+                        }
+
+                        builder.Append("..");
+
+                        if (hops.Item2 != null)
+                        {
+                            builder.Append(hops.Item2);
+                        }
+                    }
+                }
+            }
+
+            if (finalProperties?.Count > 0)
+            {
+                string value = null;
+
+                switch (pattern.BuildStrategy)
+                {
+                    case PatternBuildStrategy.WithParams:
+                    case PatternBuildStrategy.WithParamsForValues:
+                        {
+                            pattern.InternalCypherQuery.WithParam(Parameter, finalProperties);
+
+                            value = Parameter;
+
+                            if (pattern.BuildStrategy == PatternBuildStrategy.WithParamsForValues)
+                            {
+                                value = finalProperties.Properties()
+                                    .Select(jp => $"{jp.Name}: {{{Parameter}}}.{jp.Name}")
+                                    .Aggregate((first, second) => $"{first}, {second}");
+                            }
+                            break;
+                        }
+                    case PatternBuildStrategy.NoParams:
+                        {
+                            ResolveClientAndSerializers(pattern);
+
+                            value = finalProperties.Properties()
+                                    .Select(jp => $"{jp.Name}: {pattern.actualSerializer(jp.Value)}")
+                                    .Aggregate((first, second) => $"{first}, {second}");
+                            break;
+                        }
+                }
+
+                if (value != null)
+                    builder.Append($" {{ {value} }}");
+            }
+
+            return $"[{builder.ToString()}]";
+        }
+
+        internal static string GetParameter(string entity, ref string current, ref bool isAutoFlag)
+        {
+            if (current == null)
+            {
+                isAutoFlag = true;
+                current = GetRandomParameterFor(entity);
+            }
+
+            return current;
+        }
 
         internal static List<PropertyInfo> FilterNavProperties
             (EntityTypeInfo typeInfo, Type navPropertyType, bool includeIEnumerableArg = true)
@@ -1469,37 +1649,59 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         internal static LambdaExpression GetConstraintsAsProperties(LambdaExpression constraints, Type type)
         {
-            var withMethod = Utilities.GetMethodInfo(() => Extensions.With<object>(null, null, true), type);
+            var setMethod = Utilities.GetMethodInfo(() => Extensions.Set<object>(null, null, true), type);
 
-            return Expression.Lambda(Expression.Call(withMethod, Expression.Constant(type.GetDefaultValue(), type),
+            return Expression.Lambda(Expression.Call(setMethod, Expression.Constant(type.GetDefaultValue(), type),
                 constraints, Expression.Constant(true) //i.e, usePredicateOnly: true
                 ));
+        }
+
+        internal static void ResolveClientAndSerializers(Pattern pattern)
+        {
+            if (pattern.client == null || pattern.serializer == null || (pattern.entityResolver == null && pattern.entityConverter == null))
+            {
+                var client = (pattern.InternalCypherQuery as IAttachedReference)?.Client;
+
+                var serializer = client?.Serializer ?? new CustomJsonSerializer()
+                {
+                    JsonContractResolver = client?.JsonContractResolver ?? GraphClient.DefaultJsonContractResolver,
+                    JsonConverters = client?.JsonConverters ?? (IEnumerable<JsonConverter>)GraphClient.DefaultJsonConverters
+                };
+
+                var resolver = client?.JsonContractResolver as EntityResolver ??
+                    (serializer as CustomJsonSerializer)?.JsonContractResolver as EntityResolver;
+
+                var converters = new List<JsonConverter>((IEnumerable<JsonConverter>)client?.JsonConverters ?? new JsonConverter[0]);
+                converters.AddRange((serializer as CustomJsonSerializer)?.JsonConverters ?? new JsonConverter[0]);
+
+                var converter = converters.FirstOrDefault(c => c is EntityConverter) as EntityConverter;
+
+                Func<object, string> actualSerializer = serializer != null ? (obj) => serializer.Serialize(obj) : (Func<object, string>)null;
+
+                pattern.client = client;
+                pattern.serializer = serializer;
+                pattern.entityResolver = resolver;
+                pattern.entityConverter = converter;
+                pattern.actualSerializer = actualSerializer;
+            }
         }
 
         internal static JObject GetFinalProperties(Pattern pattern, 
             LambdaExpression properties, LambdaExpression constraints, Type type)
         {
+            ResolveClientAndSerializers(pattern);
+
             var lambdaExpr = properties ?? (constraints != null ? GetConstraintsAsProperties(constraints, type) : null);
 
-            var client = (pattern.InternalCypherQuery as IAttachedReference)?.Client;
-
-            var serializer = client?.Serializer ?? new CustomJsonSerializer()
-            {
-                JsonContractResolver = client?.JsonContractResolver ?? GraphClient.DefaultJsonContractResolver,
-                JsonConverters = client?.JsonConverters ?? (IEnumerable<JsonConverter>)GraphClient.DefaultJsonConverters
-            };
-
-            var resolver = client?.JsonContractResolver as EntityResolver ?? 
-                (serializer as CustomJsonSerializer)?.JsonContractResolver as EntityResolver;
-
-            var converters = new List<JsonConverter>((IEnumerable<JsonConverter>)client?.JsonConverters ?? new JsonConverter[0]);
-            converters.AddRange((serializer as CustomJsonSerializer)?.JsonConverters ?? new JsonConverter[0]);
-
-            var converter = converters.FirstOrDefault(c => c is EntityConverter) as EntityConverter;
-
-            Func<object, string> actualSerializer = serializer != null ? (obj) => serializer.Serialize(obj) : (Func<object, string>)null;
-
-            return Utilities.GetFinalProperties(lambdaExpr, resolver, converter, actualSerializer);
+            return Utilities.GetFinalProperties(lambdaExpr, pattern.entityResolver, pattern.entityConverter, pattern.actualSerializer);
         }
+    }
+
+
+    public enum PatternBuildStrategy
+    {
+        NoParams = 0,
+        WithParams,
+        WithParamsForValues,
     }
 }

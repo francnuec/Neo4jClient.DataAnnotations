@@ -366,6 +366,8 @@ namespace Neo4jClient.DataAnnotations.Tests
             };
 
             TestUtilities.TestFinalPropertiesForEquality((instance) => serializer.Serialize(instance), expected, aFinalProperties);
+
+            var str = pattern.Build();
         }
     }
 }

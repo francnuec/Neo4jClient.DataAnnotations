@@ -66,13 +66,15 @@ namespace Neo4jClient.DataAnnotations.Tests
             var path = builder.Pattern((ActorNode actor) => actor.Movies, (r) => r.Movie)
                 .Extend("R2", "C", RelationshipDirection.Incoming);
 
-            var pattern = path.Pattern;
+            var pattern = path.Pattern as Pattern;
 
             Assert.NotNull(pattern);
-            Assert.Equal(pattern.AParameter, null);
+
+            Assert.NotNull(pattern.AParameter);
+            Assert.True(pattern.AParamIsAuto);
             Assert.Equal(pattern.RParameter, "R2"); //test this to make sure we are interacting with the right pattern here, and not a previous one.
             Assert.Equal(pattern.BParameter, "C");
-            Assert.True(pattern.isExtension);
+            Assert.True(pattern.IsExtension);
         }
 
         [Fact]
