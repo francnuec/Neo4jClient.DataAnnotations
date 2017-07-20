@@ -714,7 +714,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             //Build B
             B = BuildNode(this, bParam, bParamIsAuto, BParameter, BLabels, BFinalProperties);
 
-            if (R != null || HasBType || (B != null && B != "()"))
+            if (IsExtension || R != null || HasBType || (B != null && B != "()"))
             {
                 if (Direction == RelationshipDirection.Incoming)
                 {

@@ -273,7 +273,8 @@ namespace Neo4jClient.DataAnnotations.Tests
             Assert.Equal(testTypes, rTypes);
         }
 
-        public static List<object[]> FinalPropsSerializerData { get; } = new List<object[]>()
+
+        public static List<object[]> SerializerData { get; } = new List<object[]>()
         {
             new object[] { "ConverterSerializer", GraphClient.DefaultJsonContractResolver,
                 new List<JsonConverter>(GraphClient.DefaultJsonConverters)
@@ -285,7 +286,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         };
 
         [Theory]
-        [MemberData("FinalPropsSerializerData", MemberType = typeof(PatternTests))]
+        [MemberData("SerializerData", MemberType = typeof(PatternTests))]
         public void Properties_FinalProperties(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
         {
             TestUtilities.AddEntityTypes();
@@ -329,7 +330,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("FinalPropsSerializerData", MemberType = typeof(PatternTests))]
+        [MemberData("SerializerData", MemberType = typeof(PatternTests))]
         public void Constraints_FinalProperties(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
         {
             TestUtilities.AddEntityTypes();
@@ -368,6 +369,145 @@ namespace Neo4jClient.DataAnnotations.Tests
             TestUtilities.TestFinalPropertiesForEquality((instance) => serializer.Serialize(instance), expected, aFinalProperties);
 
             var str = pattern.Build();
+        }
+
+        [Theory]
+        [MemberData("SerializerData", MemberType = typeof(PatternTests))]
+        public void Build_NoParamsStrategy(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
+        {
+            TestUtilities.AddEntityTypes();
+
+            var client = Substitute.For<IRawGraphClient>();
+
+            var serializer = new CustomJsonSerializer() { JsonConverters = converters, JsonContractResolver = resolver };
+            client.Serializer.Returns(serializer);
+            client.JsonContractResolver.Returns(resolver);
+
+            var query = new CypherFluentQuery(client);
+
+            var builder = new DummyPath(null, query);
+
+            var path = builder
+                .Pattern<MovieNode, MovieActorRelationship, ActorNode>("greysAnatomy", "acted_in", "ellenPompeo")
+                .Label(A: new[] { "Series" }, R: new[] { "STARRED_IN" }, B: new[] { "Female" }, replaceA: true, replaceR: false, replaceB: false)
+                .Prop(() => new MovieNode() //could have used constrain, but would be good to test both methods
+                {
+                    Title = "Grey's Anatomy",
+                    Year = 2017
+                })
+                .Hop(1) //not necessary, but for tests
+                .Constrain(null, null, (actor) =>
+                    actor.Name == "Ellen Pompeo"
+                    && actor.Born == Params.Get<ActorNode>("shondaRhimes").Born
+                    && actor.Roles == new string[] { "Meredith Grey" })
+                .Extend(RelationshipDirection.Outgoing)
+                as Path;
+
+            var expectedMain = "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
+                "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
+                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })";
+            var expectedExt = "-->()";
+
+            var actualMain = path.Patterns[0].Build();
+            var actualExt = path.Patterns[1].Build();
+
+            Assert.Equal(expectedMain, actualMain);
+
+            Assert.Equal(expectedExt, actualExt);
+        }
+
+        [Theory]
+        [MemberData("SerializerData", MemberType = typeof(PatternTests))]
+        public void Build_WithParamsStrategy(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
+        {
+            TestUtilities.AddEntityTypes();
+
+            var client = Substitute.For<IRawGraphClient>();
+
+            var serializer = new CustomJsonSerializer() { JsonConverters = converters, JsonContractResolver = resolver };
+            client.Serializer.Returns(serializer);
+            client.JsonContractResolver.Returns(resolver);
+
+            var query = new CypherFluentQuery(client);
+
+            var builder = new DummyPath(null, query);
+
+            var path = builder
+                .Pattern<MovieNode, MovieActorRelationship, ActorNode>("greysAnatomy", "acted_in", "ellenPompeo")
+                .Label(A: new[] { "Series" }, R: new[] { "STARRED_IN" }, B: new[] { "Female" }, replaceA: true, replaceR: false, replaceB: false)
+                .Prop(() => new MovieNode() //could have used constrain, but would be good to test both methods
+                {
+                    Title = "Grey's Anatomy",
+                    Year = 2017
+                })
+                .Hop(1) //not necessary, but for tests
+                .Constrain(null, null, (actor) =>
+                    actor.Name == "Ellen Pompeo"
+                    && actor.Born == Params.Get<ActorNode>("shondaRhimes").Born
+                    && actor.Roles == new string[] { "Meredith Grey" })
+                .Extend(RelationshipDirection.Outgoing)
+                as Path;
+
+            path.Patterns.ForEach(p => p.BuildStrategy = PatternBuildStrategy.WithParams);
+
+            var expectedMain = "(greysAnatomy:Series { greysAnatomy })" +
+                "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
+                "(ellenPompeo:Female:Actor { ellenPompeo })";
+            var expectedExt = "-->()";
+
+            var actualMain = path.Patterns[0].Build();
+            var actualExt = path.Patterns[1].Build();
+
+            Assert.Equal(expectedMain, actualMain);
+
+            Assert.Equal(expectedExt, actualExt);
+        }
+
+        [Theory]
+        [MemberData("SerializerData", MemberType = typeof(PatternTests))]
+        public void Build_WithParamsForValuesStrategy(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
+        {
+            TestUtilities.AddEntityTypes();
+
+            var client = Substitute.For<IRawGraphClient>();
+
+            var serializer = new CustomJsonSerializer() { JsonConverters = converters, JsonContractResolver = resolver };
+            client.Serializer.Returns(serializer);
+            client.JsonContractResolver.Returns(resolver);
+
+            var query = new CypherFluentQuery(client);
+
+            var builder = new DummyPath(null, query);
+
+            var path = builder
+                .Pattern<MovieNode, MovieActorRelationship, ActorNode>("greysAnatomy", "acted_in", "ellenPompeo")
+                .Label(A: new[] { "Series" }, R: new[] { "STARRED_IN" }, B: new[] { "Female" }, replaceA: true, replaceR: false, replaceB: false)
+                .Prop(() => new MovieNode() //could have used constrain, but would be good to test both methods
+                {
+                    Title = "Grey's Anatomy",
+                    Year = 2017
+                })
+                .Hop(1) //not necessary, but for tests
+                .Constrain(null, null, (actor) =>
+                    actor.Name == "Ellen Pompeo"
+                    && actor.Born == Params.Get<ActorNode>("shondaRhimes").Born
+                    && actor.Roles == new string[] { "Meredith Grey" })
+                .Extend(RelationshipDirection.Outgoing)
+                as Path;
+
+            path.Patterns.ForEach(p => p.BuildStrategy = PatternBuildStrategy.WithParamsForValues);
+
+            var expectedMain = "(greysAnatomy:Series { Title: {greysAnatomy}.Title, Year: {greysAnatomy}.Year })" +
+                "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
+                "(ellenPompeo:Female:Actor { Name: {ellenPompeo}.Name, Born: {ellenPompeo}.Born, Roles: {ellenPompeo}.Roles })";
+            var expectedExt = "-->()";
+
+            var actualMain = path.Patterns[0].Build();
+            var actualExt = path.Patterns[1].Build();
+
+            Assert.Equal(expectedMain, actualMain);
+
+            Assert.Equal(expectedExt, actualExt);
         }
     }
 }

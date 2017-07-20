@@ -36,7 +36,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression = expression;
         }
 
-        protected internal List<Pattern> Patterns { get; } = new List<Pattern>();
+        public List<Pattern> Patterns { get; } = new List<Pattern>();
 
         public IPattern Pattern => Patterns.Count > 0 ? Patterns[Patterns.Count - 1] : null;
 
