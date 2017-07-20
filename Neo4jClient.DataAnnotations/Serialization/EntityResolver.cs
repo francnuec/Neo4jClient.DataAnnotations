@@ -132,7 +132,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
             var newChild = GetJsonPropertyDuplicate(child);
 
             //set complex name
-            newChild.PropertyName = $"{complexTypedProperty.PropertyName}_{child.PropertyName}";
+            newChild.PropertyName = $"{complexTypedProperty.PropertyName}{Defaults.ComplexTypeNameSeparator}{child.PropertyName}";
 
             //set new value provider
             newChild.ValueProvider = new ComplexTypedPropertyValueProvider

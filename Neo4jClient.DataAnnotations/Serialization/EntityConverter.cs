@@ -231,10 +231,10 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 {
                     InitializeEntityInfo(derivedInfo, serializer);
 
-                    var _Index = -1;
+                    var sepIndex = -1;
                     if (propValueJObject.Properties().All(jp => derivedInfo.JsonNamePropertyMap.ContainsKey(jp.Name)
-                    || ((_Index = jp.Name.IndexOf("_")) > 0
-                    && derivedInfo.JsonNamePropertyMap.ContainsKey(jp.Name.Substring(0, _Index)))))
+                    || ((sepIndex = jp.Name.IndexOf(Defaults.ComplexTypeNameSeparator)) > 0
+                    && derivedInfo.JsonNamePropertyMap.ContainsKey(jp.Name.Substring(0, sepIndex)))))
                     {
                         //found it
                         propValueInfo = derivedInfo;
@@ -338,7 +338,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
                     }
 
                     //add to the parent object itself.
-                    var newProp = new JProperty(propJsonName + "_" + propChild.Name, propChild.Value);
+                    var newProp = new JProperty(propJsonName + Defaults.ComplexTypeNameSeparator + propChild.Name, propChild.Value);
                     currentProp.AddAfterSelf(newProp);
                     currentProp = newProp;
 

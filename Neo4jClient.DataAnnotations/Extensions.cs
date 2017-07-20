@@ -7,6 +7,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.CompilerServices;
 using System.Reflection;
 using System.Linq.Expressions;
+using Neo4jClient.DataAnnotations.Expressions;
+using Neo4jClient.DataAnnotations.Cypher;
 
 namespace Neo4jClient.DataAnnotations
 {
@@ -87,6 +89,8 @@ namespace Neo4jClient.DataAnnotations
 
         /// <summary>
         /// No Further Processing. Naming and other processing escape. This instructs the expression visitors to use as specified.
+        /// NOTE: This method does not affect serialization. So inner complex typed properties would still serialize to exploded properties as expected.
+        /// This method is mainly used by the expression visitors, and mostly at the top surface level (rarely deep into the object).
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="obj"></param>
@@ -94,6 +98,30 @@ namespace Neo4jClient.DataAnnotations
         public static T _<T>(this T obj)
         {
             return obj;
+        }
+
+        /// <summary>
+        /// Casts an object to a certain type so as to use its properties directly.
+        /// Use only in expressions, especially with <see cref="Params"/> method calls (in which case it Pseudo-casts).
+        /// NOTE: THIS METHOD IS NOT SAFE TO EXECUTE. If the cast fails, it merely generates a default value for the return type.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static TReturn As<TReturn>(this object obj)
+        {
+            //do something, just in case this method was executed
+            TReturn ret = default(TReturn);
+
+            try
+            {
+                ret = (TReturn)obj;
+            }
+            catch
+            {
+
+            }
+
+            return ret;
         }
 
         public static bool IsAnonymousType(this Type type)
@@ -223,7 +251,7 @@ namespace Neo4jClient.DataAnnotations
         {
             return With(instance, predicate, usePredicateOnly: false);
         }
-
+         
         internal static T With<T>(this T instance, Expression<Func<T, bool>> predicate, bool usePredicateOnly)
         {
             return instance;
@@ -249,6 +277,60 @@ namespace Neo4jClient.DataAnnotations
 
                         break;
                     }
+            }
+
+            return expression;
+        }
+
+        public static Expression Cast(this Expression expression, out Type castAdded, Type castToAdd = null)
+        {
+            castAdded = null;
+
+            if (castToAdd == null)
+            {
+                //try executing this to get the actual type of the object returned and use that type
+                try
+                {
+                    var obj = expression.ExecuteExpression<object>();
+                    castToAdd = obj?.GetType();
+                }
+                catch
+                {
+
+                }
+            }
+
+            if (castToAdd != null && expression.Type != castToAdd)
+            {
+                //cast it to its appropriate type
+                try
+                {
+                    //try as first
+                    expression = Expression.TypeAs(expression, castToAdd);
+                }
+                catch
+                {
+                    //rejected, so use normal convert
+                    expression = Expression.Convert(expression, castToAdd);
+                }
+
+                castAdded = castToAdd;
+            }
+
+            return expression;
+        }
+
+        public static Expression SafeCast(this Expression expression, out Type castAdded, Type castToAdd = null)
+        {
+            castAdded = null;
+
+            try
+            {
+                return Cast(expression, out castAdded, castToAdd);
+            }
+            catch
+            {
+
             }
 
             return expression;
@@ -296,6 +378,29 @@ namespace Neo4jClient.DataAnnotations
         public static bool IsScalar(this Type type)
         {
             return Utilities.IsTypeScalar(type);
+        }
+
+        /// <summary>
+        /// Placeholder method for predicate member values in expressions.
+        /// </summary>
+        /// <typeparam name="TReturn">The last return type of the contiguous access stretch.</typeparam>
+        /// <param name="index">The index of the value in the store.</param>
+        /// <returns>The executed expression value, or a default value of the return type.</returns>
+        internal static TReturn GetValue<TReturn>(this EntityExpressionVisitor visitor, int index)
+        {
+            var specialNodeExpr = visitor.SpecialNodes[index];
+
+            return (TReturn)(specialNodeExpr.ConcreteValue ?? typeof(TReturn).GetDefaultValue());
+        }
+
+        public static bool IsComplex(this Type type)
+        {
+            return type.GetTypeInfo().IsDefined(Defaults.ComplexType);
+        }
+
+        public static Type GetMemberType(this MemberInfo member)
+        {
+            return (member as PropertyInfo)?.PropertyType ?? (member as FieldInfo)?.FieldType ?? (member as MethodInfo)?.ReturnType;
         }
     }
 }

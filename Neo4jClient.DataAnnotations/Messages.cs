@@ -25,5 +25,11 @@ namespace Neo4jClient.DataAnnotations
         public const string ParamsGetError = "Please do not call this method directly. Use only in expressions.";
 
         public const string ComplexTypedPropertyMatchingTypeNotFoundError = "No matching type found for Complex Typed Property: {0}, in Class: {1}.";
+
+        public const string InvalidMemberAssignmentError = "Invalid member assignment. Member: {0}";
+
+        public const string JsonPropertyNotFoundError = "Json Property '{0}' not found for Type '{1}'";
+
+        public const string AmbiguousParamsPathError = "Expression path to Neo4j parameter is ambiguous, and cannot be translated. Params: {0}.";
     }
 }

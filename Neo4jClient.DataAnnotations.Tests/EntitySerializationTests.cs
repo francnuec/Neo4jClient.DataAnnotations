@@ -18,19 +18,19 @@ namespace Neo4jClient.DataAnnotations.Tests
     {
         public static List<object[]> SerializerData { get; } = new List<object[]>()
         {
-            new object[] { TestUtilities.SerializeWithConverter, "ConverterSerializer" },
-            new object[] { TestUtilities.SerializeWithResolver, "ResolverSerializer" },
+            new object[] { "ConverterSerializer", TestUtilities.SerializeWithConverter },
+            new object[] { "ResolverSerializer", TestUtilities.SerializeWithResolver },
         };
 
         public static List<object[]> DeserializerData { get; } = new List<object[]>()
         {
-            new object[] { TestUtilities.SerializerSettingsWithConverter, "ConverterSerializerSettings" },
-            new object[] { TestUtilities.SerializerSettingsWithResolver, "ResolverSerializerSettings" },
+            new object[] { "ConverterSerializerSettings", TestUtilities.SerializerSettingsWithConverter },
+            new object[] { "ResolverSerializerSettings", TestUtilities.SerializerSettingsWithResolver },
         };
 
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(EntitySerializationTests))]
-        public void NullComplexTypePropertyWrite_InvalidOperationException(Func<object, string> serializer, string name = null)
+        public void NullComplexTypePropertyWrite_InvalidOperationException(string serializerName, Func < object, string> serializer)
         {
             TestUtilities.AddEntityTypes();
 
@@ -43,7 +43,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(EntitySerializationTests))]
-        public void EntityWrite(Func<object, string> serializer, string name = null)
+        public void EntityWrite(string serializerName, Func<object, string> serializer)
         {
             TestUtilities.AddEntityTypes();
 
@@ -51,6 +51,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             {
                 Name = "Ellen Pompeo",
                 Born = 1969,
+                Roles = new string[] { "Meredith Grey" },
                 Address = new AddressWithComplexType()
                 {
                     //While crude functionality to handle polymorphic instance of complex types is in place, it is advised to not subclass a complex type.
@@ -72,7 +73,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             {
                 { "Name", new Tuple<JTokenType, dynamic>(JTokenType.String, "Ellen Pompeo") },
                 { "Born", new Tuple<JTokenType, dynamic>(JTokenType.Integer, 1969) },
-                { "Roles", new Tuple<JTokenType, dynamic>(JTokenType.Null, null)},
+                { "Roles", new Tuple<JTokenType, dynamic>(JTokenType.Array, new string[] { "Meredith Grey" })},
                 { "NewAddressName_AddressLine", new Tuple<JTokenType, dynamic>(JTokenType.Null, null) },
                 { "NewAddressName_City", new Tuple<JTokenType, dynamic>(JTokenType.String, "Los Angeles") },
                 { "NewAddressName_State", new Tuple<JTokenType, dynamic>(JTokenType.String, "California") },
@@ -101,19 +102,28 @@ namespace Neo4jClient.DataAnnotations.Tests
                 var tokenExpected = tokensExpected[property.Name];
 
                 Assert.Equal(tokenExpected.Item1, property.Value.Type);
-                Assert.Equal(tokenExpected.Item2, property.Value.ToObject<dynamic>());
+
+                try
+                {
+                    Assert.Equal(tokenExpected.Item2, property.Value.ToObject<dynamic>());
+                }
+                catch
+                {
+                    //double check
+                    Assert.Equal(serializer(tokenExpected.Item2), serializer(property.Value));
+                }
             }
         }
 
         [Theory]
         [MemberData("DeserializerData", MemberType = typeof(EntitySerializationTests))]
-        public void EntityRead(JsonSerializerSettings deserializerSettings, string name = null)
+        public void EntityRead(string settingsName, JsonSerializerSettings deserializerSettings)
         {
             Dictionary<string, dynamic> actorTokens = new Dictionary<string, dynamic>()
             {
                 { "Name", "Ellen Pompeo" },
                 { "Born", 1969 },
-                { "Roles", null},
+                { "Roles", new string[] { "Meredith Grey" }},
                 { "NewAddressName_AddressLine", null },
                 { "NewAddressName_City", "Los Angeles" },
                 { "NewAddressName_State", "California" },

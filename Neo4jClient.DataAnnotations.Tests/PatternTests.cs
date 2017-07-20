@@ -7,6 +7,9 @@ using System.Collections.Generic;
 using System.Text;
 using Xunit;
 using System.Linq;
+using Neo4jClient.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Neo4jClient.DataAnnotations.Tests
 {
@@ -268,6 +271,101 @@ namespace Neo4jClient.DataAnnotations.Tests
             Assert.NotNull(rTypes);
             Assert.Equal(2, rTypes.Count());
             Assert.Equal(testTypes, rTypes);
+        }
+
+        public static List<object[]> FinalPropsSerializerData { get; } = new List<object[]>()
+        {
+            new object[] { "ConverterSerializer", GraphClient.DefaultJsonContractResolver,
+                new List<JsonConverter>(GraphClient.DefaultJsonConverters)
+                {
+                    TestUtilities.Converter
+                }},
+            new object[] { "ResolverSerializer", TestUtilities.Resolver,
+                new List<JsonConverter>(GraphClient.DefaultJsonConverters)},
+        };
+
+        [Theory]
+        [MemberData("FinalPropsSerializerData", MemberType = typeof(PatternTests))]
+        public void Properties_FinalProperties(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
+        {
+            TestUtilities.AddEntityTypes();
+
+            var client = Substitute.For<IRawGraphClient>();
+
+            var serializer = new CustomJsonSerializer() { JsonConverters = converters, JsonContractResolver = resolver };
+            client.Serializer.Returns(serializer);
+            client.JsonContractResolver.Returns(resolver);
+
+            var query = new CypherFluentQuery(client);
+
+            var builder = new DummyPath(null, query);
+
+            var pattern = builder
+                .Pattern<ActorNode>("Ambode")
+                .Prop(() => new
+                {
+                    Name = "Ellen Pompeo",
+                    Born = Params.Get<ActorNode>("shondaRhimes").Born,
+                    Roles = new string[] { "Meredith Grey" },
+                    Age = 47.ToString()
+                })
+                .Pattern as Pattern;
+
+            var aProperties = pattern.AProperties;
+            Assert.NotNull(aProperties);
+
+            var aFinalProperties = pattern.AFinalProperties;
+            Assert.NotNull(aFinalProperties);
+
+            var expected = new Dictionary<string, dynamic>()
+            {
+                { "Name", "\"Ellen Pompeo\"" },
+                { "Born", "shondaRhimes.Born" },
+                { "Roles", "[\r\n  \"Meredith Grey\"\r\n]" },
+                { "Age", "\"47\"" }, //because we assigned a 47 string and not a 47 int.
+            };
+
+            TestUtilities.TestFinalPropertiesForEquality((instance) => serializer.Serialize(instance), expected, aFinalProperties);
+        }
+
+        [Theory]
+        [MemberData("FinalPropsSerializerData", MemberType = typeof(PatternTests))]
+        public void Constraints_FinalProperties(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
+        {
+            TestUtilities.AddEntityTypes();
+
+            var client = Substitute.For<IRawGraphClient>();
+
+            var serializer = new CustomJsonSerializer() { JsonConverters = converters, JsonContractResolver = resolver };
+            client.Serializer.Returns(serializer);
+            client.JsonContractResolver.Returns(resolver);
+
+            var query = new CypherFluentQuery(client);
+
+            var builder = new DummyPath(null, query);
+
+            var pattern = builder
+                .Pattern<ActorNode>("Ambode")
+                .Constrain((actor) =>
+                    actor.Name == "Ellen Pompeo"
+                    && actor.Born == Params.Get<ActorNode>("shondaRhimes").Born
+                    && actor.Roles == new string[] { "Meredith Grey" })
+                .Pattern as Pattern;
+
+            var aConstraints = pattern.AConstraints;
+            Assert.NotNull(aConstraints);
+
+            var aFinalProperties = pattern.AFinalProperties;
+            Assert.NotNull(aFinalProperties);
+
+            var expected = new Dictionary<string, dynamic>()
+            {
+                { "Name", "\"Ellen Pompeo\"" },
+                { "Born", "shondaRhimes.Born" },
+                { "Roles", "[\r\n  \"Meredith Grey\"\r\n]" }
+            };
+
+            TestUtilities.TestFinalPropertiesForEquality((instance) => serializer.Serialize(instance), expected, aFinalProperties);
         }
     }
 }

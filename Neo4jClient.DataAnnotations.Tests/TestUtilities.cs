@@ -1,11 +1,13 @@
 ﻿using Neo4jClient.DataAnnotations.Serialization;
 using Neo4jClient.DataAnnotations.Tests.Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Xunit;
 
 namespace Neo4jClient.DataAnnotations.Tests
 {
@@ -53,6 +55,18 @@ namespace Neo4jClient.DataAnnotations.Tests
             }
         };
 
+        public static ActorNode NormalAddressActor = new ActorNode<int>()
+        {
+            Name = "Ellen Pompeo",
+            Born = 1969,
+            Address = new Address()
+            {
+                City = "Los Angeles",
+                State = "California",
+                Country = "US"
+            }
+        };
+
         public static void AddEntityTypes()
         {
             var entityTypes = new Type[] { typeof(PersonNode), typeof(DirectorNode), typeof(MovieNode), typeof(MovieExtraNode),
@@ -60,6 +74,28 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             foreach (var entityType in entityTypes)
                 Neo4jAnnotations.AddEntityType(entityType);
+        }
+
+        public static void TestFinalPropertiesForEquality(Func<object, string> serializer,
+            Dictionary<string, dynamic> expected, JObject finalProperties)
+        {
+            Assert.NotNull(finalProperties);
+
+            foreach (var prop in finalProperties.Properties())
+            {
+                Assert.Contains(prop.Name, expected.Keys);
+
+                var expectedValue = expected[prop.Name];
+
+                Assert.NotNull(expectedValue);
+
+                var propValueStr = serializer(prop.Value);
+
+                if (expectedValue is string)
+                    Assert.Equal(expectedValue, propValueStr);
+                else
+                    Assert.Equal(serializer(expectedValue), propValueStr);
+            }
         }
     }
 }

@@ -6,6 +6,11 @@ using Neo4jClient.Cypher;
 using System.Linq;
 using System.Reflection;
 using System.ComponentModel.DataAnnotations.Schema;
+using Neo4jClient.DataAnnotations.Serialization;
+using Neo4jClient.DataAnnotations.Expressions;
+using Newtonsoft.Json.Linq;
+using Neo4jClient.Serialization;
+using Newtonsoft.Json;
 
 namespace Neo4jClient.DataAnnotations.Cypher
 {
@@ -518,18 +523,67 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public bool UseGivenBLabelsOnly { get; protected internal set; }
 
 
-        public LambdaExpression AProperties { get; protected internal set; }
+        private LambdaExpression aProps, rProps, bProps;
+        public LambdaExpression AProperties
+        {
+            get { return aProps; }
+            protected internal set
+            {
+                aProps = value;
+                aFinalPropsSet = false;
+            }
+        }
 
-        public LambdaExpression RProperties { get; protected internal set; }
+        public LambdaExpression RProperties
+        {
+            get { return rProps; }
+            protected internal set
+            {
+                rProps = value;
+                rFinalPropsSet = false;
+            }
+        }
 
-        public LambdaExpression BProperties { get; protected internal set; }
+        public LambdaExpression BProperties
+        {
+            get { return bProps; }
+            protected internal set
+            {
+                bProps = value;
+                bFinalPropsSet = false;
+            }
+        }
 
+        private LambdaExpression aConstrs, rConstrs, bConstrs;
+        public LambdaExpression AConstraints
+        {
+            get { return aConstrs; }
+            protected internal set
+            {
+                aConstrs = value;
+                aFinalPropsSet = false;
+            }
+        }
 
-        public LambdaExpression AConstraints { get; protected internal set; }
+        public LambdaExpression RConstraints
+        {
+            get { return rConstrs; }
+            protected internal set
+            {
+                rConstrs = value;
+                rFinalPropsSet = false;
+            }
+        }
 
-        public LambdaExpression RConstraints { get; protected internal set; }
-
-        public LambdaExpression BConstraints { get; protected internal set; }
+        public LambdaExpression BConstraints
+        {
+            get { return bConstrs; }
+            protected internal set
+            {
+                bConstrs = value;
+                bFinalPropsSet = false;
+            }
+        }
 
         private RelationshipDirection? dir;
         private bool dirSet, isAutoDirection;
@@ -565,17 +619,53 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public bool isExtension { get; protected internal set; }
 
 
-        private Dictionary<string, string> aFinalProps, rFinalProps, bFinalProps;
+        private JObject aFinalProps, rFinalProps, bFinalProps;
         private bool aFinalPropsSet, rFinalPropsSet, bFinalPropsSet;
         /// <summary>
         /// This would contain the properties as they would be written to cypher.
-        /// In other words, a string in cypher would actually still contain its quotation here.
+        /// Parameters would be a <see cref="JRaw"/> value here, and not <see cref="JValue"/> string.
         /// </summary>
-        public Dictionary<string, string> AFinalProperties { get; set; }
+        public JObject AFinalProperties
+        {
+            get
+            {
+                if (!aFinalPropsSet)
+                {
+                    aFinalPropsSet = true;
+                    aFinalProps = GetFinalProperties(this, AProperties, AConstraints, AType);
+                }
 
-        public Dictionary<string, string> RFinalProperties { get; set; }
+                return aFinalProps;
+            }
+        }
 
-        public Dictionary<string, string> BFinalProperties { get; set; }
+        public JObject RFinalProperties
+        {
+            get
+            {
+                if (!rFinalPropsSet)
+                {
+                    rFinalPropsSet = true;
+                    rFinalProps = GetFinalProperties(this, RProperties, RConstraints, RType);
+                }
+
+                return rFinalProps;
+            }
+        }
+
+        public JObject BFinalProperties
+        {
+            get
+            {
+                if (!bFinalPropsSet)
+                {
+                    bFinalPropsSet = true;
+                    bFinalProps = GetFinalProperties(this, BProperties, BConstraints, BType);
+                }
+
+                return bFinalProps;
+            }
+        }
 
 
         //private PropertyInfo rSelProperty, bSelProperty;
@@ -734,12 +824,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
             //CHECK LIST
             //Parameters
             //Labels
+            //hops
             //Constraints
             //Properties
             //Direction
 
             return null;
         }
+
 
         internal static List<PropertyInfo> FilterNavProperties
             (EntityTypeInfo typeInfo, Type navPropertyType, bool includeIEnumerableArg = true)
@@ -1373,6 +1465,41 @@ namespace Neo4jClient.DataAnnotations.Cypher
             }
 
             return dir;
+        }
+
+        internal static LambdaExpression GetConstraintsAsProperties(LambdaExpression constraints, Type type)
+        {
+            var withMethod = Utilities.GetMethodInfo(() => Extensions.With<object>(null, null, true), type);
+
+            return Expression.Lambda(Expression.Call(withMethod, Expression.Constant(type.GetDefaultValue(), type),
+                constraints, Expression.Constant(true) //i.e, usePredicateOnly: true
+                ));
+        }
+
+        internal static JObject GetFinalProperties(Pattern pattern, 
+            LambdaExpression properties, LambdaExpression constraints, Type type)
+        {
+            var lambdaExpr = properties ?? (constraints != null ? GetConstraintsAsProperties(constraints, type) : null);
+
+            var client = (pattern.InternalCypherQuery as IAttachedReference)?.Client;
+
+            var serializer = client?.Serializer ?? new CustomJsonSerializer()
+            {
+                JsonContractResolver = client?.JsonContractResolver ?? GraphClient.DefaultJsonContractResolver,
+                JsonConverters = client?.JsonConverters ?? (IEnumerable<JsonConverter>)GraphClient.DefaultJsonConverters
+            };
+
+            var resolver = client?.JsonContractResolver as EntityResolver ?? 
+                (serializer as CustomJsonSerializer)?.JsonContractResolver as EntityResolver;
+
+            var converters = new List<JsonConverter>((IEnumerable<JsonConverter>)client?.JsonConverters ?? new JsonConverter[0]);
+            converters.AddRange((serializer as CustomJsonSerializer)?.JsonConverters ?? new JsonConverter[0]);
+
+            var converter = converters.FirstOrDefault(c => c is EntityConverter) as EntityConverter;
+
+            Func<object, string> actualSerializer = serializer != null ? (obj) => serializer.Serialize(obj) : (Func<object, string>)null;
+
+            return Utilities.GetFinalProperties(lambdaExpr, resolver, converter, actualSerializer);
         }
     }
 }

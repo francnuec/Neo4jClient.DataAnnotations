@@ -13,26 +13,27 @@ namespace Neo4jClient.DataAnnotations.Expressions
     //
     public class EntityExpressionVisitor : ExpressionVisitor
     {
-        private static Type dictType = typeof(Dictionary<string, object>);
+        public static readonly Type DictType = typeof(Dictionary<string, object>);
 
-        private static MethodInfo dictAddMethod = Utilities.GetMethodInfo(() => new Dictionary<string, object>().Add(null, null));
+        public static readonly MethodInfo DictAddMethod = Utilities.GetMethodInfo(() => new Dictionary<string, object>().Add(null, null));
 
         private Dictionary<string, List<Tuple<string, List<MemberInfo>>>> dictMemberNames;
+        public Dictionary<string, List<Tuple<string, List<MemberInfo>>>> DictMemberNames { get { return dictMemberNames; } }
 
 
-        private List<Expression> paramNodes = new List<Expression>();
+        protected internal List<Expression> SpecialNodeExpressions { get; } = new List<Expression>();
 
-        private List<MethodCallExpression> paramMarkers = new List<MethodCallExpression>();
+        public List<Tuple<List<object>, SpecialNode>> SpecialNodePaths { get; } = new List<Tuple<List<object>, SpecialNode>>();
 
-        public List<List<Expression>> Params { get; } = new List<List<Expression>>();
-
-        public List<List<object>> ParamsPaths { get; } = new List<List<object>>();
+        public List<SpecialNode> SpecialNodes { get; } = new List<SpecialNode>();
 
         public Func<object, string> Serializer { get; private set; }
 
         public EntityResolver Resolver { get; private set; }
 
         public Expression RootNode { get; private set; }
+
+        public Expression Source { get; private set; }
 
 
         public MethodCallExpression WithNode { get; private set; }
@@ -45,13 +46,15 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         public Dictionary<MemberInfo, Expression> WithPredicateMemberAssignments { get; private set; }
 
-        public Dictionary<string, Expression> WithPredicateDictionaryItems { get; private set; }
+        public Dictionary<string, Expression> WithPredicateDictionaryAssignments { get; private set; }
 
         public List<object> WithPredicateBindings { get; private set; }
 
         public ParameterExpression WithPredicateParameter { get; private set; }
 
         public bool WithUsePredicateOnly { get; private set; }
+
+        private bool isVisitingPredicate = false;
 
 
         public EntityExpressionVisitor(EntityResolver resolver, Func<object, string> serializer)
@@ -63,6 +66,9 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         public override Expression Visit(Expression node)
         {
+            if (Source == null)
+                Source = node; //this never changes
+
             bool assignRootNode = false;
 
             if (RootNode == null)
@@ -71,36 +77,16 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 assignRootNode = true;
             }
 
-            List<Expression> filtered = null;
+            List<Expression> filtered = Utilities.GetSimpleMemberAccessStretch(node, out var filteredVal);
+            bool isParams = Utilities.HasParams(filtered);
 
-            if ((filtered = Utilities.GetSimpleMemberAccessStretch(node, out var filteredVal)) != null
-                && Utilities.HasParams(filtered))
+            if (isParams)
             {
-                //found our params call.
-                //be careful to check first if we have encountered this params before
-                int markerIndex = paramNodes.IndexOf(node);
-                MethodCallExpression getParamsExpr = null;
+                //found a special node.
+                SpecialNode specialNode = AddSpecialNode(node, SpecialNodeType.Params, out var isNew,
+                    filtered, filteredVal, generatePlaceholder: true, nodePlaceholder: node);
 
-                if (markerIndex < 0)
-                {
-                    //store
-                    Params.Add(filtered);
-                    paramNodes.Add(node);
-
-                    markerIndex = Params.Count - 1;
-
-                    //replace with marker
-                    getParamsExpr = Expression.Call(typeof(Utilities), "GetParams", new[] { node.Type }, Expression.Constant(markerIndex));
-                    paramMarkers.Add(getParamsExpr);
-                }
-                else
-                {
-                    getParamsExpr = paramMarkers[markerIndex];
-                }
-
-                ParamsPaths.Add(new List<object>() { getParamsExpr });
-
-                return getParamsExpr;
+                node = specialNode.Placeholder;
             }
 
             node = base.Visit(node);
@@ -121,19 +107,39 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     {
                         var dictItems = GetNewExpressionItems(node);
                         //generate dictionary expression
-                        var dictExpr = Expression.ListInit(Expression.New(dictType), dictItems);
-                        return VisitListInit(dictExpr);
+                        var dictExpr = Expression.ListInit(Expression.New(DictType), dictItems);
+                        var dictNode = VisitListInit(dictExpr);
+
+                        //replace the empty members of dict member names generated
+                        if (dictMemberNames != null && dictMemberNames.Count > 0)
+                        {
+                            foreach (var member in node.Members)
+                            {
+                                if (dictMemberNames.TryGetValue(member.Name, out var dictValue))
+                                {
+                                    if (dictValue.Count == 1 && dictValue[0].Item2 == null)
+                                    {
+                                        //not a complex type
+                                        //so add this member
+                                        //this way, all values here would have at least one member
+                                        dictValue[0] = new Tuple<string, List<MemberInfo>>(dictValue[0].Item1, new List<MemberInfo>() { member });
+                                    }
+                                }
+                            }
+                        }
+
+                        return dictNode;
                     }
                 }
             }
 
-            var index = ParamsPaths.Count; //do this to know which Paths to add to
+            var index = SpecialNodePaths.Count; //do this to know which Paths to add to
 
             var newNode = base.VisitNew(node);
 
             if (newNode.Type.IsAnonymousType())
             {
-                AddToParamsPaths(newNode, index);
+                AddToPaths(newNode, index);
             }
 
             return newNode;
@@ -141,60 +147,70 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         protected override Expression VisitNewArray(NewArrayExpression node)
         {
-            var index = ParamsPaths.Count; //do this to know which Paths to add to
-            var newNode = base.VisitNewArray(node);
-            AddToParamsPaths(newNode, index);
-            return newNode;
+            if (node.NodeType == ExpressionType.NewArrayInit)
+            {
+                var index = SpecialNodePaths.Count; //do this to know which Paths to add to
+                var newNode = base.VisitNewArray(node);
+                AddToPaths(newNode, index);
+                return newNode;
+            }
+
+            return node;
         }
 
         protected override Expression VisitListInit(ListInitExpression node)
         {
             node = ResolveDictListInitExpression(node, storeMemberNames: dictMemberNames == null);
 
-            var index = ParamsPaths.Count; //do this to know which Paths to add to
+            var index = SpecialNodePaths.Count; //do this to know which Paths to add to
             var newNode = base.VisitListInit(node);
-            AddToParamsPaths(newNode, index);
+            AddToPaths(newNode, index);
 
             return newNode;
         }
 
         protected override Expression VisitMemberInit(MemberInitExpression node)
         {
-            var index = ParamsPaths.Count; //do this to know which Paths to add to
+            var index = SpecialNodePaths.Count; //do this to know which Paths to add to
             var newNode = base.VisitMemberInit(node);
-            AddToParamsPaths(newNode, index);
+            AddToPaths(newNode, index);
             return newNode;
         }
 
         protected override ElementInit VisitElementInit(ElementInit node)
         {
-            var index = ParamsPaths.Count; //do this to know which Paths to add to
+            var index = SpecialNodePaths.Count; //do this to know which Paths to add to
             var newNode = base.VisitElementInit(node);
-            AddToParamsPaths(newNode, index);
+            AddToPaths(newNode, index);
             return newNode;
         }
 
         protected override MemberAssignment VisitMemberAssignment(MemberAssignment node)
         {
-            var index = ParamsPaths.Count; //do this to know which Paths to add to
+            //if (Utilities.HasNfpEscape(node.Expression) && !NfpEscapedMembers.Any(m => (m as MemberInfo)?.IsEquivalentTo(node.Member) == true))
+            //{
+            //    NfpEscapedMembers.Add(node.Member);
+            //}
+
+            var index = SpecialNodePaths.Count; //do this to know which Paths to add to
             var newNode = base.VisitMemberAssignment(node);
-            AddToParamsPaths(newNode, index);
+            AddToPaths(newNode, index);
             return newNode;
         }
 
         protected override MemberListBinding VisitMemberListBinding(MemberListBinding node)
         {
-            var index = ParamsPaths.Count; //do this to know which Paths to add to
+            var index = SpecialNodePaths.Count; //do this to know which Paths to add to
             var newNode = base.VisitMemberListBinding(node);
-            AddToParamsPaths(newNode, index);
+            AddToPaths(newNode, index);
             return newNode;
         }
 
         protected override MemberMemberBinding VisitMemberMemberBinding(MemberMemberBinding node)
         {
-            var index = ParamsPaths.Count; //do this to know which Paths to add to
+            var index = SpecialNodePaths.Count; //do this to know which Paths to add to
             var newNode = base.VisitMemberMemberBinding(node);
-            AddToParamsPaths(newNode, index);
+            AddToPaths(newNode, index);
             return newNode;
         }
 
@@ -218,6 +234,19 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
                 var predicate = node.Arguments[1].ExecuteExpression<LambdaExpression>();
 
+
+                //do instance visit early on
+                if (RootNode == node)
+                {
+                    //try to exclude 'with' from the normal process.
+                    //so that if the first argument is an anonymous type, it will continue accordingly
+                    RootNode = instanceExpr;
+                }
+
+                WithInstanceNode = Visit(instanceExpr);
+
+
+                //sort out predicate
                 Expression predicateExpression = null;
 
                 if (predicate != null && predicate.Body is BinaryExpression)
@@ -241,33 +270,23 @@ namespace Neo4jClient.DataAnnotations.Expressions
                         }
                         else
                         {
-                            WithPredicateDictionaryItems = new Dictionary<string, Expression>();
+                            WithPredicateDictionaryAssignments = new Dictionary<string, Expression>();
 
                             foreach (var assignment in WithPredicateAssignments)
                             {
                                 var retrieved = Utilities.GetSimpleMemberAccessStretch(assignment.Key, out var valExpr);
                                 var dictKey = (retrieved[1] as MethodCallExpression).Arguments[0].ExecuteExpression<object>().ToString();
-                                WithPredicateDictionaryItems[dictKey] = assignment.Value;
+                                WithPredicateDictionaryAssignments[dictKey] = assignment.Value;
                             }
                         }
 
                         //all sorted. lets generate the expression
                         predicateExpression = GetPredicateExpression(WithPredicateParameter, WithPredicateBindings,
-                            WithPredicateMemberAssignments, WithPredicateDictionaryItems);
+                            WithPredicateMemberAssignments, WithPredicateDictionaryAssignments);
                     }
                 }
-
-                //do visits
-                if (RootNode == node)
-                {
-                    //try to exclude 'with' from the normal process.
-                    //so that if the first argument is an anonymous type, it will continue accordingly
-                    RootNode = instanceExpr;
-                }
-
-                //visit instance first
-                WithInstanceNode = Visit(instanceExpr);
-
+                
+                //perform predicate visit
                 if (WithUsePredicateOnly)
                 {
                     //reassign or clear everything
@@ -275,13 +294,12 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     RootNode = predicateExpression;
 
                     //clear all params, we don't need them again.
-                    Params.Clear();
-                    ParamsPaths.Clear();
-                    paramNodes.Clear();
-                    paramMarkers.Clear();
+                    SpecialNodes.Clear();
+                    SpecialNodePaths.Clear();
+                    SpecialNodeExpressions.Clear();
                     dictMemberNames?.Clear();
                 }
-                else if(isAnonymousType || isDictionaryType)
+                else if (isAnonymousType || isDictionaryType)
                 {
                     var dictItems = (predicateExpression as ListInitExpression)?.Initializers.AsEnumerable();
 
@@ -291,10 +309,13 @@ namespace Neo4jClient.DataAnnotations.Expressions
                         dictItems = GetNewExpressionItems(predicateExpression as NewExpression);
                     }
 
-                    predicateExpression = ResolveDictListInitMemberNames(dictItems, dictMemberNames);
+                    //use the instance dictionary names to set this predicate member names
+                    predicateExpression = ResolveDictListInitMemberNames(dictItems, DictMemberNames);
                 }
 
+                isVisitingPredicate = true;
                 WithPredicateNode = Visit(predicateExpression);
+                isVisitingPredicate = false;
 
                 return WithUsePredicateOnly ? WithPredicateNode : WithInstanceNode;
             }
@@ -302,16 +323,100 @@ namespace Neo4jClient.DataAnnotations.Expressions
             return base.VisitMethodCall(node);
         }
 
-
-        private void AddToParamsPaths(object node, int index)
+        protected override Expression VisitMember(MemberExpression node)
         {
-            for (int i = index, l = ParamsPaths.Count; i < l; i++)
+            if (node.NodeType == ExpressionType.MemberAccess)
             {
-                ParamsPaths[i].Add(node);
+                var exprType = node.Expression?.NodeType;
+                switch (exprType)
+                {
+                    case ExpressionType.MemberInit:
+                    case ExpressionType.ListInit:
+                    case ExpressionType.New:
+                        {
+                            //cache this expression because of the expansions we make
+                            var specialNode =
+                                AddSpecialNode(node.Expression, SpecialNodeType.MemberAccessExpression,
+                                out var isNew, generatePlaceholder: true);
+
+                            if (isNew)
+                            {
+                                specialNode.Node = Visit(node.Expression);
+                            }
+
+                            node = Expression.MakeMemberAccess(specialNode.Placeholder, node.Member);
+                            break;
+                        }
+                }
+            }
+
+            return base.VisitMember(node);
+        }
+
+
+
+        protected virtual SpecialNode AddSpecialNode
+            (Expression node, SpecialNodeType type, out bool isNew, 
+            List<Expression> filtered = null, Expression filteredVal = null, 
+            bool generatePlaceholder = false, Expression nodePlaceholder = null)
+        {
+            //found a special node.
+            //be careful to check first if we have encountered this node before
+            int index = SpecialNodeExpressions.IndexOf(node);
+            nodePlaceholder = node;
+            SpecialNode specialNode = null;
+            isNew = false;
+
+            if (index < 0)
+            {
+                //store
+                specialNode = new SpecialNode(this, node, filtered, filteredVal)
+                {
+                    Type = type,
+                    FoundWhileVisitingPredicate = isVisitingPredicate
+                };
+
+                SpecialNodes.Add(specialNode);
+                SpecialNodeExpressions.Add(node);
+
+                index = SpecialNodeExpressions.Count - 1;
+
+                if (generatePlaceholder)
+                {
+                    if (type == SpecialNodeType.Params)
+                    {
+                        nodePlaceholder = Expression.Call(Defaults.UtilitiesType, "GetParams", new[] { node.Type }, Expression.Constant(index));
+                    }
+                    else
+                    {
+                        nodePlaceholder = Expression.Call(Defaults.ExtensionsType, "GetValue", new[] { node.Type },
+                            Expression.Constant(this), Expression.Constant(index));
+                    }
+                }
+
+                specialNode.Placeholder = nodePlaceholder;
+                isNew = true;
+            }
+            else
+            {
+                specialNode = SpecialNodes[index];
+                nodePlaceholder = specialNode.Placeholder;
+            }
+
+            SpecialNodePaths.Add(new Tuple<List<object>, SpecialNode>(new List<object>() { nodePlaceholder }, specialNode));
+
+            return specialNode;
+        }
+
+        protected virtual void AddToPaths(object node, int index)
+        {
+            for (int i = index, l = SpecialNodePaths.Count; i < l; i++)
+            {
+                SpecialNodePaths[i].Item1.Add(node);
             }
         }
 
-        private List<ElementInit> GetNewExpressionItems(NewExpression node)
+        protected virtual List<ElementInit> GetNewExpressionItems(NewExpression node)
         {
             //transform the anonymous type expression to a dictionary expression
             List<ElementInit> dictItems = new List<ElementInit>();
@@ -325,7 +430,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 if (argument != null && member != null)
                 {
                     dictItems.Add(Expression.ElementInit
-                        (dictAddMethod, Expression.Constant(member),
+                        (DictAddMethod, Expression.Constant(member),
                         argument.Type != Defaults.ObjectType ?
                         Expression.Convert(argument, Defaults.ObjectType) :
                         argument
@@ -336,56 +441,59 @@ namespace Neo4jClient.DataAnnotations.Expressions
             return dictItems;
         }
 
-        private string GetMemberName(Expression argument)
+        protected virtual string GetMemberName(Expression argument)
         {
             string name = null;
 
             var retrievedExprs = Utilities.GetSimpleMemberAccessStretch(argument, out var entityExpr);
 
-            object entity = null;
-
-            if (Resolver == null && Serializer != null)
+            if (retrievedExprs?.Count > 1)
             {
-                //get the entity object
-                try
-                {
-                    entity = entityExpr.ExecuteExpression<object>();
-                }
-                catch
-                {
-                    //something went wrong.
-                    //that shouldn't deter us now to get memberName
-                    //try activating manually
+                object entity = null;
 
+                if (Resolver == null && Serializer != null)
+                {
+                    //get the entity object
                     try
                     {
-                        entity = Activator.CreateInstance(entityExpr.Type);
+                        entity = entityExpr.ExecuteExpression<object>();
                     }
                     catch
                     {
+                        //something went wrong.
+                        //that shouldn't deter us now to get memberName
+                        //try activating manually
 
+                        try
+                        {
+                            entity = Activator.CreateInstance(entityExpr.Type);
+                        }
+                        catch
+                        {
+
+                        }
                     }
                 }
+
+                //get the names
+                var currentIndex = retrievedExprs.IndexOf(entityExpr) + 1;
+                Type cast = null;
+                var entityType = entity?.GetType() ??
+                    (currentIndex < retrievedExprs.Count //check if the next expression to entity expression was just a cast, and instead use the cast type as entity type
+                    && retrievedExprs[currentIndex]?.Uncast(out cast) == entityExpr
+                    && cast != null ? cast : entityExpr.Type);
+
+                var memberNames = Utilities.GetEntityPathNames
+                    (ref entity, ref entityType, retrievedExprs, ref currentIndex, Resolver, Serializer,
+                    out var entityMembers, out var lastType, useResolvedJsonName: true);
+
+                name = memberNames?.LastOrDefault(); //we are only interested in the last member name.
             }
-
-            //get the names
-            var currentIndex = retrievedExprs.IndexOf(entityExpr) + 1;
-            Type cast = null;
-            var entityType = entity?.GetType() ??
-                (currentIndex < retrievedExprs.Count //check if the next expression to entity expression was just a cast, and instead use the cast type as entity type
-                && retrievedExprs[currentIndex]?.Uncast(out cast) == entityExpr
-                && cast != null ? cast : entityExpr.Type);
-
-            var memberNames = Utilities.GetEntityPathNames
-                (ref entity, ref entityType, retrievedExprs, ref currentIndex, Resolver, Serializer,
-                out var entityMembers, out var lastType, useResolvedJsonName: true);
-
-            name = memberNames?.LastOrDefault(); //we are only interested in the last member name.
 
             return name;
         }
 
-        private List<object> GetPathBindings(IEnumerable<MemberInfo> members,
+        protected virtual List<object> GetPathBindings(IEnumerable<MemberInfo> members,
             Dictionary<MemberInfo, Tuple<Type, List<MemberInfo>>> memberChildren,
             Dictionary<MemberInfo, Expression> memberAssignments)
         {
@@ -398,14 +506,19 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 var value = memberChildren[member];
                 var children = value.Item2;
 
+                Expression assignment = null;
+                memberAssignments.TryGetValue(member, out assignment);
+
                 bool isWritable = propInfo?.CanWrite == true || fieldInfo != null;
-                bool hasChildren = children?.Count > 0;
+                bool hasChildren = children?.Count > 0 && assignment == null; //skip the children if it was assigned to directly
 
                 Type type = value.Item1 ?? propInfo?.PropertyType ?? fieldInfo?.FieldType;
 
                 object binding = null;
                 List<object> childBindings = null;
                 IEnumerable<MemberBinding> filteredChildBindings = null;
+
+                assignment = assignment ?? (!hasChildren ? Expression.Constant(type.GetDefaultValue()) : null);
 
                 if (hasChildren)
                 {
@@ -418,7 +531,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     //assign a new instance
                     try
                     {
-                        var expr = !hasChildren ? memberAssignments[member] : Expression.MemberInit
+                        var expr = !hasChildren ? assignment : Expression.MemberInit
                             (Expression.New(type), filteredChildBindings);
 
                         binding = Expression.Bind(member, expr);
@@ -443,7 +556,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                         //use tuple
                         binding = new Tuple<MemberInfo, Tuple<Type, object>>(member,
                             new Tuple<Type, object>(type,
-                            hasChildren ? (object)filteredChildBindings.ToArray() : memberAssignments[member]));
+                            hasChildren ? (object)filteredChildBindings.ToArray() : assignment));
                     }
                 }
 
@@ -453,7 +566,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
             return bindings;
         }
 
-        private Dictionary<MemberInfo, Expression> GetPredicateMemberAssignments(Dictionary<Expression, Expression> assignments,
+        protected virtual Dictionary<MemberInfo, Expression> GetPredicateMemberAssignments(Dictionary<Expression, Expression> assignments,
             out List<MemberInfo> rootMembers,
             out Dictionary<MemberInfo, Tuple<Type, List<MemberInfo>>> memberChildren)
         {
@@ -469,37 +582,105 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
                 var index = assignmentExprs.IndexOf(entityVal) + 1;
                 Utilities.TraverseEntityPath(null, assignmentExprs, ref index,
-                    out var assignmentLastType, out var assignmentPaths, buildPath: false);
+                    out var assignmentLastType, out var assignmentPath, buildPath: false);
 
-                memberAssignments[assignmentPaths.Last().Key] = assignment.Value;
+                memberAssignments[assignmentPath.Last().Key] = assignment.Value;
 
                 //sort members and children
-                var members = assignmentPaths.OrderBy(p => p.Value.Item1).Select(p => p.Key).ToList();
+                var members = assignmentPath.OrderBy(p => p.Value.Item1).Select(p => p.Key).ToList();
 
                 rootMembers.Add(members.FirstOrDefault());
 
-                foreach (var member in members)
-                {
-                    if (!memberChildren.TryGetValue(member, out var memberVal))
-                    {
-                        memberVal = new Tuple<Type, List<MemberInfo>>(assignmentPaths[member].Item2, new List<MemberInfo>());
-                        memberChildren[member] = memberVal;
-                    }
+                SortMemberAccess(memberChildren, members, (member) => assignmentPath
+                .TryGetValue(member, out var val) ? val.Item2 : member.GetMemberType());
 
-                    var child = members.Skip(members.IndexOf(member) + 1).FirstOrDefault();
+                //foreach (var member in members)
+                //{
+                //    var child = members.Skip(members.IndexOf(member) + 1).FirstOrDefault();
 
-                    if (child != null)
-                        memberVal.Item2.Add(child);
-                }
+                //    if (!memberChildren.TryGetValue(member, out var memberVal))
+                //    {
+                //        memberVal = new Tuple<Type, List<MemberInfo>>(assignmentPath[member].Item2, new List<MemberInfo>());
+                //        memberChildren[member] = memberVal;
+                //    }
+                //    else if (child?.DeclaringType != memberVal.Item1
+                //      && memberVal.Item1.IsGenericAssignableFrom(child.DeclaringType))
+                //    {
+                //        //pick the derived type
+                //        memberVal = new Tuple<Type, List<MemberInfo>>(child.DeclaringType, memberVal.Item2);
+                //        memberChildren[member] = memberVal;
+                //    }
+
+                //    if (child != null)
+                //        memberVal.Item2.Add(child);
+                //}
             }
 
             return memberAssignments;
         }
 
-        private Expression GetPredicateExpression(
+        private void SortMemberAccess(Dictionary<MemberInfo, Tuple<Type, List<MemberInfo>>> memberChildren,
+            List<MemberInfo> members, Func<MemberInfo, Type> getMemberType, bool handleComplexTypes = true)
+        {
+            foreach (var member in members)
+            {
+                var child = members.Skip(members.IndexOf(member) + 1).FirstOrDefault();
+
+                if (!memberChildren.TryGetValue(member, out var memberVal))
+                {
+                    memberVal = new Tuple<Type, List<MemberInfo>>(getMemberType(member), new List<MemberInfo>());
+                    memberChildren[member] = memberVal;
+                }
+
+                if (child != null)
+                {
+                    if (child.DeclaringType != memberVal.Item1
+                        && memberVal.Item1.IsGenericAssignableFrom(child.DeclaringType))
+                    {
+                        //pick the derived type
+                        memberVal = new Tuple<Type, List<MemberInfo>>(child.DeclaringType, memberVal.Item2);
+                        memberChildren[member] = memberVal;
+                    }
+
+                    if (!memberVal.Item2.Contains(child))
+                        memberVal.Item2.Add(child);
+                }
+            }
+
+            //handle complex types
+            foreach (var member in members)
+            {
+                var memberVal = memberChildren[member];
+
+                if (memberVal.Item1.IsComplex())
+                {
+                    //get all complex paths
+                    Utilities.ExplodeComplexType(memberVal.Item1, out var inversePaths);
+
+                    if (inversePaths.Count > 0)
+                    {
+                        foreach (var inversePath in inversePaths)
+                        {
+                            inversePath.Reverse();
+
+                            var child = inversePath[0];
+
+                            if (!memberVal.Item2.Contains(child))
+                            {
+                                memberVal.Item2.Add(child);
+                            }
+
+                            SortMemberAccess(memberChildren, inversePath, getMemberType, handleComplexTypes: handleComplexTypes);
+                        }
+                    }
+                }
+            }
+        }
+
+        protected virtual Expression GetPredicateExpression(
             ParameterExpression parameter, List<object> bindings,
             Dictionary<MemberInfo, Expression> memberAssignments,
-            Dictionary<string, Expression> dictionaryItems)
+            Dictionary<string, Expression> dictionaryAssignments)
         {
             NewExpression newExpr = null;
             Expression predicateExpression = null;
@@ -509,7 +690,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 //anonymous type
                 var constructor = parameter.Type.GetConstructors()[0];
 
-                //build the argument list from the anonymous type delcared properties.
+                //build the argument list from the anonymous type declared properties.
                 //by default, the order at which they were declared on the type is the order for which they would appear in the constructor
                 var props = parameter.Type.GetProperties();
                 var arguments = new List<Expression>();
@@ -564,10 +745,10 @@ namespace Neo4jClient.DataAnnotations.Expressions
             else if (parameter.Type.IsDictionaryType())
             {
                 //build list init
-                newExpr = Expression.New(dictType);
+                newExpr = Expression.New(DictType);
                 predicateExpression = Expression.ListInit(newExpr,
-                    dictionaryItems.Select(item =>
-                    Expression.ElementInit(dictAddMethod, Expression.Constant(item.Key), 
+                    dictionaryAssignments.Select(item =>
+                    Expression.ElementInit(DictAddMethod, Expression.Constant(item.Key), 
                     item.Value.Type != Defaults.ObjectType ?
                     Expression.Convert(item.Value, Defaults.ObjectType) :
                     item.Value)));
@@ -581,7 +762,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
             return predicateExpression;
         }
 
-        private ListInitExpression ResolveDictListInitExpression(ListInitExpression node, bool storeMemberNames)
+        protected virtual ListInitExpression ResolveDictListInitExpression(ListInitExpression node, bool storeMemberNames)
         {
             if (node.NewExpression.Type.IsDictionaryType())
             {
@@ -598,7 +779,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     {
                         foreach (var item in _dictMemberNames)
                         {
-                            dictMemberNames.Add(item.Key, item.Value);
+                            dictMemberNames[item.Key] = item.Value;
                         }
                     }
                 }
@@ -607,7 +788,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
             return node;
         }
 
-        private ListInitExpression GetDictListInitExpression(IEnumerable<ElementInit> initializers, 
+        protected virtual ListInitExpression GetDictListInitExpression(IEnumerable<ElementInit> initializers, 
             out Dictionary<string, List<Tuple<string, List<MemberInfo>>>> dictMemberNames)
         {
             dictMemberNames = new Dictionary<string, List<Tuple<string, List<MemberInfo>>>>();
@@ -620,85 +801,15 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 //expand members if complex type
                 //if there's a cast, remove it.
                 var key = initializer.Arguments[0].Uncast(out var keyCastType);
-                var baseMember = key.ExecuteExpression<object>().ToString();
-                var members = new List<string>() { baseMember };
+                var baseMemberName = key.ExecuteExpression<object>().ToString();
 
                 var value = initializer.Arguments[1].Uncast(out var argCastType);
-                var arguments = new List<Expression>() { value };
 
-                bool hasNfpEscape = Utilities.HasNfpEscape(value);
+                var baseMemberJsonName = new string(baseMemberName.ToCharArray());
 
-                if (!hasNfpEscape)
-                {
-                    bool originallyMemberAccess = value.NodeType == ExpressionType.MemberAccess
-                        && (value as MemberExpression).Member.Name == baseMember; //test first level first
-
-                    if (!originallyMemberAccess && value is UnaryExpression)
-                    {
-                        //try second level
-                        var memberExpr = value.Uncast(out var valCast) as MemberExpression;
-
-                        if(memberExpr != null)
-                        {
-                            //test and accept second level too
-                            originallyMemberAccess = memberExpr.NodeType == ExpressionType.MemberAccess
-                                && memberExpr.Member.Name == baseMember;
-                        }
-                    }
-
-                    bool isComplexType = false;
-
-                    //check if its complex and resolve in the possible best way.
-                    var expandedArgs = Utilities.ExpandComplexTypeAccess(value, out var argInversePaths);
-
-                    if (expandedArgs.Count > 0)
-                    {
-                        //has complex members
-                        //use the scalars instead
-                        arguments = expandedArgs;
-                        isComplexType = true;
-                    }
-
-                    members.Clear();
-
-                    for (int j = 0, jl = arguments.Count; j < jl; j++)
-                    {
-                        var argument = arguments[j];
-
-                        string memberName = null;
-
-                        if (originallyMemberAccess)
-                        {
-                            //try find the actual json name
-                            var newMemberName = GetMemberName(argument);
-                            memberName = !string.IsNullOrWhiteSpace(newMemberName) ? newMemberName : null;
-                        }
-
-                        if (memberName == null)
-                        {
-                            if (isComplexType)
-                            {
-                                //use appended name if complex type
-                                memberName = $"{baseMember}_{argInversePaths[j].AsEnumerable().Reverse().Select(m => m.Name).Aggregate((first, second) => $"{first}_{second}")}";
-                            }
-                            else
-                            {
-                                //just use base name
-                                memberName = baseMember;
-                            }
-                        }
-
-                        members.Add(memberName);
-
-                        if (!dictMemberNames.TryGetValue(baseMember, out var resolvedValues))
-                        {
-                            resolvedValues = new List<Tuple<string, List<MemberInfo>>>();
-                            dictMemberNames[baseMember] = resolvedValues;
-                        }
-
-                        resolvedValues.Add(new Tuple<string, List<MemberInfo>>(memberName, isComplexType ? argInversePaths[j] : null));
-                    }
-                }
+                ResolveDictionaryMemberAssignment(baseMemberName, ref baseMemberJsonName, ref value, dictMemberNames,
+                    out var members, out var arguments, out var isMemberAccess,
+                    out var isComplexType, out var hasNfpEscape);
 
                 //generate the expression entry
                 for (int j = 0, jl = arguments.Count; j < jl; j++)
@@ -709,7 +820,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     if (argument != null && member != null)
                     {
                         dictItems.Add(Expression.ElementInit
-                            (dictAddMethod, Expression.Constant(member),
+                            (DictAddMethod, Expression.Constant(member),
                             argument.Type != Defaults.ObjectType ?
                                 Expression.Convert(argument, Defaults.ObjectType) :
                                 argument
@@ -719,10 +830,138 @@ namespace Neo4jClient.DataAnnotations.Expressions
             }
 
             //generate dictionary expression
-            return Expression.ListInit(Expression.New(dictType), dictItems);
+            return Expression.ListInit(Expression.New(DictType), dictItems);
         }
 
-        private ListInitExpression ResolveDictListInitMemberNames(IEnumerable<ElementInit> initializers, 
+        protected virtual void ResolveDictionaryMemberAssignment
+            (string baseMemberName, ref string baseMemberJsonName, ref Expression value,
+            Dictionary<string, List<Tuple<string, List<MemberInfo>>>> dictMemberNames,
+            out List<string> members, out List<Expression> arguments,
+            out bool isMemberAccess, out bool isComplexType, out bool hasNfpEscape)
+        {
+            baseMemberJsonName = baseMemberJsonName ?? baseMemberName;
+            members = new List<string>() { baseMemberJsonName };
+            arguments = new List<Expression>() { value };
+            isMemberAccess = false;
+
+            hasNfpEscape = Utilities.HasNfpEscape(value);
+
+            var valueType = value.Type;
+            isComplexType = valueType.IsComplex();
+
+            if (!hasNfpEscape)
+            {
+                isMemberAccess = value.NodeType == ExpressionType.MemberAccess
+                    && (value as MemberExpression).Member.Name == baseMemberName; //test first level first
+
+                if (!isMemberAccess && value is UnaryExpression)
+                {
+                    //try second level
+                    var memberExpr = value.Uncast(out var valCast) as MemberExpression;
+
+                    if (memberExpr != null)
+                    {
+                        //test and accept second level too
+                        isMemberAccess = memberExpr.NodeType == ExpressionType.MemberAccess
+                            && memberExpr.Member.Name == baseMemberName;
+                    }
+                }
+
+                if (isMemberAccess)
+                {
+                    value = value.Cast(out var valueCast); //take advantage of the object passed where available.
+                    valueType = value.Type;
+                }
+
+                List<List<MemberInfo>> argInversePaths = null;
+
+                if (isComplexType)
+                {
+                    //it's complex so resolve in the possible best way.
+                    var expandedArgs = Utilities.ExplodeComplexTypeMemberAccess(value, out argInversePaths);
+
+                    if (expandedArgs.Count > 0)
+                    {
+                        //has complex members
+                        //use the scalars instead
+                        arguments = expandedArgs;
+                        isComplexType = true;
+                    }
+                }
+
+                members.Clear();
+
+                for (int j = 0, jl = arguments.Count; j < jl; j++)
+                {
+                    var argument = arguments[j];
+
+                    string memberName = null;
+
+                    if (isMemberAccess || isComplexType)
+                    {
+                        argument = argument.Cast(out var argCast);
+
+                        //try find the actual json name
+                        var newMemberName = GetMemberName(argument);
+                        newMemberName = !string.IsNullOrWhiteSpace(newMemberName) ? newMemberName : null;
+
+                        if (newMemberName != null)
+                        {
+                            if (isMemberAccess)
+                            {
+                                memberName = newMemberName;
+                            }
+                            else if (isComplexType)
+                            {
+                                memberName = $"{baseMemberJsonName}{Defaults.ComplexTypeNameSeparator}{newMemberName}";
+                            }
+                        }
+                    }
+
+                    if (memberName == null)
+                    {
+                        if (isComplexType)
+                        {
+                            //use appended name if complex type
+                            memberName = argInversePaths[j].AsEnumerable().Reverse().Select(m => m.Name)
+                                .Aggregate((first, second) => $"{first}{Defaults.ComplexTypeNameSeparator}{second}");
+
+                            memberName = $"{baseMemberName}{Defaults.ComplexTypeNameSeparator}{memberName}"; //use its base member name here, not json's
+                        }
+                        else
+                        {
+                            //just use base name
+                            memberName = baseMemberName;
+                        }
+                    }
+
+                    members.Add(memberName);
+
+                    AddToDictMemberName(dictMemberNames, baseMemberName, memberName, isComplexType ? argInversePaths[j] : null);
+                }
+            }
+            else
+            {
+                AddToDictMemberName(dictMemberNames, baseMemberName, baseMemberJsonName, null);
+            }
+        }
+
+        private void AddToDictMemberName(Dictionary<string, List<Tuple<string, List<MemberInfo>>>> dictMemberNames,
+            string baseMemberName, string memberName, List<MemberInfo> complexPath)
+        {
+            if (!dictMemberNames.TryGetValue(baseMemberName, out var resolvedValues))
+            {
+                resolvedValues = new List<Tuple<string, List<MemberInfo>>>();
+                dictMemberNames[baseMemberName] = resolvedValues;
+            }
+
+            if (!resolvedValues.Any(r => r.Item1 == memberName))
+            {
+                resolvedValues.Add(new Tuple<string, List<MemberInfo>>(memberName, complexPath));
+            }
+        }
+
+        protected virtual ListInitExpression ResolveDictListInitMemberNames(IEnumerable<ElementInit> initializers, 
             Dictionary<string, List<Tuple<string, List<MemberInfo>>>> dictMemberNames)
         {
             if (dictMemberNames?.Count > 0)
@@ -731,59 +970,92 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 var newDictItems = new List<ElementInit>();
 
                 Action<string, Expression> addNewItem = (name, expr) =>
-                    newDictItems.Add(Expression.ElementInit(dictAddMethod, Expression.Constant(name),
+                    newDictItems.Add(Expression.ElementInit(DictAddMethod, Expression.Constant(name),
                     expr.Type != Defaults.ObjectType ? Expression.Convert(expr, Defaults.ObjectType) : expr));
 
-                foreach (var item in initializers) // (int i = 0, l = dictItems.Count; i < l; i++)
+                foreach (var item in initializers)
                 {
-                    var memberName = item.Arguments[0].Uncast(out var memCast).ExecuteExpression<object>().ToString();
-                    var dictValueExpr = item.Arguments[1].Uncast(out var valCast);
+                    var baseMemberName = item.Arguments[0].ExecuteExpression<object>().ToString();
+                    var dictValueExpr = item.Arguments[1].Uncast(out var valCast, Defaults.ObjectType);
 
-                    if (dictMemberNames.TryGetValue(memberName, out var baseMemberValues))
+                    if (dictMemberNames.TryGetValue(baseMemberName, out var baseMemberValues))
                     {
                         if (baseMemberValues.Count > 1)
                         {
-                            //maybe a complex type
+                            //complex type
                             //replace and extend
-                            foreach (var baseMemVal in baseMemberValues)
+                            //but let dictValueExpr take precedence
+
+                            //pick the first name before the first 'underscore'
+                            var itemName = baseMemberValues.First().Item1;
+                            var sepIdx = itemName.IndexOf(Defaults.ComplexTypeNameSeparator);
+                            var baseMemberJsonName = sepIdx > 0 ? itemName.Substring(0, sepIdx) : new string(itemName.ToCharArray());
+
+                            ResolveDictionaryMemberAssignment(baseMemberName, ref baseMemberJsonName, ref dictValueExpr, dictMemberNames, out var newMembers,
+                                out var newArgs, out var isMemberAccess, out var isComplexType, out var hasNfpEscape);
+
+                            //add the new members
+                            for (int i = 0, l = newMembers.Count; i < l; i++)
                             {
-                                //generate new dictionary value expression
-                                var baseMemValExpr = dictValueExpr;
-
-                                if (baseMemVal.Item2?.Count > 0)
-                                {
-                                    //extend by members
-                                    foreach (var baseMemValMemInfo in baseMemVal.Item2.AsEnumerable().Reverse()) //LIFO
-                                    {
-                                        baseMemValExpr = Expression.PropertyOrField(baseMemValExpr, baseMemValMemInfo.Name);
-                                    }
-                                }
-
-                                //add the new item
-                                //retrieved value wins key
-                                addNewItem(baseMemVal.Item1, baseMemValExpr);
+                                addNewItem(newMembers[i], newArgs[i]);
                             }
+
+                            //foreach (var baseMemVal in baseMemberValues)
+                            //{
+                            //    //generate new dictionary value expression
+                            //    var baseMemValExpr = dictValueExpr;
+
+                            //    if (baseMemVal.Item2?.Count > 0)
+                            //    {
+                            //        //extend by members
+                            //        foreach (var baseMemValMemInfo in baseMemVal.Item2.AsEnumerable().Reverse()) //LIFO
+                            //        {
+                            //            if (!baseMemValMemInfo.DeclaringType.IsGenericAssignableFrom(baseMemValExpr.Type))
+                            //            {
+                            //                //unexpected member. it belongs to a derived type not exposed to this expression
+                            //                //break this loop
+                            //                //don't add
+                            //                baseMemValExpr = dictValueExpr;
+                            //                break;
+                            //            }
+
+                            //            baseMemValExpr = Expression.MakeMemberAccess(baseMemValExpr, baseMemValMemInfo);
+                            //        }
+
+                            //        if (baseMemValExpr == dictValueExpr)
+                            //            continue; //nothing happened, don't add
+                            //    }
+
+                            //    //add the new item
+                            //    //retrieved value wins key
+                            //    addNewItem(baseMemVal.Item1, baseMemValExpr);
+                            //}
+                            continue;
                         }
-                        else if (memberName != baseMemberValues.FirstOrDefault()?.Item1)
+                        else if (baseMemberName != baseMemberValues.FirstOrDefault()?.Item1)
                         {
                             //retrieved value wins key
                             addNewItem(baseMemberValues[0].Item1, dictValueExpr);
-                        }
-                        else
-                        {
-                            addNewItem(memberName, dictValueExpr);
+                            continue;
                         }
                     }
                     else
                     {
-                        addNewItem(memberName, dictValueExpr);
+                        AddToDictMemberName(dictMemberNames, baseMemberName, baseMemberName, null);
                     }
+
+                    addNewItem(baseMemberName, dictValueExpr);
                 }
 
                 initializers = newDictItems;
             }
 
-            return Expression.ListInit(Expression.New(dictType), initializers);
+            return Expression.ListInit(Expression.New(DictType), initializers);
+        }
+
+        protected internal bool IsPredicateAssignmentValue(Expression expression)
+        {
+            return WithPredicateAssignments != null && WithPredicateAssignments.Values.Contains(expression);
         }
     }
 }

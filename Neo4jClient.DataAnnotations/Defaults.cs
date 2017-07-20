@@ -22,10 +22,15 @@ namespace Neo4jClient.DataAnnotations
         public static readonly Type ExtensionsType = typeof(Extensions);
         public static readonly Type NeoScalarType = typeof(NeoScalarAttribute);
         public static readonly Type ObjectType = typeof(object);
-        public static Type DictionaryType = typeof(IDictionary<,>);
+        public static readonly Type DictionaryType = typeof(IDictionary<,>);
+        public static readonly Type UtilitiesType = typeof(Utilities);
         #endregion
 
+        public static string ComplexTypeNameSeparator = "_";
+
         public static DefaultContractResolver ContractResolver = null;
+
+        public static Serialization.EntityConverter EntityConverter = null;
 
         public static List<Type> ScalarTypes { get; } = new List<Type>()
         {
