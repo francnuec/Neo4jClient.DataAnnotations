@@ -4257,9 +4257,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="source"></param>
         /// <param name="A"></param>
         /// <returns></returns>
-        public static IPathFinisher S(this IPath source)
+        public static IPathExtent S(this IPath source)
         {
-            return SharedShortest(source).Assign();
+            return SharedShortest(source);
         }
         #endregion
 
@@ -4274,7 +4274,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// </summary>
         /// <param name="source"></param>
         /// <returns></returns>
-        public static IPathFinisher A(this IPath source)
+        public static IPathExtent A(this IPath source)
         {
             return SharedAssign(source);
         }
@@ -4289,7 +4289,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// </summary>
         /// <param name="source"></param>
         /// <returns></returns>
-        public static IPathFinisher A(this IPathExtension source)
+        public static IPathExtent A(this IPathExtension source)
         {
             return SharedAssign(source);
         }

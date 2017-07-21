@@ -10,6 +10,7 @@ using Neo4jClient.DataAnnotations.Serialization;
 using Neo4jClient.DataAnnotations.Expressions;
 using Newtonsoft.Json.Linq;
 using System.Collections;
+using Neo4jClient.Cypher;
 
 namespace Neo4jClient.DataAnnotations
 {
@@ -1446,6 +1447,27 @@ namespace Neo4jClient.DataAnnotations
             }
 
             return filteredProps;
+        }
+
+        public static string BuildPaths(ICypherFluentQuery query, 
+            IEnumerable<Expression<Func<IPathBuilder, IPathExtent>>> pathBuildExpressions,
+            PatternBuildStrategy patternBuildStrategy)
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+
+            var pathsText = pathBuildExpressions.Select(pathExpr =>
+            {
+                var pathBuilder = new PathBuilder(query, pathExpr)
+                {
+                    PatternBuildStrategy = patternBuildStrategy
+                };
+
+                return pathBuilder.Build();
+            }).Aggregate((first, second) => $"{first}, {second}");
+
+            stringBuilder.Append(pathsText);
+
+            return stringBuilder.ToString();
         }
     }
 }

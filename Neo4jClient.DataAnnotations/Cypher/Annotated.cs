@@ -22,14 +22,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
             this.InternalCypherQuery = query ?? throw new ArgumentNullException(nameof(query));
         }
 
-        public Annotated(Annotated existing)
-            : this(existing?.InternalCypherQuery)
-        {
-            if (existing == null)
-                throw new ArgumentNullException(nameof(existing));
+        //public Annotated(Annotated existing)
+        //    : this(existing?.InternalCypherQuery)
+        //{
+        //    if (existing == null)
+        //        throw new ArgumentNullException(nameof(existing));
 
-            //existing.CommitToCypherQuery();
-        }
+        //    //existing.CommitToCypherQuery();
+        //}
 
         public virtual ICypherFluentQuery CypherQuery
         {

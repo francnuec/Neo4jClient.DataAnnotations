@@ -9,24 +9,29 @@ namespace Neo4jClient.DataAnnotations.Cypher
 {
     public interface IPathable
     {
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        IPath Origin { get; }
+        //[EditorBrowsable(EditorBrowsableState.Never)]
+        //IPath Origin { get; }
     }
 
     public interface IPathBuilder : IPathable, IAnnotated
     {
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        Expression<Func<IPathBuilder, IPathable>> Expression { get; }
+        IPathExtent Path { get; set; }
+
+        string PathParameter { get; set; }
+
+        PatternBuildStrategy PatternBuildStrategy { get; set; }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        string PathParameter { get; }
+        bool AssignPathParameter { get; }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        bool IsShortestPath { get; }
+        bool FindShortestPath { get; }
     }
 
     public interface IPathExtent : IPathable, IAnnotated
     {
+        IPathBuilder Builder { get; }
+
         [EditorBrowsable(EditorBrowsableState.Never)]
         IPattern Pattern { get; }
 
@@ -34,12 +39,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         IPathExtension Extension { get; }
     }
 
+
     public interface IPath : IPathExtent, IAnnotated
     {
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        IPathBuilder Builder { get; }
-
-        IPathFinisher Finisher { get; }
     }
 
     public interface IPatternedPath : IPath
@@ -65,8 +67,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
     public interface IPathExtension : IPathExtent, IAnnotated
     {
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        IPathExtent Current { get;  }
+        //[EditorBrowsable(EditorBrowsableState.Never)]
+        //IPathExtent Current { get;  }
     }
 
     public interface IPatternedPathExtension : IPathExtension
@@ -87,15 +89,5 @@ namespace Neo4jClient.DataAnnotations.Cypher
     public interface IPatternedPathExtension<out TANode, out TRel, out TBNode> : IPathExtension
     {
 
-    }
-
-
-    public interface IPathFinisher : IPathable, IAnnotated
-    {
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        bool AssignPathParameter { get; }
-
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        bool FindShortestPath { get; }
     }
 }

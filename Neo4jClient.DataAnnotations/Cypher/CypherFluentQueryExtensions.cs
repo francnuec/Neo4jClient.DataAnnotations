@@ -9,83 +9,78 @@ namespace Neo4jClient.DataAnnotations.Cypher
 {
     public static partial class CypherFluentQueryExtensions
     {
-        ///// <summary>
-        ///// Converts this <see cref="ICypherFluentQuery"/> to an <see cref="IAnnonatedQuery"/>.
-        ///// This may also resolve method signature conflicts between <see cref="ICypherFluentQuery"/> and <see cref="IAnnotatedBuilder"/> methods.
-        ///// </summary>
-        ///// <param name="query"></param>
-        ///// <returns></returns>
-        //public static IAnnotatedBuilder AsAnnonated(this ICypherFluentQuery query)
-        //{
-        //    return new DummyAnnonatedQuery(query);
-        //}
-
-        ///// <summary>
-        ///// Converts this <see cref="IAnnotatedBuilder"/> back to its underlying <see cref="ICypherFluentQuery"/>.
-        ///// This is particularly useful in cases where some <see cref="ICypherFluentQuery"/> methods are missing from the <see cref="IAnnotatedBuilder"/> extension methods.
-        ///// </summary>
-        ///// <returns><see cref="ICypherFluentQuery"/></returns>
-        //public static ICypherFluentQuery AsCypherFluent(this IAnnotatedBuilder query)
-        //{
-        //    return query.CypherFluentQuery;
-        //}
-
-        public static ICypherFluentQuery Match(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathable>>[] patterns)
+        /// <summary>
+        /// Builds Neo4j pattern using the <see cref="PatternBuildStrategy.NoParams"/> strategy, separating them with a comma.
+        /// E.g Given: (path) => path.Pattern("a").Assign(), (path2) => path2.Pattern("b", "c"), you should get the Neo4j pattern: path=(a), (b)-->(c).
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="patternDescriptions"></param>
+        /// <returns></returns>
+        public static string GetPattern(this ICypherFluentQuery query,
+            params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
-            query.Match((p) => p
-            .Pattern<string>("").Label(null).Constrain((a) => a == (object)12)
-            .Extend(RelationshipDirection.Outgoing).Label(null).Constrain(null)
-            .ThenExtend(RelationshipDirection.Incoming).Label(null).Constrain(null)
-            .Assign());
-
-            query.Match((p) => p
-            .P("").L(null).C((a) => a == (object)12)
-            .E(RelationshipDirection.Outgoing).L(null).C(null)
-            .TE(RelationshipDirection.Incoming).L(null).C(null)
-            .A());
-
-            return null;
+            return GetPattern(query, PatternBuildStrategy.NoParams, patternDescriptions);
         }
 
-        //public static IPathBuilder Match(this IAnnotatedBuilder query)
-        //{
-        //    return null;
-        //}
-
-        public static ICypherFluentQuery OptionalMatch(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathable>>[] patterns)
+        /// <summary>
+        /// Builds Neo4j Patterns using the specified <see cref="PatternBuildStrategy"/>, separating them with a comma.
+        /// E.g Given: (path) => path.Pattern("a").Assign(), (path2) => path2.Pattern("b", "c"), you should get the Neo4j pattern: path=(a), (b)-->(c).
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="patternDescriptions"></param>
+        /// <returns></returns>
+        public static string GetPattern(this ICypherFluentQuery query,
+            PatternBuildStrategy patternBuildStrategy,
+            params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
-            return null;
+            return Utilities.BuildPaths(query,
+                patternDescriptions ?? throw new ArgumentNullException(nameof(patternDescriptions)),
+                patternBuildStrategy);
         }
 
-        //public static IPathBuilder OptionalMatch(this IAnnotatedBuilder query)
-        //{
-        //    return null;
-        //}
-
-        public static ICypherFluentQuery Merge(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathable>>[] patterns)
+        /// <summary>
+        /// Generates a cypher MATCH statement from the pattern descriptions.
+        /// E.g Given: (path) => path.Pattern("a").Assign(), (path2) => path2.Pattern("b", "c"), you should get the Neo4j pattern: MATCH path=(a), (b)-->(c).
+        /// </summary>
+        public static ICypherFluentQuery Match(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
-            return null;
+            return query.Match(GetPattern(query, PatternBuildStrategy.WithParamsForValues, patternDescriptions));
         }
 
-        //public static IPathBuilder Merge(this IAnnotatedBuilder query)
-        //{
-        //    return null;
-        //}
-
-        public static ICypherFluentQuery Create(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathable>>[] patterns)
+        /// <summary>
+        /// Generates a cypher OPTIONAL MATCH statement from the pattern descriptions.
+        /// E.g Given: (path) => path.Pattern("a").Assign(), (path2) => path2.Pattern("b", "c"), you should get the Neo4j pattern: OPTIONAL MATCH path=(a), (b)-->(c).
+        /// </summary>
+        public static ICypherFluentQuery OptionalMatch(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
-            //query.Create()
-            //    .Pattern("")
-            //    .Label(null)
-            //    .Constrain((a) => a["yes"] == "ok")
-            //    .ExtendedByPath(RelationshipDirection.Outgoing)
-            //    .ThenByPath(RelationshipDirection.Outgoing)
-            //    .AndThen()
-            //    .Pattern()
+            return query.OptionalMatch(GetPattern(query, PatternBuildStrategy.WithParamsForValues, patternDescriptions));
+        }
 
-            //query.Create().Pattern((p) => p.Label(null).Constrain((a)));
+        /// <summary>
+        /// Generates a cypher MERGE statement from the pattern descriptions.
+        /// E.g Given: (path) => path.Pattern("a").Assign(), (path2) => path2.Pattern("b", "c"), you should get the Neo4j pattern: MERGE path=(a), (b)-->(c).
+        /// </summary>
+        public static ICypherFluentQuery Merge(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
+        {
+            return query.Merge(GetPattern(query, PatternBuildStrategy.WithParamsForValues, patternDescriptions));
+        }
 
-            return null;
+        /// <summary>
+        /// Generates a cypher CREATE statement from the pattern descriptions.
+        /// E.g Given: (path) => path.Pattern("a").Assign(), (path2) => path2.Pattern("b", "c"), you should get the Neo4j pattern: CREATE path=(a), (b)-->(c).
+        /// </summary>
+        public static ICypherFluentQuery Create(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
+        {
+            return query.Create(GetPattern(query, PatternBuildStrategy.WithParams, patternDescriptions));
+        }
+
+        /// <summary>
+        /// Generates a cypher CREATE UNIQUE statement from the pattern descriptions.
+        /// E.g Given: (path) => path.Pattern("a").Assign(), (path2) => path2.Pattern("b", "c"), you should get the Neo4j pattern: CREATE UNIQUE path=(a), (b)-->(c).
+        /// </summary>
+        public static ICypherFluentQuery CreateUnique(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
+        {
+            return query.CreateUnique(GetPattern(query, PatternBuildStrategy.WithParams, patternDescriptions));
         }
     }
 }

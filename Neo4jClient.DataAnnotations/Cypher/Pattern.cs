@@ -16,12 +16,10 @@ namespace Neo4jClient.DataAnnotations.Cypher
 {
     public class Pattern : Annotated, IPattern
     {
-        public Pattern(IPathExtent path, ICypherFluentQuery query,
-            PatternBuildStrategy buildStrategy = PatternBuildStrategy.NoParams)
+        public Pattern(ICypherFluentQuery query, IPathExtent path)
             : base(query)
         {
             Path = path;
-            BuildStrategy = buildStrategy;
         }
 
         private EntityResolver entityResolver;
@@ -32,7 +30,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         public IPathExtent Path { get; protected internal set; }
 
-        public PatternBuildStrategy BuildStrategy { get; set; }
+        private PatternBuildStrategy? buildStrategy;
+        public PatternBuildStrategy BuildStrategy
+        {
+            get
+            {
+                return buildStrategy ?? 
+                    Path?.Builder?.PatternBuildStrategy ?? 
+                    PatternBuildStrategy.NoParams;
+            }
+            set
+            {
+                buildStrategy = value;
+            }
+        }
 
         internal string aParam, rParam, bParam;
         private bool aParamIsAuto, rParamIsAuto, bParamIsAuto;
@@ -1697,11 +1708,22 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
     }
 
-
     public enum PatternBuildStrategy
     {
+        /// <summary>
+        /// Writes the properties directly into the generated pattern.
+        /// E.g. (a:Movie { title: "Grey's Anatomy", year: 2017 }
+        /// </summary>
         NoParams = 0,
+        /// <summary>
+        /// Stores the properties via a <see cref="ICypherFluentQuery.WithParam(string, object)"/> call, and replaces it with a parameter.
+        /// E.g. (a:Movie { movie }), where "movie" is the parameter. This style can be used for the CREATE and CREATE UNIQUE statements.
+        /// </summary>
         WithParams,
+        /// <summary>
+        /// Stores the properties via a <see cref="ICypherFluentQuery.WithParam(string, object)"/> call, and replaces each property value with corresponding parameter property.
+        /// E.g. (a:Movie { title: {movie}.title, year: {movie}.year }), where "movie" is the parameter. This style is applicable to the MATCH and OPTIONAL MATCH statements.
+        /// </summary>
         WithParamsForValues,
     }
 }

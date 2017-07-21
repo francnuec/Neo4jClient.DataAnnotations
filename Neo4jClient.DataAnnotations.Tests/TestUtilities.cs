@@ -1,5 +1,7 @@
-﻿using Neo4jClient.DataAnnotations.Serialization;
+﻿using Neo4jClient.Cypher;
+using Neo4jClient.DataAnnotations.Serialization;
 using Neo4jClient.DataAnnotations.Tests.Models;
+using Neo4jClient.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -8,6 +10,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Xunit;
+using NSubstitute;
+using Newtonsoft.Json.Serialization;
+using Neo4jClient.DataAnnotations.Cypher;
 
 namespace Neo4jClient.DataAnnotations.Tests
 {
@@ -76,6 +81,17 @@ namespace Neo4jClient.DataAnnotations.Tests
                 Neo4jAnnotations.AddEntityType(entityType);
         }
 
+        public static List<object[]> SerializerData { get; } = new List<object[]>()
+        {
+            new object[] { "ConverterSerializer", GraphClient.DefaultJsonContractResolver,
+                new List<JsonConverter>(GraphClient.DefaultJsonConverters)
+                {
+                    Converter
+                }},
+            new object[] { "ResolverSerializer", TestUtilities.Resolver,
+                new List<JsonConverter>(GraphClient.DefaultJsonConverters)},
+        };
+
         public static void TestFinalPropertiesForEquality(Func<object, string> serializer,
             Dictionary<string, dynamic> expected, JObject finalProperties)
         {
@@ -96,6 +112,35 @@ namespace Neo4jClient.DataAnnotations.Tests
                 else
                     Assert.Equal(serializer(expectedValue), propValueStr);
             }
+        }
+
+        public static ICypherFluentQuery GetCypherQuery(DefaultContractResolver resolver, List<JsonConverter> converters,
+            out IRawGraphClient client, out CustomJsonSerializer serializer)
+        {
+            client = Substitute.For<IRawGraphClient>();
+
+            serializer = new CustomJsonSerializer() { JsonConverters = converters, JsonContractResolver = resolver };
+            client.Serializer.Returns(serializer);
+            client.JsonContractResolver.Returns(resolver);
+
+            return new CypherFluentQuery(client);
+        }
+
+        public static IPath BuildTestPath(IPathBuilder P)
+        {
+            return P
+            .Pattern<MovieNode, MovieActorRelationship, ActorNode>("greysAnatomy", "acted_in", "ellenPompeo")
+            .Label(new[] { "Series" }, new[] { "STARRED_IN" }, new[] { "Female" }, true, false, false)
+            .Prop(() => new MovieNode() //could have used constrain, but would be good to test both methods
+            {
+                Title = "Grey's Anatomy",
+                Year = 2017
+            })
+            .Hop(1) //not necessary, but for tests
+            .Constrain(null, null, (actor) =>
+                actor.Name == "Ellen Pompeo"
+                && actor.Born == Params.Get<ActorNode>("shondaRhimes").Born
+                && actor.Roles == new string[] { "Meredith Grey" });
         }
     }
 }

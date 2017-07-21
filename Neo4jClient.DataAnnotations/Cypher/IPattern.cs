@@ -12,6 +12,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
     {
         IPathExtent Path { get; }
 
+        PatternBuildStrategy BuildStrategy { get; set; }
+
         string AParameter { get; }
         string RParameter { get; }
         string BParameter { get; }

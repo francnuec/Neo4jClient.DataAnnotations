@@ -8,6 +8,8 @@ namespace Neo4jClient.DataAnnotations
     {
         public const string NullARBParametersError = "A, R, and B are null. You should provide at least one parameter name.";
 
+        public const string PathableNotRecognizedError = "Cannot process this IPathable type as it is not recognized. Expected IPathBuilder or Path types.";
+
         public const string PropsAndConstraintsClashError = "You can only provide either constraints or properties for entity {0}, but not both as we have in this case.";
 
         public const string NullComplexTypePropertyError = "ComplexType properties cannot be null. An instance must be provided always. Property: {0}, Class: {1}.";

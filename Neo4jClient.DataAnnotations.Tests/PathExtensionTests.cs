@@ -48,7 +48,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = Substitute.For<ICypherFluentQuery>();
 
-            var builder = new DummyPath((p) => null, query);
+            var builder = new PathBuilder(query);
 
             var path = builder.Pattern((ActorNode actor) => actor.Movies, (r) => r.Movie)
                 .Extend(null, null, RelationshipDirection.Incoming);
@@ -61,7 +61,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = Substitute.For<ICypherFluentQuery>();
 
-            var builder = new DummyPath((p) => null, query);
+            var builder = new PathBuilder(query);
 
             var path = builder.Pattern((ActorNode actor) => actor.Movies, (r) => r.Movie)
                 .Extend("R2", "C", RelationshipDirection.Incoming);
@@ -82,7 +82,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = Substitute.For<ICypherFluentQuery>();
 
-            var builder = new DummyPath((p) => null, query);
+            var builder = new PathBuilder(query);
 
             var ex = Assert.Throws<InvalidOperationException>(() => builder.Pattern((ActorNode actor) => actor.Movies, (r) => r.Movie)
                 .Constrain((actor) => actor.Name == "Ellen Pompeo" && actor.Born == 1969)

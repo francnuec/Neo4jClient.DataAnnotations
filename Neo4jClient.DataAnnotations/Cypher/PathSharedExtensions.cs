@@ -55,17 +55,32 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="testARBForNull"></param>
         /// <returns></returns>
         internal static IPatternedPath SharedPattern<TANode, TRel, TBNode>
-        (this IPathBuilder source, string A, string R, string B, RelationshipDirection? dir, bool testARBForNull = true)
+        (this IPathable source, string A, string R, string B, RelationshipDirection? dir, bool testARBForNull = true)
         {
             if (testARBForNull && string.IsNullOrWhiteSpace(A) && string.IsNullOrWhiteSpace(R) && string.IsNullOrWhiteSpace(B))
             {
                 //you must provide at least one parameter
                 throw new InvalidOperationException(Messages.NullARBParametersError);
             }
-
-            //create new path as we may have new entity types.
+            
+            var builder = source as IPathBuilder;
             var oldPath = source as Path;
-            Path path = new Path<TANode, TRel, TBNode>(oldPath);
+
+            Path path = null;
+
+            if (builder != null)
+            {
+                path = new Path<TANode, TRel, TBNode>(builder);
+            }
+            else if (oldPath != null)
+            {
+                //create new path as we may have new entity types.
+                path = new Path<TANode, TRel, TBNode>(oldPath);
+            }
+            else
+            {
+                throw new ArgumentException(Messages.PathableNotRecognizedError, nameof(source));
+            }
 
             var pattern = path.Pattern as Pattern;
 
@@ -84,7 +99,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
         internal static IPatternedPath SharedPattern<TANode, TRel, TBNode>
-        (this IPathBuilder source, LambdaExpression relationship, string R, string B, RelationshipDirection? dir,
+        (this IPathable source, LambdaExpression relationship, string R, string B, RelationshipDirection? dir,
             bool testARBForNull = false)
         {
             if(relationship == null)
@@ -102,7 +117,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
         internal static IPatternedPath SharedPattern<TANode, TRel, TBNode>
-            (this IPathBuilder source, LambdaExpression beginRelationship,
+            (this IPathable source, LambdaExpression beginRelationship,
             LambdaExpression endRelationship, string R, string B, RelationshipDirection? dir,
             bool testARBForNull = false)
         {
@@ -272,6 +287,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             return (IPatternedPathExtension<TANode, TBNode>)SharedExtend<TANode, CypherObject, TBNode>(source, relationship, R, B, dir);
         }
 
+
         private static void AssertLastBMatchesNewA(IPath source, Type aType, out Pattern oldPattern)
         {
             oldPattern = source.Pattern as Pattern;
@@ -292,48 +308,13 @@ namespace Neo4jClient.DataAnnotations.Cypher
             }
         }
 
-        internal static IPatternedPathExtension SharedExtend<TANode, TRel, TBNode>
-        (this IPath source, string R, string B, RelationshipDirection? dir)
+        private static Path ProcessSharedExtend<TANode, TRel, TBNode>(IPath source, Func<Path> getPath)
         {
             Pattern oldPattern;
             AssertLastBMatchesNewA(source, typeof(TANode), out oldPattern);
 
             //pass it on to sharedpattern method
-            var path = (Path)SharedPattern<TANode, TRel, TBNode>
-                ((IPathBuilder)source, (string)null, R, B, dir, testARBForNull: false);
-
-            //make sure to indicate new pattern as an extension
-            FinishPathExtensionSet(path.Pattern as Pattern, oldPattern);
-
-            return path;
-        }
-
-        internal static IPatternedPathExtension SharedExtend<TANode, TRel, TBNode>
-        (this IPath source, LambdaExpression relationship, string R, string B, RelationshipDirection? dir)
-        {
-            Pattern oldPattern;
-            AssertLastBMatchesNewA(source, typeof(TANode), out oldPattern);
-
-            //pass it on to sharedpattern method
-            var path = (Path)SharedPattern<TANode, TRel, TBNode>
-                ((IPathBuilder)source, relationship, R, B, dir, testARBForNull: false);
-
-            //make sure to indicate new pattern as an extension
-            FinishPathExtensionSet(path.Pattern as Pattern, oldPattern);
-
-            return path;
-        }
-
-        internal static IPatternedPathExtension SharedExtend<TANode, TRel, TBNode>
-            (this IPath source, LambdaExpression beginRelationship, LambdaExpression endRelationship,
-            string R, string B, RelationshipDirection? dir)
-        {
-            Pattern oldPattern;
-            AssertLastBMatchesNewA(source, typeof(TANode), out oldPattern);
-
-            //pass it on to sharedpattern method
-            var path = (Path)SharedPattern<TANode, TRel, TBNode>
-                ((IPathBuilder)source, beginRelationship, endRelationship, R, B, dir, testARBForNull: false);
+            var path = getPath();
 
             //make sure to indicate new pattern as an extension
             FinishPathExtensionSet(path.Pattern as Pattern, oldPattern);
@@ -381,23 +362,50 @@ namespace Neo4jClient.DataAnnotations.Cypher
             if (oldBParam != null)
                 old.BParameter = oldBParam;
         }
+
+
+        internal static IPatternedPathExtension SharedExtend<TANode, TRel, TBNode>
+        (this IPath source, string R, string B, RelationshipDirection? dir)
+        {
+            //pass it on to sharedpattern method
+            return ProcessSharedExtend<TANode, TRel, TBNode>
+                (source, () => (Path)SharedPattern<TANode, TRel, TBNode>
+                (source, (string)null, R, B, dir, testARBForNull: false));
+        }
+
+        internal static IPatternedPathExtension SharedExtend<TANode, TRel, TBNode>
+        (this IPath source, LambdaExpression relationship, string R, string B, RelationshipDirection? dir)
+        {
+            return ProcessSharedExtend<TANode, TRel, TBNode>
+                (source, () => (Path)SharedPattern<TANode, TRel, TBNode>
+                (source, relationship, R, B, dir, testARBForNull: false));
+        }
+
+        internal static IPatternedPathExtension SharedExtend<TANode, TRel, TBNode>
+            (this IPath source, LambdaExpression beginRelationship, LambdaExpression endRelationship,
+            string R, string B, RelationshipDirection? dir)
+        {
+            return ProcessSharedExtend<TANode, TRel, TBNode>
+                (source, () => (Path)SharedPattern<TANode, TRel, TBNode>
+                (source, beginRelationship, endRelationship, R, B, dir, testARBForNull: false));
+        }
         #endregion
 
         #region Shortest
-        public static IPath SharedShortest(this IPath source)
+        public static IPathExtent SharedShortest(this IPath source)
         {
             var path = source as Path;
-            path.FindShortestPath = true;
+            (path.Builder as PathBuilder).FindShortestPath = true;
 
-            return path;
+            return SharedAssign(path);
         }
         #endregion
 
         #region Assign
-        internal static IPathFinisher SharedAssign(this IPathExtent source)
+        internal static IPathExtent SharedAssign(this IPathExtent source)
         {
             var path = source as Path;
-            path.AssignPathParameter = true;
+            (path.Builder as PathBuilder).AssignPathParameter = true;
 
             return path;
         }

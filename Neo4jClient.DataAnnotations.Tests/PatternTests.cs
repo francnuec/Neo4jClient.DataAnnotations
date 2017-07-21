@@ -20,7 +20,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = Substitute.For<ICypherFluentQuery>();
 
-            var builder = new DummyPath(null, query);
+            var builder = new PathBuilder(query);
 
             //(A:Movie)-[r]-(B:Director)
             var pattern = builder.Pattern<MovieNode, DirectorNode>("A", "B").Pattern as Pattern;
@@ -40,7 +40,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = Substitute.For<ICypherFluentQuery>();
 
-            var builder = new DummyPath(null, query);
+            var builder = new PathBuilder(query);
 
             var pattern = builder.Pattern<MovieNode, MovieActorRelationship, ActorNode>((A) => A.Actors).Pattern as Pattern;
 
@@ -58,7 +58,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = Substitute.For<ICypherFluentQuery>();
 
-            var builder = new DummyPath(null, query);
+            var builder = new PathBuilder(query);
 
             var pattern = builder.Pattern<MovieNode, MovieActorRelationship, ActorNode>("Lagos").Pattern as Pattern;
 
@@ -85,7 +85,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = Substitute.For<ICypherFluentQuery>();
 
-            var builder = new DummyPath(null, query);
+            var builder = new PathBuilder(query);
 
             var pattern = builder.Pattern<ActorNode, MovieNode>("Ambode", "Lagos").Pattern as Pattern;
 
@@ -122,7 +122,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = Substitute.For<ICypherFluentQuery>();
 
-            var builder = new DummyPath(null, query);
+            var builder = new PathBuilder(query);
 
             var pattern = builder.Pattern<WriterNode, MovieNode>("Tinubu", "Lagos")
                 .Extend<MovieActorRelationship, ActorNode>("Ambode", RelationshipDirection.Incoming)
@@ -148,7 +148,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = Substitute.For<ICypherFluentQuery>();
 
-            var builder = new DummyPath(null, query);
+            var builder = new PathBuilder(query);
 
             var pattern = builder.Pattern<MovieNode, MovieActorRelationship, CypherObject>("Lagos", "rel", null).Pattern as Pattern;
 
@@ -172,7 +172,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = Substitute.For<ICypherFluentQuery>();
 
-            var builder = new DummyPath(null, query);
+            var builder = new PathBuilder(query);
 
             var pattern = builder.Pattern<MovieNode, MovieActorRelationship, CypherObject>("Lagos", "rel", null).Pattern as Pattern;
 
@@ -188,7 +188,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = Substitute.For<ICypherFluentQuery>();
 
-            var builder = new DummyPath(null, query);
+            var builder = new PathBuilder(query);
 
             var pattern = builder.Pattern<MovieNode, WriterNode>("Lagos").Pattern as Pattern;
 
@@ -204,7 +204,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = Substitute.For<ICypherFluentQuery>();
 
-            var builder = new DummyPath(null, query);
+            var builder = new PathBuilder(query);
 
             var pattern = builder.Pattern<MovieNode, DirectorNode>("Lagos").Pattern as Pattern;
 
@@ -220,7 +220,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = Substitute.For<ICypherFluentQuery>();
 
-            var builder = new DummyPath(null, query);
+            var builder = new PathBuilder(query);
 
             var pattern = builder.Pattern<MovieNode, MovieExtraNode>("Lagos", RelationshipDirection.Incoming).Pattern as Pattern;
 
@@ -236,7 +236,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = Substitute.For<ICypherFluentQuery>();
 
-            var builder = new DummyPath(null, query);
+            var builder = new PathBuilder(query);
 
             var testTypes = new List<string>() { "Test", "Relationship" };
 
@@ -258,7 +258,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = Substitute.For<ICypherFluentQuery>();
 
-            var builder = new DummyPath(null, query);
+            var builder = new PathBuilder(query);
 
             var testTypes = new List<string>() { "Test", "Relationship" };
 
@@ -273,33 +273,15 @@ namespace Neo4jClient.DataAnnotations.Tests
             Assert.Equal(testTypes, rTypes);
         }
 
-
-        public static List<object[]> SerializerData { get; } = new List<object[]>()
-        {
-            new object[] { "ConverterSerializer", GraphClient.DefaultJsonContractResolver,
-                new List<JsonConverter>(GraphClient.DefaultJsonConverters)
-                {
-                    TestUtilities.Converter
-                }},
-            new object[] { "ResolverSerializer", TestUtilities.Resolver,
-                new List<JsonConverter>(GraphClient.DefaultJsonConverters)},
-        };
-
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(PatternTests))]
+        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
         public void Properties_FinalProperties(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
         {
             TestUtilities.AddEntityTypes();
 
-            var client = Substitute.For<IRawGraphClient>();
+            var query = TestUtilities.GetCypherQuery(resolver, converters, out var client, out var serializer);
 
-            var serializer = new CustomJsonSerializer() { JsonConverters = converters, JsonContractResolver = resolver };
-            client.Serializer.Returns(serializer);
-            client.JsonContractResolver.Returns(resolver);
-
-            var query = new CypherFluentQuery(client);
-
-            var builder = new DummyPath(null, query);
+            var builder = new PathBuilder(query);
 
             var pattern = builder
                 .Pattern<ActorNode>("Ambode")
@@ -330,20 +312,14 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(PatternTests))]
+        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
         public void Constraints_FinalProperties(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
         {
             TestUtilities.AddEntityTypes();
 
-            var client = Substitute.For<IRawGraphClient>();
+            var query = TestUtilities.GetCypherQuery(resolver, converters, out var client, out var serializer);
 
-            var serializer = new CustomJsonSerializer() { JsonConverters = converters, JsonContractResolver = resolver };
-            client.Serializer.Returns(serializer);
-            client.JsonContractResolver.Returns(resolver);
-
-            var query = new CypherFluentQuery(client);
-
-            var builder = new DummyPath(null, query);
+            var builder = new PathBuilder(query);
 
             var pattern = builder
                 .Pattern<ActorNode>("Ambode")
@@ -372,34 +348,16 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(PatternTests))]
-        public void Build_NoParamsStrategy(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
+        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        public void NoParamsStrategy_Build(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
         {
             TestUtilities.AddEntityTypes();
 
-            var client = Substitute.For<IRawGraphClient>();
+            var query = TestUtilities.GetCypherQuery(resolver, converters, out var client, out var serializer);
 
-            var serializer = new CustomJsonSerializer() { JsonConverters = converters, JsonContractResolver = resolver };
-            client.Serializer.Returns(serializer);
-            client.JsonContractResolver.Returns(resolver);
+            var builder = new PathBuilder(query);
 
-            var query = new CypherFluentQuery(client);
-
-            var builder = new DummyPath(null, query);
-
-            var path = builder
-                .Pattern<MovieNode, MovieActorRelationship, ActorNode>("greysAnatomy", "acted_in", "ellenPompeo")
-                .Label(A: new[] { "Series" }, R: new[] { "STARRED_IN" }, B: new[] { "Female" }, replaceA: true, replaceR: false, replaceB: false)
-                .Prop(() => new MovieNode() //could have used constrain, but would be good to test both methods
-                {
-                    Title = "Grey's Anatomy",
-                    Year = 2017
-                })
-                .Hop(1) //not necessary, but for tests
-                .Constrain(null, null, (actor) =>
-                    actor.Name == "Ellen Pompeo"
-                    && actor.Born == Params.Get<ActorNode>("shondaRhimes").Born
-                    && actor.Roles == new string[] { "Meredith Grey" })
+            var path = TestUtilities.BuildTestPath(builder)
                 .Extend(RelationshipDirection.Outgoing)
                 as Path;
 
@@ -417,34 +375,16 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(PatternTests))]
-        public void Build_WithParamsStrategy(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
+        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        public void WithParamsStrategy_Build(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
         {
             TestUtilities.AddEntityTypes();
 
-            var client = Substitute.For<IRawGraphClient>();
+            var query = TestUtilities.GetCypherQuery(resolver, converters, out var client, out var serializer);
 
-            var serializer = new CustomJsonSerializer() { JsonConverters = converters, JsonContractResolver = resolver };
-            client.Serializer.Returns(serializer);
-            client.JsonContractResolver.Returns(resolver);
+            var builder = new PathBuilder(query);
 
-            var query = new CypherFluentQuery(client);
-
-            var builder = new DummyPath(null, query);
-
-            var path = builder
-                .Pattern<MovieNode, MovieActorRelationship, ActorNode>("greysAnatomy", "acted_in", "ellenPompeo")
-                .Label(A: new[] { "Series" }, R: new[] { "STARRED_IN" }, B: new[] { "Female" }, replaceA: true, replaceR: false, replaceB: false)
-                .Prop(() => new MovieNode() //could have used constrain, but would be good to test both methods
-                {
-                    Title = "Grey's Anatomy",
-                    Year = 2017
-                })
-                .Hop(1) //not necessary, but for tests
-                .Constrain(null, null, (actor) =>
-                    actor.Name == "Ellen Pompeo"
-                    && actor.Born == Params.Get<ActorNode>("shondaRhimes").Born
-                    && actor.Roles == new string[] { "Meredith Grey" })
+            var path = TestUtilities.BuildTestPath(builder)
                 .Extend(RelationshipDirection.Outgoing)
                 as Path;
 
@@ -464,34 +404,16 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(PatternTests))]
-        public void Build_WithParamsForValuesStrategy(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
+        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        public void WithParamsForValuesStrategy_Build(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
         {
             TestUtilities.AddEntityTypes();
 
-            var client = Substitute.For<IRawGraphClient>();
+            var query = TestUtilities.GetCypherQuery(resolver, converters, out var client, out var serializer);
 
-            var serializer = new CustomJsonSerializer() { JsonConverters = converters, JsonContractResolver = resolver };
-            client.Serializer.Returns(serializer);
-            client.JsonContractResolver.Returns(resolver);
+            var builder = new PathBuilder(query);
 
-            var query = new CypherFluentQuery(client);
-
-            var builder = new DummyPath(null, query);
-
-            var path = builder
-                .Pattern<MovieNode, MovieActorRelationship, ActorNode>("greysAnatomy", "acted_in", "ellenPompeo")
-                .Label(A: new[] { "Series" }, R: new[] { "STARRED_IN" }, B: new[] { "Female" }, replaceA: true, replaceR: false, replaceB: false)
-                .Prop(() => new MovieNode() //could have used constrain, but would be good to test both methods
-                {
-                    Title = "Grey's Anatomy",
-                    Year = 2017
-                })
-                .Hop(1) //not necessary, but for tests
-                .Constrain(null, null, (actor) =>
-                    actor.Name == "Ellen Pompeo"
-                    && actor.Born == Params.Get<ActorNode>("shondaRhimes").Born
-                    && actor.Roles == new string[] { "Meredith Grey" })
+            var path = TestUtilities.BuildTestPath(builder)
                 .Extend(RelationshipDirection.Outgoing)
                 as Path;
 

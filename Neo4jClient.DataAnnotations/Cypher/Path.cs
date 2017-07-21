@@ -1,21 +1,23 @@
-﻿using Neo4jClient.Cypher;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Collections;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace Neo4jClient.DataAnnotations.Cypher
 {
     public abstract class Path : Annotated, IAnnotated, IPathable,
-        IPathBuilder, IPathExtent, IPath, IPathExtension, IPathFinisher,
+        IPathExtent, IPath, IPathExtension,
         IPatternedPath, IPatternedPathExtension
     {
         public Path(Path existing)
-            : base(existing)
+            : this(existing?.Builder)
         {
-            Expression = existing.Expression;
+            if (existing == null)
+                throw new ArgumentNullException(nameof(existing));
+
+            //PatternBuildStrategy = existing.PatternBuildStrategy;
 
             //mutate by adding all the patterns from previous path to this one
             //and also change the path for the exisiting patterns to this
@@ -30,10 +32,11 @@ namespace Neo4jClient.DataAnnotations.Cypher
             //Patterns.Add(new Pattern(this, InternalCypherQuery));
         }
 
-        public Path(Expression<Func<IPathBuilder, IPathable>> expression, ICypherFluentQuery query)
-            : base(query)
+        public Path(IPathBuilder builder)
+            : base(builder.CypherQuery)
         {
-            Expression = expression;
+            Builder = builder;
+            //PatternBuildStrategy = builder.PatternBuildStrategy;
         }
 
         public List<Pattern> Patterns { get; } = new List<Pattern>();
@@ -42,42 +45,21 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         public IPathExtension Extension => this;
 
-        public IPath Origin => this;
+        //public IPath Origin => this;
 
-        public IPathBuilder Builder => this;
+        public IPathBuilder Builder { get; }
 
         public IPathExtent Current => this;
 
-        public Expression<Func<IPathBuilder, IPathable>> Expression { get; }
-
-        public string PathParameter { get; protected internal set; }
-
-        public bool IsShortestPath => FindShortestPath;
-
-        public IPathFinisher Finisher => this;
-
-        public bool AssignPathParameter { get; protected internal set; }
-
-        public bool FindShortestPath { get; protected internal set; }
-
         public override string Build()
         {
-            throw new NotImplementedException();
-        }
-    }
+            var builder = new StringBuilder();
 
-    public class DummyPath: Path
-    {
-        public DummyPath(Path existing)
-            : base(existing)
-        {
+            var patternText = Patterns.Select(p => p.Build()).Aggregate((pattern, extension) => pattern + extension);
 
-        }
+            builder.Append(patternText);
 
-        public DummyPath(Expression<Func<IPathBuilder, IPathable>> expression, ICypherFluentQuery query)
-            : base(expression, query)
-        {
-
+            return builder.ToString();
         }
     }
 
@@ -92,8 +74,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Init();
         }
 
-        public Path(Expression<Func<IPathBuilder, IPathable>> expression, ICypherFluentQuery query)
-            : base(expression, query)
+        public Path(IPathBuilder builder)
+            : base(builder)
         {
             Init();
         }
@@ -101,7 +83,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         void Init()
         {
             //Add a new pattern
-            Patterns.Add(new Pattern(this, InternalCypherQuery));
+            Patterns.Add(new Pattern(InternalCypherQuery, this));
         }
     }
 }
