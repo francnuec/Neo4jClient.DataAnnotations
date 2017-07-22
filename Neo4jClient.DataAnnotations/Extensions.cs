@@ -14,13 +14,6 @@ namespace Neo4jClient.DataAnnotations
 {
     public static class Extensions
     {
-        public static T UseAnnotations<T>(this T client) where T : IGraphClient
-        {
-            Neo4jAnnotations.Register(client);
-
-            return client;
-        }
-
         public static bool IsGenericAssignableFrom(this Type genericType, Type givenType)
         {
             if (givenType == null)

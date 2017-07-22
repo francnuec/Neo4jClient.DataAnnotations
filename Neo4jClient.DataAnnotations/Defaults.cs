@@ -28,9 +28,9 @@ namespace Neo4jClient.DataAnnotations
 
         public static string ComplexTypeNameSeparator = "_";
 
-        public static DefaultContractResolver ContractResolver = null;
+        public static Serialization.EntityResolver EntityResolver { get; internal set; }
 
-        public static Serialization.EntityConverter EntityConverter = null;
+        public static Serialization.EntityConverter EntityConverter { get; internal set; }
 
         public static List<Type> ScalarTypes { get; } = new List<Type>()
         {

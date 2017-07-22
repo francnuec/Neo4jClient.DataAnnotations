@@ -10,6 +10,7 @@ using System.Linq;
 using Neo4jClient.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using Neo4jClient.DataAnnotations.Serialization;
 
 namespace Neo4jClient.DataAnnotations.Tests
 {
@@ -275,11 +276,11 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
-        public void Properties_FinalProperties(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
+        public void Properties_FinalProperties(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
-            TestUtilities.AddEntityTypes();
+            TestUtilities.RegisterEntityTypes(resolver, converter);
 
-            var query = TestUtilities.GetCypherQuery(resolver, converters, out var client, out var serializer);
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
 
             var builder = new PathBuilder(query);
 
@@ -313,11 +314,11 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
-        public void Constraints_FinalProperties(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
+        public void Constraints_FinalProperties(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
-            TestUtilities.AddEntityTypes();
+            TestUtilities.RegisterEntityTypes(resolver, converter);
 
-            var query = TestUtilities.GetCypherQuery(resolver, converters, out var client, out var serializer);
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
 
             var builder = new PathBuilder(query);
 
@@ -349,11 +350,11 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
-        public void NoParamsStrategy_Build(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
+        public void NoParamsStrategy_Build(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
-            TestUtilities.AddEntityTypes();
+            TestUtilities.RegisterEntityTypes(resolver, converter);
 
-            var query = TestUtilities.GetCypherQuery(resolver, converters, out var client, out var serializer);
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
 
             var builder = new PathBuilder(query);
 
@@ -376,11 +377,11 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
-        public void WithParamsStrategy_Build(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
+        public void WithParamsStrategy_Build(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
-            TestUtilities.AddEntityTypes();
+            TestUtilities.RegisterEntityTypes(resolver, converter);
 
-            var query = TestUtilities.GetCypherQuery(resolver, converters, out var client, out var serializer);
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
 
             var builder = new PathBuilder(query);
 
@@ -405,11 +406,11 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
-        public void WithParamsForValuesStrategy_Build(string serializerName, DefaultContractResolver resolver, List<JsonConverter> converters)
+        public void WithParamsForValuesStrategy_Build(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
-            TestUtilities.AddEntityTypes();
+            TestUtilities.RegisterEntityTypes(resolver, converter);
 
-            var query = TestUtilities.GetCypherQuery(resolver, converters, out var client, out var serializer);
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
 
             var builder = new PathBuilder(query);
 

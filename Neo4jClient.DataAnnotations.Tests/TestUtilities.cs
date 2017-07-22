@@ -72,24 +72,41 @@ namespace Neo4jClient.DataAnnotations.Tests
             }
         };
 
+        public static Type[] EntityTypes = new Type[]
+        {
+            typeof(PersonNode), typeof(DirectorNode), typeof(MovieNode), typeof(MovieExtraNode),
+            typeof(ActorNode), typeof(Address), typeof(AddressWithComplexType), typeof(Location),
+            typeof(AddressThirdLevel), typeof(SomeComplexType)
+        };
+
         public static void AddEntityTypes()
         {
-            var entityTypes = new Type[] { typeof(PersonNode), typeof(DirectorNode), typeof(MovieNode), typeof(MovieExtraNode),
-                typeof(ActorNode), typeof(Address), typeof(AddressWithComplexType), typeof(Location), typeof(AddressThirdLevel), typeof(SomeComplexType) };
+            //for test purposes, we use reflection here.
+            var addEntityTypeMethod = typeof(Neo4jAnnotations).GetMethod("AddEntityType", BindingFlags.Static | BindingFlags.NonPublic);
+            var parameters = new object[1];
+            foreach (var entityType in EntityTypes)
+            {
+                parameters[0] = entityType;
+                addEntityTypeMethod.Invoke(null, parameters);
+            }
+        }
 
-            foreach (var entityType in entityTypes)
-                Neo4jAnnotations.AddEntityType(entityType);
+        public static void RegisterEntityTypes(EntityResolver resolver, EntityConverter converter)
+        {
+            if (resolver != null)
+            {
+                Neo4jAnnotations.RegisterWithResolver(EntityTypes, resolver);
+            }
+            else
+            {
+                Neo4jAnnotations.RegisterWithConverter(EntityTypes, converter);
+            }
         }
 
         public static List<object[]> SerializerData { get; } = new List<object[]>()
         {
-            new object[] { "ConverterSerializer", GraphClient.DefaultJsonContractResolver,
-                new List<JsonConverter>(GraphClient.DefaultJsonConverters)
-                {
-                    Converter
-                }},
-            new object[] { "ResolverSerializer", TestUtilities.Resolver,
-                new List<JsonConverter>(GraphClient.DefaultJsonConverters)},
+            new object[] { "Converter", null, Converter },
+            new object[] { "Resolver", Resolver, null},
         };
 
         public static void TestFinalPropertiesForEquality(Func<object, string> serializer,
@@ -114,16 +131,16 @@ namespace Neo4jClient.DataAnnotations.Tests
             }
         }
 
-        public static ICypherFluentQuery GetCypherQuery(DefaultContractResolver resolver, List<JsonConverter> converters,
-            out IRawGraphClient client, out CustomJsonSerializer serializer)
+        public static ICypherFluentQuery GetCypherQuery(out IRawGraphClient clientSubstitute, out CustomJsonSerializer serializer)
         {
-            client = Substitute.For<IRawGraphClient>();
+            clientSubstitute = Substitute.For<IRawGraphClient>();
 
-            serializer = new CustomJsonSerializer() { JsonConverters = converters, JsonContractResolver = resolver };
-            client.Serializer.Returns(serializer);
-            client.JsonContractResolver.Returns(resolver);
+            serializer = new CustomJsonSerializer() { JsonConverters = GraphClient.DefaultJsonConverters,
+                JsonContractResolver = GraphClient.DefaultJsonContractResolver };
+            clientSubstitute.Serializer.Returns(serializer);
+            clientSubstitute.JsonContractResolver.Returns(GraphClient.DefaultJsonContractResolver);
 
-            return new CypherFluentQuery(client);
+            return new CypherFluentQuery(clientSubstitute);
         }
 
         public static IPath BuildTestPath(IPathBuilder P)

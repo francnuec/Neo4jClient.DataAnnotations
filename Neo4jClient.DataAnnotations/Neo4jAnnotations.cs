@@ -6,6 +6,7 @@ using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json;
 using System.Reflection;
 using System.Collections.Concurrent;
+using Neo4jClient.DataAnnotations.Serialization;
 
 namespace Neo4jClient.DataAnnotations
 {
@@ -16,20 +17,127 @@ namespace Neo4jClient.DataAnnotations
 
         }
 
-        //public static Neo4jAnnotations Instance { get; } = new Neo4jAnnotations();
-
         private static ConcurrentDictionary<Type, EntityTypeInfo> entityTypeInfo { get; set; }
             = new ConcurrentDictionary<Type, EntityTypeInfo>();
 
         private static ConcurrentDictionary<Type, object> entityTypes 
             = new ConcurrentDictionary<Type, object>();
 
-        internal static ICollection<Type> EntityTypes { get { return entityTypes.Keys; } }
+        public static ICollection<Type> EntityTypes { get { return entityTypes.Keys; } }
+
+
+        public static void RegisterWithResolver(IEnumerable<Type> entityTypes)
+        {
+            RegisterWithResolver(entityTypes, new EntityResolver());
+        }
+
+        public static void RegisterWithConverter(IEnumerable<Type> entityTypes)
+        {
+            RegisterWithConverter(entityTypes, new EntityConverter());
+        }
+
+        public static void RegisterWithResolver(IEnumerable<Type> entityTypes, EntityResolver resolver)
+        {
+            InternalRegister(entityTypes, resolver, null);
+        }
+
+        public static void RegisterWithConverter(IEnumerable<Type> entityTypes, EntityConverter converter)
+        {
+            InternalRegister(entityTypes, null, converter);
+        }
+
+
+        internal static void InternalRegister(IEnumerable<Type> entityTypes, EntityResolver entityResolver, EntityConverter entityConverter)
+        {
+            if (entityResolver == null && entityConverter == null)
+            {
+                throw new InvalidOperationException("You must enable either the EntityResolver or EntityConverter for Neo4jClient.DataAnnotations to work.");
+            }
+            else if (entityResolver != null && entityConverter != null)
+            {
+                throw new InvalidOperationException("You cannot enable both EntityResolver and EntityConverter.");
+            }
+
+            if (entityTypes == null || entityTypes.FirstOrDefault() == null)
+            {
+                throw new ArgumentNullException(nameof(entityTypes), "Neo4jClient.DataAnnotations needs to know all your entity types (including complex types) and their derived types aforehand in order to do efficient work.");
+            }
+
+            if (entityResolver != null)
+            {
+                var defaultResolver = GraphClient.DefaultJsonContractResolver;
+
+                if (defaultResolver == null || !typeof(EntityResolver).IsAssignableFrom(defaultResolver.GetType()))
+                {
+                    Defaults.EntityResolver = entityResolver;
+
+                    try
+                    {
+                        //try reflection to set the default resolver
+                        typeof(GraphClient)
+                            .GetField("DefaultJsonContractResolver", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)
+                            .SetValue(null, entityResolver);
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+
+            if (entityConverter != null)
+            {
+                var entityConverterType = typeof(EntityConverter);
+
+                var defaultConverters = GraphClient.DefaultJsonConverters;
+
+                if (defaultConverters == null || !defaultConverters.Any(c => entityConverterType.IsAssignableFrom(c.GetType())))
+                {
+                    Defaults.EntityConverter = entityConverter;
+
+                    var _converters = new List<JsonConverter>();
+                    _converters.Add(entityConverter);
+                    _converters.AddRange(defaultConverters ?? new JsonConverter[0]);
+
+                    try
+                    {
+                        //try reflection to insert this converter in the original array
+                        typeof(GraphClient)
+                            .GetField("DefaultJsonConverters", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)
+                            .SetValue(null, _converters.ToArray());
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+
+            foreach(var entityType in entityTypes)
+            {
+                AddEntityType(entityType);
+            }
+        }
+
+        private static void AddConverter(JsonConverter converter, Type converterType, IList<JsonConverter> converters)
+        {
+            if (!converters.Any(c => converterType.IsAssignableFrom(c.GetType())))
+            {
+                try
+                {
+                    converters.Insert(0, converter);
+                }
+                catch
+                {
+                    converters.Add(converter);
+                }
+            }
+        }
 
         internal static EntityTypeInfo GetEntityTypeInfo(Type type)
         {
             EntityTypeInfo info;
-            if(!entityTypeInfo.TryGetValue(type, out info))
+            if (!entityTypeInfo.TryGetValue(type, out info))
             {
                 info = new EntityTypeInfo(type);
                 entityTypeInfo[type] = info;
@@ -60,7 +168,7 @@ namespace Neo4jClient.DataAnnotations
                         existing[derivedType] = GetEntityTypeInfo(derivedType);
                 }
             }
-            
+
             var list = existing.Values.ToList();
 
             if (list != null)
@@ -70,7 +178,7 @@ namespace Neo4jClient.DataAnnotations
             return list;
         }
 
-        public static void AddEntityType(Type entityType)
+        internal static void AddEntityType(Type entityType)
         {
             if (!EntityTypes.Contains(entityType))
             {
@@ -78,7 +186,7 @@ namespace Neo4jClient.DataAnnotations
             }
         }
 
-        public static void RemoveEntityType(Type entityType)
+        internal static void RemoveEntityType(Type entityType)
         {
             if (EntityTypes.Contains(entityType))
             {
@@ -86,7 +194,7 @@ namespace Neo4jClient.DataAnnotations
             }
         }
 
-        public static bool ContainsEntityType(Type entityType, bool includeBaseClasses = true)
+        internal static bool ContainsEntityType(Type entityType, bool includeBaseClasses = true)
         {
             var ret = EntityTypes.Contains(entityType)
                 || entityType.GetTypeInfo().IsGenericType && EntityTypes.Contains(entityType.GetGenericTypeDefinition()) //search generics too
@@ -111,96 +219,39 @@ namespace Neo4jClient.DataAnnotations
             return list;
         }
 
-        internal static void Register(IGraphClient client)
-        {
-            if (client.JsonContractResolver == null)
-            {
-                throw new InvalidOperationException("You need a json contract resolver of type DefaultContractResolver.");
-            }
-
-            //var entityConverterType = typeof(EntityConverter);
-
-            //var entityConverter = new EntityConverter();
-
-            //IList<JsonConverter> converters = client.JsonConverters;
-
-            //if (converters == null)
-            //{
-            //    throw new InvalidOperationException("You need a list of JsonConverters set.");
-            //}
-
-            //AddConverter(entityConverter, entityConverterType, converters);
-
-            //var executionConfig = client.ExecutionConfiguration;
-
-            //if (executionConfig != null && executionConfig.JsonConverters != converters)
-            //{
-            //    converters = executionConfig.JsonConverters as IList<JsonConverter>;
-
-            //    if (converters != null)
-            //    {
-            //        AddConverter(entityConverter, entityConverterType, converters);
-            //    }
-            //}
-
-            //InternalRegister(entityConverter, entityConverterType);
-        }
-
-        public static void Register()
-        {
-            //InternalRegister(new EntityConverter(), typeof(EntityConverter));
-        }
-
-        //internal static void InternalRegister(EntityConverter entityConverter, Type entityConverterType)
+        //internal static void Register(IGraphClient client)
         //{
-        //    entityConverter = entityConverter ?? new EntityConverter();
-        //    entityConverterType = entityConverterType ?? typeof(EntityConverter);
-
-        //    var defaultConverters = GraphClient.DefaultJsonConverters;
-
-        //    var _converters = new List<JsonConverter>();
-        //    _converters.Add(entityConverter);
-        //    _converters.AddRange(defaultConverters ?? new JsonConverter[0]);
-            
-        //    if (defaultConverters != null && !defaultConverters.Any(c => c.GetType() == entityConverterType))
+        //    if (client.JsonContractResolver == null)
         //    {
-        //        try
-        //        {
-        //            //try reflection to insert this converter in the original array
-        //            typeof(GraphClient)
-        //                .GetField("DefaultJsonConverters", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)
-        //                .SetValue(null, _converters.ToArray());
-        //        }
-        //        catch
-        //        {
+        //        throw new InvalidOperationException("You need a json contract resolver of type DefaultContractResolver.");
+        //    }
 
+        //    var entityConverterType = typeof(EntityConverter);
+
+        //    var entityConverter = new EntityConverter();
+
+        //    IList<JsonConverter> converters = client.JsonConverters;
+
+        //    if (converters == null)
+        //    {
+        //        throw new InvalidOperationException("You need a list of JsonConverters set.");
+        //    }
+
+        //    AddConverter(entityConverter, entityConverterType, converters);
+
+        //    var executionConfig = client.ExecutionConfiguration;
+
+        //    if (executionConfig != null && executionConfig.JsonConverters != converters)
+        //    {
+        //        converters = executionConfig.JsonConverters as IList<JsonConverter>;
+
+        //        if (converters != null)
+        //        {
+        //            AddConverter(entityConverter, entityConverterType, converters);
         //        }
         //    }
 
-        //    //also try json default settings
-        //    //only set if null
-        //    if(JsonConvert.DefaultSettings == null)
-        //    {
-        //        JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
-        //        {
-        //            Converters = _converters
-        //        };
-        //    }
+        //    InternalRegister(entityConverter, entityConverterType);
         //}
-
-        private static void AddConverter(JsonConverter converter, Type converterType, IList<JsonConverter> converters)
-        {
-            if (!converters.Any(c => c.GetType() == converterType))
-            {
-                try
-                {
-                    converters.Insert(0, converter);
-                }
-                catch
-                {
-                    converters.Add(converter);
-                }
-            }
-        }
     }
 }
