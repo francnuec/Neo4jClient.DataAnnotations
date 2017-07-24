@@ -84,7 +84,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var builder = new PathBuilder(query);
 
-            var ex = Assert.Throws<InvalidOperationException>(() => builder.Pattern((ActorNode actor) => actor.Movies, (r) => r.Movie)
+            var ex = Assert.Throws<InvalidOperationException>(() => builder. Pattern((ActorNode actor) => actor.Movies, (r) => r.Movie)
                 .Constrain((actor) => actor.Name == "Ellen Pompeo" && actor.Born == 1969)
                 .Prop(() => new { Name = "Ellen Pompeo", Born = 1969 }));
 

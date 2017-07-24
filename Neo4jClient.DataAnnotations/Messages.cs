@@ -33,5 +33,9 @@ namespace Neo4jClient.DataAnnotations
         public const string JsonPropertyNotFoundError = "Json Property '{0}' not found for Type '{1}'";
 
         public const string AmbiguousParamsPathError = "Expression path to Neo4j parameter is ambiguous, and cannot be translated. Params: {0}.";
+
+        public const string NoResolverOrConverterError = "You must enable either the EntityResolver or EntityConverter for Neo4jClient.DataAnnotations to work.";
+
+        public const string BothResolverAndConverterError = "You cannot enable both EntityResolver and EntityConverter.";
     }
 }

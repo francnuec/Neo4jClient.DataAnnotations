@@ -2,10 +2,29 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard1.4</TargetFramework>
+    <PackageId>Neo4jClient.DataAnnotations</PackageId>
+    <Description>Use POCO classes in the Neo4jClient library, ORM style. Annotate with System.ComponentModel.DataAnnotations.Schema attributes. Supports Complex Types too.</Description>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Authors>francnuec</Authors>
+    <PackageLicenseUrl>https://github.com/francnuec/Neo4jClient.DataAnnotations/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/francnuec/Neo4jClient.DataAnnotations</PackageProjectUrl>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageTags>nosql cypher neo4j entity orm poco</PackageTags>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageReleaseNotes>Visit project site for usage and instructions.</PackageReleaseNotes>
+    <Version>1.0.1</Version>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\netstandard1.4\Neo4jClient.DataAnnotations.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\netstandard1.4\Neo4jClient.DataAnnotations.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Neo4jClient-2.0.0.8\Neo4jClient\Neo4jClient.csproj" />
+    <PackageReference Include="Neo4jClient" Version="2.0.0.9" />
   </ItemGroup>
 
 </Project>

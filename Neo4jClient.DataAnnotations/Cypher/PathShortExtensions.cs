@@ -1499,9 +1499,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1516,9 +1516,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1533,9 +1533,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1551,9 +1551,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1568,9 +1568,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1585,9 +1585,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1604,9 +1604,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1621,9 +1621,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1638,9 +1638,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1657,9 +1657,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1674,9 +1674,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1691,9 +1691,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -3115,15 +3115,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
         /// <param name="to">Maximum number of hops to consider.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension H
             (this IPatternedPathExtension source)
         {
@@ -3133,15 +3132,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
         /// <param name="to">Maximum number of hops to consider.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension H
             (this IPatternedPathExtension source, int exact)
         {
@@ -3151,15 +3149,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
         /// <param name="to">Maximum number of hops to consider.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension H
             (this IPatternedPathExtension source, int? from, int? to)
         {
@@ -3171,15 +3168,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
         /// <param name="to">Maximum number of hops to consider.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension<TBNode> H<TBNode>
             (this IPatternedPathExtension<TBNode> source)
         {
@@ -3189,15 +3185,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
         /// <param name="to">Maximum number of hops to consider.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension<TBNode> H<TBNode>
             (this IPatternedPathExtension<TBNode> source, int exact)
         {
@@ -3207,15 +3202,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
         /// <param name="to">Maximum number of hops to consider.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension<TBNode> H<TBNode>
             (this IPatternedPathExtension<TBNode> source, int? from, int? to)
         {
@@ -3227,15 +3221,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
         /// <param name="to">Maximum number of hops to consider.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension<TANode, TBNode> H<TANode, TBNode>
             (this IPatternedPathExtension<TANode, TBNode> source)
         {
@@ -3245,15 +3238,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
         /// <param name="to">Maximum number of hops to consider.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension<TANode, TBNode> H<TANode, TBNode>
             (this IPatternedPathExtension<TANode, TBNode> source, int exact)
         {
@@ -3263,15 +3255,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
         /// <param name="to">Maximum number of hops to consider.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension<TANode, TBNode> H<TANode, TBNode>
             (this IPatternedPathExtension<TANode, TBNode> source, int? from, int? to)
         {
@@ -3283,15 +3274,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
         /// <param name="to">Maximum number of hops to consider.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension<CypherObject, TRel, TBNode> H<TRel, TBNode>
             (this IPatternedPathExtension<CypherObject, TRel, TBNode> source)
         {
@@ -3301,15 +3291,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
         /// <param name="to">Maximum number of hops to consider.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension<CypherObject, TRel, TBNode> H<TRel, TBNode>
             (this IPatternedPathExtension<CypherObject, TRel, TBNode> source, int exact)
         {
@@ -3319,15 +3308,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
         /// <param name="to">Maximum number of hops to consider.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension<CypherObject, TRel, TBNode> H<TRel, TBNode>
             (this IPatternedPathExtension<CypherObject, TRel, TBNode> source, int? from, int? to)
         {
@@ -3339,15 +3327,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
         /// <param name="to">Maximum number of hops to consider.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension<TANode, TRel, TBNode> H<TANode, TRel, TBNode>
             (this IPatternedPathExtension<TANode, TRel, TBNode> source)
         {
@@ -3357,15 +3344,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
         /// <param name="to">Maximum number of hops to consider.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension<TANode, TRel, TBNode> H<TANode, TRel, TBNode>
             (this IPatternedPathExtension<TANode, TRel, TBNode> source, int exact)
         {
@@ -3375,15 +3361,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <see cref="null"/> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <see cref="from"/> and <see cref="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <see cref="null"/> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
         /// <param name="to">Maximum number of hops to consider.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension<TANode, TRel, TBNode> H<TANode, TRel, TBNode>
             (this IPatternedPathExtension<TANode, TRel, TBNode> source, int? from, int? to)
         {
@@ -3597,7 +3582,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="R">Properties for Relationship R.</param>
         /// <param name="B">Properties for Node B.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension PP
             (this IPatternedPathExtension source, Expression<Func<object>> B)
         {
@@ -3618,7 +3602,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="R">Properties for Relationship R.</param>
         /// <param name="B">Properties for Node B.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension PP
             (this IPatternedPathExtension source,
             Expression<Func<object>> R,
@@ -3643,7 +3626,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="R">Properties for Relationship R.</param>
         /// <param name="B">Properties for Node B.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension<TBNode> PP<TBNode>
             (this IPatternedPathExtension<TBNode> source, Expression<Func<object>> B)
         {
@@ -3664,7 +3646,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="R">Properties for Relationship R.</param>
         /// <param name="B">Properties for Node B.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension<TBNode> PP<TBNode>
             (this IPatternedPathExtension<TBNode> source,
             Expression<Func<object>> R,
@@ -3689,7 +3670,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="R">Properties for Relationship R.</param>
         /// <param name="B">Properties for Node B.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension<TANode, TBNode> PP<TANode, TBNode>
             (this IPatternedPathExtension<TANode, TBNode> source, Expression<Func<object>> B)
         {
@@ -3710,7 +3690,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="R">Properties for Relationship R.</param>
         /// <param name="B">Properties for Node B.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension<TANode, TBNode> PP<TANode, TBNode>
             (this IPatternedPathExtension<TANode, TBNode> source,
             Expression<Func<object>> R,
@@ -3735,7 +3714,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="R">Properties for Relationship R.</param>
         /// <param name="B">Properties for Node B.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension<CypherObject, TRel, TBNode> PP<TRel, TBNode>
             (this IPatternedPathExtension<CypherObject, TRel, TBNode> source,
             Expression<Func<object>> R,
@@ -3760,7 +3738,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="R">Properties for Relationship R.</param>
         /// <param name="B">Properties for Node B.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension<TANode, TRel, TBNode> PP<TANode, TRel, TBNode>
             (this IPatternedPathExtension<TANode, TRel, TBNode> source, Expression<Func<object>> B)
         {
@@ -3781,7 +3758,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="R">Properties for Relationship R.</param>
         /// <param name="B">Properties for Node B.</param>
         /// <returns></returns>
-        /// <summary>
         public static IPatternedPathExtension<TANode, TRel, TBNode> PP<TANode, TRel, TBNode>
             (this IPatternedPathExtension<TANode, TRel, TBNode> source,
             Expression<Func<object>> R,

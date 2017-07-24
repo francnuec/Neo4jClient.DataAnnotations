@@ -25,10 +25,19 @@ namespace Neo4jClient.DataAnnotations
 
         public static ICollection<Type> EntityTypes { get { return entityTypes.Keys; } }
 
+        public static void RegisterWithResolver()
+        {
+            RegisterWithResolver(null, new EntityResolver());
+        }
 
         public static void RegisterWithResolver(IEnumerable<Type> entityTypes)
         {
             RegisterWithResolver(entityTypes, new EntityResolver());
+        }
+
+        public static void RegisterWithConverter()
+        {
+            RegisterWithConverter(null, new EntityConverter());
         }
 
         public static void RegisterWithConverter(IEnumerable<Type> entityTypes)
@@ -36,9 +45,19 @@ namespace Neo4jClient.DataAnnotations
             RegisterWithConverter(entityTypes, new EntityConverter());
         }
 
+        public static void RegisterWithResolver(EntityResolver resolver)
+        {
+            RegisterWithResolver(null, resolver);
+        }
+
         public static void RegisterWithResolver(IEnumerable<Type> entityTypes, EntityResolver resolver)
         {
             InternalRegister(entityTypes, resolver, null);
+        }
+
+        public static void RegisterWithConverter(EntityConverter converter)
+        {
+            RegisterWithConverter(null, converter);
         }
 
         public static void RegisterWithConverter(IEnumerable<Type> entityTypes, EntityConverter converter)
@@ -46,22 +65,38 @@ namespace Neo4jClient.DataAnnotations
             InternalRegister(entityTypes, null, converter);
         }
 
+        public static void AddEntityType(Type entityType)
+        {
+            if (!EntityTypes.Contains(entityType))
+            {
+                entityTypes[entityType] = null;
+            }
+        }
+
+        public static void RemoveEntityType(Type entityType)
+        {
+            if (EntityTypes.Contains(entityType))
+            {
+                entityTypes.TryRemove(entityType, out var val);
+            }
+        }
+
 
         internal static void InternalRegister(IEnumerable<Type> entityTypes, EntityResolver entityResolver, EntityConverter entityConverter)
         {
             if (entityResolver == null && entityConverter == null)
             {
-                throw new InvalidOperationException("You must enable either the EntityResolver or EntityConverter for Neo4jClient.DataAnnotations to work.");
+                throw new InvalidOperationException(Messages.NoResolverOrConverterError);
             }
             else if (entityResolver != null && entityConverter != null)
             {
-                throw new InvalidOperationException("You cannot enable both EntityResolver and EntityConverter.");
+                throw new InvalidOperationException(Messages.BothResolverAndConverterError);
             }
 
-            if (entityTypes == null || entityTypes.FirstOrDefault() == null)
-            {
-                throw new ArgumentNullException(nameof(entityTypes), "Neo4jClient.DataAnnotations needs to know all your entity types (including complex types) and their derived types aforehand in order to do efficient work.");
-            }
+            //if (entityTypes == null || entityTypes.FirstOrDefault() == null)
+            //{
+            //    throw new ArgumentNullException(nameof(entityTypes), "Neo4jClient.DataAnnotations needs to know all your entity types (including complex types) and their derived types aforehand in order to do efficient work.");
+            //}
 
             if (entityResolver != null)
             {
@@ -113,9 +148,12 @@ namespace Neo4jClient.DataAnnotations
                 }
             }
 
-            foreach(var entityType in entityTypes)
+            if (entityTypes != null)
             {
-                AddEntityType(entityType);
+                foreach (var entityType in entityTypes)
+                {
+                    AddEntityType(entityType);
+                }
             }
         }
 
@@ -176,22 +214,6 @@ namespace Neo4jClient.DataAnnotations
                 list.Sort((x, y) => x.Type.IsGenericAssignableFrom(y.Type) ? -1 : (y.Type.IsGenericAssignableFrom(x.Type) ? 1 : (x.Type.Name.CompareTo(y.Type.Name))));
 
             return list;
-        }
-
-        internal static void AddEntityType(Type entityType)
-        {
-            if (!EntityTypes.Contains(entityType))
-            {
-                entityTypes[entityType] = null;
-            }
-        }
-
-        internal static void RemoveEntityType(Type entityType)
-        {
-            if (EntityTypes.Contains(entityType))
-            {
-                entityTypes.TryRemove(entityType, out var val);
-            }
         }
 
         internal static bool ContainsEntityType(Type entityType, bool includeBaseClasses = true)

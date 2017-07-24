@@ -81,13 +81,9 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         public static void AddEntityTypes()
         {
-            //for test purposes, we use reflection here.
-            var addEntityTypeMethod = typeof(Neo4jAnnotations).GetMethod("AddEntityType", BindingFlags.Static | BindingFlags.NonPublic);
-            var parameters = new object[1];
             foreach (var entityType in EntityTypes)
             {
-                parameters[0] = entityType;
-                addEntityTypeMethod.Invoke(null, parameters);
+                Neo4jAnnotations.AddEntityType(entityType);
             }
         }
 

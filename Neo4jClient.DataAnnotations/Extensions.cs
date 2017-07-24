@@ -233,7 +233,7 @@ namespace Neo4jClient.DataAnnotations
         /// Allows you to expressively assign new values (especially <see cref="Params"/>) to select properties of an existing instance without cloning or modifying the original instance.
         /// These new values would be used in place of the old ones on the instance.
         /// E.g. () =&gt; ellenPompeo.Set(actor =&gt; actor.Born == Params.Get&lt;Actor&gt;("shondaRhimes").Born);
-        /// NOTE: The member selection must always be on the left, and new values on the right of a logical equal-to ('==') operation. Use '&&' for more properties.
+        /// NOTE: The member selection must always be on the left, and new values on the right of a logical equal-to ('==') operation. Use '&amp;&amp;' for more properties.
         /// Also note that this method does not modify this instance, but overrides its final properties written to cypher.
         /// </summary>
         /// <typeparam name="T"></typeparam>
