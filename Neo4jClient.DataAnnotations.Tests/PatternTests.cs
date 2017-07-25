@@ -289,7 +289,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 .Prop(() => new
                 {
                     Name = "Ellen Pompeo",
-                    Born = Params.Get<ActorNode>("shondaRhimes").Born,
+                    Born = Vars.Get<ActorNode>("shondaRhimes").Born,
                     Roles = new string[] { "Meredith Grey" },
                     Age = 47.ToString()
                 })
@@ -326,7 +326,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 .Pattern<ActorNode>("Ambode")
                 .Constrain((actor) =>
                     actor.Name == "Ellen Pompeo"
-                    && actor.Born == Params.Get<ActorNode>("shondaRhimes").Born
+                    && actor.Born == Vars.Get<ActorNode>("shondaRhimes").Born
                     && actor.Roles == new string[] { "Meredith Grey" })
                 .Pattern as Pattern;
 
@@ -389,11 +389,12 @@ namespace Neo4jClient.DataAnnotations.Tests
                 .Extend(RelationshipDirection.Outgoing)
                 as Path;
 
-            path.Patterns.ForEach(p => p.BuildStrategy = PatternBuildStrategy.WithParams);
+            path.Patterns.ForEach(p => p.BuildStrategy = PropertiesBuildStrategy.WithParams);
 
-            var expectedMain = "(greysAnatomy:Series { greysAnatomy })" +
+            var expectedMain = "(greysAnatomy:Series $greysAnatomy)" +
                 "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { ellenPompeo })";
+                //becase of the inner shondaRhimes variable, it would use the NoParams strategy instead for the ellenPompeo props.
+                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })";
             var expectedExt = "-->()";
 
             var actualMain = path.Patterns[0].Build();
@@ -418,11 +419,12 @@ namespace Neo4jClient.DataAnnotations.Tests
                 .Extend(RelationshipDirection.Outgoing)
                 as Path;
 
-            path.Patterns.ForEach(p => p.BuildStrategy = PatternBuildStrategy.WithParamsForValues);
+            path.Patterns.ForEach(p => p.BuildStrategy = PropertiesBuildStrategy.WithParamsForValues);
 
-            var expectedMain = "(greysAnatomy:Series { Title: {greysAnatomy}.Title, Year: {greysAnatomy}.Year })" +
+            var expectedMain = "(greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
                 "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { Name: {ellenPompeo}.Name, Born: {ellenPompeo}.Born, Roles: {ellenPompeo}.Roles })";
+                //becase of the inner shondaRhimes variable, it would use the NoParams strategy instead for the ellenPompeo props.
+                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })";
             var expectedExt = "-->()";
 
             var actualMain = path.Patterns[0].Build();

@@ -12,7 +12,7 @@
     <PackageTags>nosql cypher neo4j entity orm poco</PackageTags>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageReleaseNotes>Visit project site for usage and instructions.</PackageReleaseNotes>
-    <Version>1.0.1</Version>
+    <Version>1.0.1-alpha</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

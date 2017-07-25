@@ -18,7 +18,7 @@ namespace Neo4jClient.DataAnnotations
         public static readonly Type ColumnType = typeof(ColumnAttribute);
         public static readonly Type KeyType = typeof(KeyAttribute);
         public static readonly Type ComplexType = typeof(ComplexTypeAttribute);
-        public static readonly Type ParamsType = typeof(Params);
+        public static readonly Type ParamsType = typeof(Vars);
         public static readonly Type ExtensionsType = typeof(Extensions);
         public static readonly Type NeoScalarType = typeof(NeoScalarAttribute);
         public static readonly Type ObjectType = typeof(object);

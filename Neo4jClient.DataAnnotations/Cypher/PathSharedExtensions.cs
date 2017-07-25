@@ -59,8 +59,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
         {
             if (testARBForNull && string.IsNullOrWhiteSpace(A) && string.IsNullOrWhiteSpace(R) && string.IsNullOrWhiteSpace(B))
             {
-                //you must provide at least one parameter
-                throw new InvalidOperationException(Messages.NullARBParametersError);
+                //you must provide at least one variable
+                throw new InvalidOperationException(Messages.NullARBVariablesError);
             }
             
             var builder = source as IPathBuilder;
@@ -84,13 +84,13 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
             var pattern = path.Pattern as Pattern;
 
-            pattern.AParameter = A;
+            pattern.AVariable = A;
             pattern.AType = typeof(TANode);
 
-            pattern.RParameter = R;
+            pattern.RVariable = R;
             pattern.RType = typeof(TRel);
 
-            pattern.BParameter = B;
+            pattern.BVariable = B;
             pattern.BType = typeof(TBNode);
 
             pattern.Direction = dir;
@@ -334,33 +334,33 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 current.AType = lastBType;
             }
 
-            var oldBParam = old.BParameter;
-            var currentAParam = current.AParameter;
+            var oldBVar = old.BVariable;
+            var currentAVar = current.AVariable;
 
-            if (!old.BParamIsAuto)
+            if (!old.BVarIsAuto)
             {
                 //swap
-                currentAParam = oldBParam;
-                oldBParam = null;
+                currentAVar = oldBVar;
+                oldBVar = null;
             }
-            else if (!current.AParamIsAuto)
+            else if (!current.AVarIsAuto)
             {
                 //swap
                 //replace the old with the new
-                oldBParam = currentAParam;
-                currentAParam = null;
+                oldBVar = currentAVar;
+                currentAVar = null;
             }
             else
             {
-                oldBParam = null;
-                currentAParam = null;
+                oldBVar = null;
+                currentAVar = null;
             }
 
-            if (currentAParam != null)
-                current.AParameter = currentAParam;
+            if (currentAVar != null)
+                current.AVariable = currentAVar;
 
-            if (oldBParam != null)
-                old.BParameter = oldBParam;
+            if (oldBVar != null)
+                old.BVariable = oldBVar;
         }
 
 
@@ -405,7 +405,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         internal static IPathExtent SharedAssign(this IPathExtent source)
         {
             var path = source as Path;
-            (path.Builder as PathBuilder).AssignPathParameter = true;
+            (path.Builder as PathBuilder).AssignPathVariable = true;
 
             return path;
         }

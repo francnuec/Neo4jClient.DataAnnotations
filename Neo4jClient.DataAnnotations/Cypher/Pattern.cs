@@ -25,19 +25,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
         private EntityResolver entityResolver;
         private EntityConverter entityConverter;
         private ISerializer serializer;
-        private Func<object, string> actualSerializer;
+        private Func<object, string> serializerFunc;
         private IGraphClient client;
+        private QueryWriter queryWriter;
 
         public IPathExtent Path { get; protected internal set; }
 
-        private PatternBuildStrategy? buildStrategy;
-        public PatternBuildStrategy BuildStrategy
+        private PropertiesBuildStrategy? buildStrategy;
+        public PropertiesBuildStrategy BuildStrategy
         {
             get
             {
                 return buildStrategy ?? 
                     Path?.Builder?.PatternBuildStrategy ?? 
-                    PatternBuildStrategy.NoParams;
+                    PropertiesBuildStrategy.NoParams;
             }
             set
             {
@@ -45,67 +46,67 @@ namespace Neo4jClient.DataAnnotations.Cypher
             }
         }
 
-        internal string aParam, rParam, bParam;
-        private bool aParamIsAuto, rParamIsAuto, bParamIsAuto;
+        internal string aVar, rVar, bVar;
+        private bool aVarIsAuto, rVarIsAuto, bVarIsAuto;
 
-        public string AParameter
+        public string AVariable
         {
             get
             {
-                return aParam ?? 
-                    (aParam = (abSelector ?? arSelector)?.Parameters[0].Name) ?? 
-                    GetParameter("A", ref aParam, ref aParamIsAuto);
+                return aVar ?? 
+                    (aVar = (abSelector ?? arSelector)?.Parameters[0].Name) ?? 
+                    GetVariable("A", ref aVar, ref aVarIsAuto);
             }
 
             protected internal set
             {
-                if (value != aParam)
-                    aParamIsAuto = false;
+                if (value != aVar)
+                    aVarIsAuto = false;
 
-                aParam = !string.IsNullOrWhiteSpace(value) ? value : null;
+                aVar = !string.IsNullOrWhiteSpace(value) ? value : null;
             }
         }
 
-        public string RParameter
+        public string RVariable
         {
             get
             {
-                return rParam ?? 
-                    (rParam = rbSelector?.Parameters[0].Name) ?? 
-                    GetParameter("R", ref rParam, ref rParamIsAuto);
+                return rVar ?? 
+                    (rVar = rbSelector?.Parameters[0].Name) ?? 
+                    GetVariable("R", ref rVar, ref rVarIsAuto);
             }
 
             protected internal set
             {
-                if (value != rParam)
-                    rParamIsAuto = false;
+                if (value != rVar)
+                    rVarIsAuto = false;
 
-                rParam = !string.IsNullOrWhiteSpace(value) ? value : null;
+                rVar = !string.IsNullOrWhiteSpace(value) ? value : null;
             }
         }
 
-        public string BParameter
+        public string BVariable
         {
             get
             {
-                return bParam ?? GetParameter("B", ref bParam, ref bParamIsAuto);
+                return bVar ?? GetVariable("B", ref bVar, ref bVarIsAuto);
             }
 
             protected internal set
             {
-                if (value != bParam)
-                    bParamIsAuto = false;
+                if (value != bVar)
+                    bVarIsAuto = false;
 
-                bParam = !string.IsNullOrWhiteSpace(value) ? value : null;
+                bVar = !string.IsNullOrWhiteSpace(value) ? value : null;
             }
         }
 
 
-        public bool AParamIsAuto { get => AParameter != null && aParamIsAuto; }
+        public bool AVarIsAuto { get => AVariable != null && aVarIsAuto; }
 
-        public bool RParamIsAuto { get => RParameter != null && rParamIsAuto; }
+        public bool RVarIsAuto { get => RVariable != null && rVarIsAuto; }
 
-        public bool BParamIsAuto { get => BParameter != null && bParamIsAuto; }
+        public bool BVarIsAuto { get => BVariable != null && bVarIsAuto; }
 
 
         public bool HasAType { get { return AType != null && AType != Defaults.CypherObjectType; } }
@@ -243,7 +244,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                             BNavProperty = inverseProp ?? bNavProp;
 
                             //create expression
-                            abSelector = CreateNavigationPropertySelector(AType, navigationProp, AParameter);
+                            abSelector = CreateNavigationPropertySelector(AType, navigationProp, AVariable);
                         }
                     }
                 }
@@ -286,7 +287,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                             ANavProperty = navigationProperty;
 
                             //create expression
-                            arSelector = CreateNavigationPropertySelector(AType, navigationProperty, AParameter);
+                            arSelector = CreateNavigationPropertySelector(AType, navigationProperty, AVariable);
                         }
                     }
                 }
@@ -328,7 +329,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                             BNavProperty = inverseProp ?? bNavProp;
                             
                             //create expression
-                            rbSelector = CreateNavigationPropertySelector(RType, navigationProp, RParameter);
+                            rbSelector = CreateNavigationPropertySelector(RType, navigationProp, RVariable);
                         }
                     }
                 }
@@ -558,7 +559,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         private bool aFinalPropsSet, rFinalPropsSet, bFinalPropsSet;
         /// <summary>
         /// This would contain the properties as they would be written to cypher.
-        /// Parameters would be a <see cref="JRaw"/> value here, and not <see cref="JValue"/> string.
+        /// Variables would be a <see cref="JRaw"/> value here, and not <see cref="JValue"/> string.
         /// </summary>
         public JObject AFinalProperties
         {
@@ -567,7 +568,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 if (!aFinalPropsSet)
                 {
                     aFinalPropsSet = true;
-                    aFinalProps = GetFinalProperties(this, AProperties, AConstraints, AType);
+                    aFinalProps = GetFinalProperties(this, AProperties, AConstraints, AType, out aHasVars);
                 }
 
                 return aFinalProps;
@@ -581,7 +582,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 if (!rFinalPropsSet)
                 {
                     rFinalPropsSet = true;
-                    rFinalProps = GetFinalProperties(this, RProperties, RConstraints, RType);
+                    rFinalProps = GetFinalProperties(this, RProperties, RConstraints, RType, out rHasVars);
                 }
 
                 return rFinalProps;
@@ -595,12 +596,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 if (!bFinalPropsSet)
                 {
                     bFinalPropsSet = true;
-                    bFinalProps = GetFinalProperties(this, BProperties, BConstraints, BType);
+                    bFinalProps = GetFinalProperties(this, BProperties, BConstraints, BType, out bHasVars);
                 }
 
                 return bFinalProps;
             }
         }
+
+
+        private bool aHasVars, rHasVars, bHasVars;
+        public bool AFinalPropertiesHasVariables => aHasVars;
+
+        public bool RFinalPropertiesHasVariables => rHasVars;
+
+        public bool BFinalPropertiesHasVariables => bHasVars;
 
 
         private EntityTypeInfo aInfo, rInfo, bInfo;
@@ -699,11 +708,13 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public override string Build()
         {
             //CHECK LIST
-            //Parameters
+            //Variables
             //Labels
             //Hops
             //FinalProperties
             //Direction
+
+            ResolveInternalUtilities(this);
 
             StringBuilder builder = new StringBuilder();
 
@@ -712,18 +723,18 @@ namespace Neo4jClient.DataAnnotations.Cypher
             if (!IsExtension)
             {
                 //Build A
-                A = BuildNode(this, aParam, aParamIsAuto, AParameter, ALabels, AFinalProperties);
+                A = BuildNode(this, aVar, aVarIsAuto, AVariable, ALabels, AFinalProperties, AFinalPropertiesHasVariables);
 
                 builder.Append(A);
             }
 
             //Build R
-            R = BuildRelationship(this, rParam, rParamIsAuto, RParameter, RTypes, RHops, RFinalProperties);
+            R = BuildRelationship(this, rVar, rVarIsAuto, RVariable, RTypes, RHops, RFinalProperties, RFinalPropertiesHasVariables);
             if (R == "[]")
                 R = null; //just omit the empty ones
 
             //Build B
-            B = BuildNode(this, bParam, bParamIsAuto, BParameter, BLabels, BFinalProperties);
+            B = BuildNode(this, bVar, bVarIsAuto, BVariable, BLabels, BFinalProperties, BFinalPropertiesHasVariables);
 
             if (IsExtension || R != null || HasBType || (B != null && B != "()"))
             {
@@ -873,73 +884,56 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
         internal static string BuildNode(Pattern pattern,
-            string param, bool paramIsAuto, string Parameter, //NOTE: this call order is important, and method signature should not be reshuffled.
-            IEnumerable<string> labels, JObject finalProperties)
+            string variable, bool variableIsAuto, string Variable, //NOTE: this call order is important, and method signature should not be reshuffled.
+            IEnumerable<string> labels, JObject finalProperties, bool finalPropsHasVars)
         {
             //e.g. (param:labels {finalProperties})
 
             StringBuilder builder = new StringBuilder();
 
-            if (!paramIsAuto && param != null)
+            bool alreadyBound = false;
+
+            if (!variableIsAuto && variable != null)
             {
-                builder.Append(param);
+                builder.Append(variable);
+                //don't continue is this is already bound
+                //this is a crude test.
+                alreadyBound = pattern.queryWriter?.ContainsParameterWithKey(variable) == true;
             }
 
-            if (labels?.Count() > 0)
+            if (!alreadyBound)
             {
-                builder.Append(":" + labels.Aggregate((first, second) => $"{first}:{second}"));
-            }
-
-            if (finalProperties?.Count > 0)
-            {
-                string value = null;
-
-                switch (pattern.BuildStrategy)
+                if (labels?.Count() > 0)
                 {
-                    case PatternBuildStrategy.WithParams:
-                    case PatternBuildStrategy.WithParamsForValues:
-                        {
-                            pattern.InternalCypherQuery.WithParam(Parameter, finalProperties);
-
-                            value = Parameter;
-
-                            if (pattern.BuildStrategy == PatternBuildStrategy.WithParamsForValues)
-                            {
-                                value = finalProperties.Properties()
-                                    .Select(jp => $"{jp.Name}: {{{Parameter}}}.{jp.Name}")
-                                    .Aggregate((first, second) => $"{first}, {second}");
-                            }
-                            break;
-                        }
-                    case PatternBuildStrategy.NoParams:
-                        {
-                            ResolveClientAndSerializers(pattern);
-
-                            value = finalProperties.Properties()
-                                    .Select(jp => $"{jp.Name}: {pattern.actualSerializer(jp.Value)}")
-                                    .Aggregate((first, second) => $"{first}, {second}");
-                            break;
-                        }
+                    builder.Append(":" + labels.Aggregate((first, second) => $"{first}:{second}"));
                 }
 
-                if (value != null)
-                    builder.Append($" {{ {value} }}");
+                if (finalProperties?.Count > 0)
+                {
+                    ResolveInternalUtilities(pattern);
+
+                    string properties = BuildProperties(finalProperties, pattern.InternalCypherQuery, Variable,
+                        finalPropsHasVars? PropertiesBuildStrategy.NoParams : pattern.BuildStrategy, pattern.serializerFunc);
+
+                    if (properties != null && properties != "{  }")
+                        builder.Append($" {properties}");
+                }
             }
 
             return $"({builder.ToString()})";
         }
 
         internal static string BuildRelationship(Pattern pattern,
-            string param, bool paramIsAuto, string Parameter, //NOTE: this call order is important, and method signature should not be reshuffled.
-            IEnumerable<string> types, Tuple<int?, int?> hops, JObject finalProperties)
+            string variable, bool variableIsAuto, string Variable, //NOTE: this call order is important, and method signature should not be reshuffled.
+            IEnumerable<string> types, Tuple<int?, int?> hops, JObject finalProperties, bool finalPropsHasVars)
         {
             //e.g. (param:types*hops {finalProperties})
 
             StringBuilder builder = new StringBuilder();
 
-            if (!paramIsAuto && param != null)
+            if (!variableIsAuto && variable != null)
             {
-                builder.Append(param);
+                builder.Append(variable);
             }
 
             if (types?.Count() > 0)
@@ -976,49 +970,57 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
             if (finalProperties?.Count > 0)
             {
-                string value = null;
+                string properties = BuildProperties(finalProperties, pattern.InternalCypherQuery, Variable,
+                    finalPropsHasVars ? PropertiesBuildStrategy.NoParams : pattern.BuildStrategy, pattern.serializerFunc);
 
-                switch (pattern.BuildStrategy)
-                {
-                    case PatternBuildStrategy.WithParams:
-                    case PatternBuildStrategy.WithParamsForValues:
-                        {
-                            pattern.InternalCypherQuery.WithParam(Parameter, finalProperties);
-
-                            value = Parameter;
-
-                            if (pattern.BuildStrategy == PatternBuildStrategy.WithParamsForValues)
-                            {
-                                value = finalProperties.Properties()
-                                    .Select(jp => $"{jp.Name}: {{{Parameter}}}.{jp.Name}")
-                                    .Aggregate((first, second) => $"{first}, {second}");
-                            }
-                            break;
-                        }
-                    case PatternBuildStrategy.NoParams:
-                        {
-                            ResolveClientAndSerializers(pattern);
-
-                            value = finalProperties.Properties()
-                                    .Select(jp => $"{jp.Name}: {pattern.actualSerializer(jp.Value)}")
-                                    .Aggregate((first, second) => $"{first}, {second}");
-                            break;
-                        }
-                }
-
-                if (value != null)
-                    builder.Append($" {{ {value} }}");
+                if (properties != null && properties != "{  }")
+                    builder.Append($" {properties}");
             }
 
             return $"[{builder.ToString()}]";
         }
 
-        internal static string GetParameter(string entity, ref string current, ref bool isAutoFlag)
+        internal static string BuildProperties
+            (JObject finalProperties, ICypherFluentQuery query, string Variable,
+            PropertiesBuildStrategy buildStrategy, Func<object, string> serializer)
+        {
+            string value = null;
+
+            switch (buildStrategy)
+            {
+                case PropertiesBuildStrategy.WithParams:
+                case PropertiesBuildStrategy.WithParamsForValues:
+                    {
+                        query.WithParam(Variable, finalProperties);
+
+                        value = "$" + Variable;
+
+                        if (buildStrategy == PropertiesBuildStrategy.WithParamsForValues)
+                        {
+                            value = finalProperties.Properties()
+                                .Select(jp => $"{jp.Name}: ${Variable}.{jp.Name}")
+                                .Aggregate((first, second) => $"{first}, {second}");
+                        }
+                        break;
+                    }
+                case PropertiesBuildStrategy.NoParams:
+                    {
+                        value = finalProperties.Properties()
+                                .Select(jp => $"{jp.Name}: {serializer(jp.Value)}")
+                                .Aggregate((first, second) => $"{first}, {second}");
+                        break;
+                    }
+            }
+
+            return value?.StartsWith("$") != true ? $"{{ {value} }}" : value;
+        }
+
+        internal static string GetVariable(string entity, ref string current, ref bool isAutoFlag)
         {
             if (current == null)
             {
                 isAutoFlag = true;
-                current = GetRandomParameterFor(entity);
+                current = Utilities.GetRandomVariableFor(entity);
             }
 
             return current;
@@ -1347,16 +1349,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
             return lambda;
         }
 
-        internal static string GetRandomParameterFor(string entity)
-        {
-            Random random;
-
-            return "___"
-                + $"{entity}"
-                + (random = new Random(DateTime.UtcNow.Millisecond)).Next(1, 100)
-                + random.Next(1, 100);
-        }
-
         internal static Type GetOtherNodeFromRAndKnownNode(Type R, Type knownNode, bool findingA, ref RelationshipDirection? direction)
         {
             var rInfo = Neo4jAnnotations.GetEntityTypeInfo(R);
@@ -1658,72 +1650,31 @@ namespace Neo4jClient.DataAnnotations.Cypher
             return dir;
         }
 
-        internal static LambdaExpression GetConstraintsAsProperties(LambdaExpression constraints, Type type)
-        {
-            var setMethod = Utilities.GetMethodInfo(() => Extensions.Set<object>(null, null, true), type);
-
-            return Expression.Lambda(Expression.Call(setMethod, Expression.Constant(type.GetDefaultValue(), type),
-                constraints, Expression.Constant(true) //i.e, usePredicateOnly: true
-                ));
-        }
-
-        internal static void ResolveClientAndSerializers(Pattern pattern)
+        internal static void ResolveInternalUtilities(Pattern pattern)
         {
             if (pattern.client == null || pattern.serializer == null || (pattern.entityResolver == null && pattern.entityConverter == null))
             {
-                var client = (pattern.InternalCypherQuery as IAttachedReference)?.Client;
-
-                var serializer = client?.Serializer ?? new CustomJsonSerializer()
-                {
-                    JsonContractResolver = client?.JsonContractResolver ?? GraphClient.DefaultJsonContractResolver,
-                    JsonConverters = client?.JsonConverters ?? (IEnumerable<JsonConverter>)GraphClient.DefaultJsonConverters
-                };
-
-                var resolver = client?.JsonContractResolver as EntityResolver ??
-                    (serializer as CustomJsonSerializer)?.JsonContractResolver as EntityResolver;
-
-                var converters = new List<JsonConverter>((IEnumerable<JsonConverter>)client?.JsonConverters ?? new JsonConverter[0]);
-                converters.AddRange((serializer as CustomJsonSerializer)?.JsonConverters ?? new JsonConverter[0]);
-
-                var converter = converters.FirstOrDefault(c => c is EntityConverter) as EntityConverter;
-
-                Func<object, string> actualSerializer = serializer != null ? (obj) => serializer.Serialize(obj) : (Func<object, string>)null;
+                Utilities.GetQueryUtilities(pattern.InternalCypherQuery, out var client, out var serializer,
+                    out var resolver, out var converter, out var serializerFunc, out var queryWriter);
 
                 pattern.client = client;
                 pattern.serializer = serializer;
                 pattern.entityResolver = resolver;
                 pattern.entityConverter = converter;
-                pattern.actualSerializer = actualSerializer;
+                pattern.serializerFunc = serializerFunc;
+                pattern.queryWriter = queryWriter;
             }
         }
 
         internal static JObject GetFinalProperties(Pattern pattern, 
-            LambdaExpression properties, LambdaExpression constraints, Type type)
+            LambdaExpression properties, LambdaExpression constraints, Type type, out bool hasVariables)
         {
-            ResolveClientAndSerializers(pattern);
+            ResolveInternalUtilities(pattern);
 
-            var lambdaExpr = properties ?? (constraints != null ? GetConstraintsAsProperties(constraints, type) : null);
+            var lambdaExpr = properties ?? (constraints != null ? Utilities.GetConstraintsAsPropertiesLambda(constraints, type) : null);
 
-            return Utilities.GetFinalProperties(lambdaExpr, pattern.entityResolver, pattern.entityConverter, pattern.actualSerializer);
+            return Utilities.GetFinalProperties(lambdaExpr, pattern.entityResolver, 
+                pattern.entityConverter, pattern.serializerFunc, out hasVariables);
         }
-    }
-
-    public enum PatternBuildStrategy
-    {
-        /// <summary>
-        /// Writes the properties directly into the generated pattern.
-        /// E.g. (a:Movie { title: "Grey's Anatomy", year: 2017 }
-        /// </summary>
-        NoParams = 0,
-        /// <summary>
-        /// Stores the properties via a <see cref="ICypherFluentQuery.WithParam(string, object)"/> call, and replaces it with a parameter.
-        /// E.g. (a:Movie { movie }), where "movie" is the parameter. This style can be used for the CREATE and CREATE UNIQUE statements.
-        /// </summary>
-        WithParams,
-        /// <summary>
-        /// Stores the properties via a <see cref="ICypherFluentQuery.WithParam(string, object)"/> call, and replaces each property value with corresponding parameter property.
-        /// E.g. (a:Movie { title: {movie}.title, year: {movie}.year }), where "movie" is the parameter. This style is applicable to the MATCH and OPTIONAL MATCH statements.
-        /// </summary>
-        WithParamsForValues,
     }
 }

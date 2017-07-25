@@ -17,12 +17,12 @@ namespace Neo4jClient.DataAnnotations.Cypher
     {
         IPathExtent Path { get; set; }
 
-        string PathParameter { get; set; }
+        string PathVariable { get; set; }
 
-        PatternBuildStrategy PatternBuildStrategy { get; set; }
+        PropertiesBuildStrategy PatternBuildStrategy { get; set; }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        bool AssignPathParameter { get; }
+        bool AssignPathVariable { get; }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         bool FindShortestPath { get; }

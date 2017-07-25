@@ -44,7 +44,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
             {
                 //if (type == null && Node != null)
                 //{
-                //    type = Utilities.HasParams(Filtered) ? SpecialNodeType.Params : 
+                //    type = Utilities.HasParams(Filtered) ? SpecialNodeType.Vars : 
                 //        (Visitor != null && Visitor.IsPredicateAssignmentValue(Node) ? 
                 //        SpecialNodeType.PredicateAssignment : 
                 //        SpecialNodeType.Other
@@ -85,9 +85,9 @@ namespace Neo4jClient.DataAnnotations.Expressions
         {
             object ret = null;
 
-            if (specialNode.Type == SpecialNodeType.Params)
+            if (specialNode.Type == SpecialNodeType.Variable)
             {
-                ret = Utilities.BuildParams(specialNode.Filtered, resolver, serializer, out var typeReturned, useResolvedJsonName: useResolvedJsonName);
+                ret = Utilities.BuildVars(specialNode.Filtered, resolver, serializer, out var typeReturned, useResolvedJsonName: useResolvedJsonName);
             }
             else
             {
@@ -101,7 +101,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
     public enum SpecialNodeType
     {
         Other = 0,
-        Params = 1,
+        Variable = 1,
         //PredicateAssignment = 2,
         MemberAccessExpression = 3
     }

@@ -17,23 +17,23 @@ namespace Neo4jClient.DataAnnotations.Cypher
             : this(query)
         {
             Path = expression?.Compile().Invoke(this);
-            PathParameter = expression?.Parameters[0].Name;
+            PathVariable = expression?.Parameters[0].Name;
         }
 
-        public PathBuilder(ICypherFluentQuery query, IPathExtent path, string pathParameter)
+        public PathBuilder(ICypherFluentQuery query, IPathExtent path, string pathVariable)
             : this(query)
         {
             Path = path;
-            PathParameter = pathParameter;
+            PathVariable = pathVariable;
         }
 
         public IPathExtent Path { get; set; }
 
-        public PatternBuildStrategy PatternBuildStrategy { get; set; }
+        public PropertiesBuildStrategy PatternBuildStrategy { get; set; }
 
-        public string PathParameter { get; set; }
+        public string PathVariable { get; set; }
 
-        public bool AssignPathParameter { get; protected internal set; }
+        public bool AssignPathVariable { get; protected internal set; }
 
         public bool FindShortestPath { get; protected internal set; }
 
@@ -45,11 +45,11 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
             var pathText = Path?.Build();
 
-            var pathParameter = PathParameter;
+            var pathVariable = PathVariable;
 
-            if (AssignPathParameter && pathParameter != null)
+            if (AssignPathVariable && pathVariable != null)
             {
-                builder.Append($"{pathParameter}=");
+                builder.Append($"{pathVariable}=");
             }
 
             if (FindShortestPath)

@@ -6,7 +6,7 @@ namespace Neo4jClient.DataAnnotations
 {
     public class Messages
     {
-        public const string NullARBParametersError = "A, R, and B are null. You should provide at least one parameter name.";
+        public const string NullARBVariablesError = "A, R, and B are null. You should provide at least one variable name.";
 
         public const string PathableNotRecognizedError = "Cannot process this IPathable type as it is not recognized. Expected IPathBuilder or Path types.";
 
@@ -24,7 +24,7 @@ namespace Neo4jClient.DataAnnotations
 
         public const string ExtendLastBNewAMismatchError = "The last B node of Type: {0} does not match this new A of Type: {1}. Since you are extending the last pattern, this two should match.";
 
-        public const string ParamsGetError = "Please do not call this method directly. Use only in expressions.";
+        public const string VarsGetError = "Please do not call this method directly. Use only in expressions.";
 
         public const string ComplexTypedPropertyMatchingTypeNotFoundError = "No matching type found for Complex Typed Property: {0}, in Class: {1}.";
 
@@ -32,7 +32,7 @@ namespace Neo4jClient.DataAnnotations
 
         public const string JsonPropertyNotFoundError = "Json Property '{0}' not found for Type '{1}'";
 
-        public const string AmbiguousParamsPathError = "Expression path to Neo4j parameter is ambiguous, and cannot be translated. Params: {0}.";
+        public const string AmbiguousVarsPathError = "Expression path to Neo4j variable is ambiguous, and cannot be translated. Vars: {0}.";
 
         public const string NoResolverOrConverterError = "You must enable either the EntityResolver or EntityConverter for Neo4jClient.DataAnnotations to work.";
 

@@ -11,6 +11,8 @@ using Neo4jClient.DataAnnotations.Expressions;
 using Newtonsoft.Json.Linq;
 using System.Collections;
 using Neo4jClient.Cypher;
+using Neo4jClient.Serialization;
+using Newtonsoft.Json;
 
 namespace Neo4jClient.DataAnnotations
 {
@@ -554,12 +556,12 @@ namespace Neo4jClient.DataAnnotations
                 && methodExpr.Method.IsEquivalentTo("_", Defaults.ExtensionsType);
         }
 
-        public static bool HasParams(List<Expression> expressions)
+        public static bool HasVars(List<Expression> expressions)
         {
-            return HasParams(expressions, out var methodExpr);
+            return HasVars(expressions, out var methodExpr);
         }
 
-        public static bool HasParams(List<Expression> expressions, out MethodCallExpression methodExpr)
+        public static bool HasVars(List<Expression> expressions, out MethodCallExpression methodExpr)
         {
             methodExpr = null;
             return expressions != null && expressions.Count > 0
@@ -567,11 +569,11 @@ namespace Neo4jClient.DataAnnotations
                 && methodExpr.Method.IsEquivalentTo("Get", Defaults.ParamsType);
         }
 
-        public static string BuildParams(List<Expression> expressions, EntityResolver resolver,
+        public static string BuildVars(List<Expression> expressions, EntityResolver resolver,
             Func<object, string> serializer, out Type typeReturned, bool? useResolvedJsonName = null)
         {
             typeReturned = null;
-            if (!HasParams(expressions, out var methodExpr))
+            if (!HasVars(expressions, out var methodExpr))
                 return null;
 
             if (useResolvedJsonName == null)
@@ -699,20 +701,20 @@ namespace Neo4jClient.DataAnnotations
                 if (arrayIndexExpr != null)
                 {
                     //try executing it first
-                    //if it fails, maybe we have a nested Params call
+                    //if it fails, maybe we have a nested Vars call
                     try
                     {
                         var arrayIndex = arrayIndexExpr.ExecuteExpression<int?>();
                         arrayIndexStr = arrayIndex?.ToString();
                     }
-                    catch (NotImplementedException e) when (e.Message == Messages.ParamsGetError)
+                    catch (NotImplementedException e) when (e.Message == Messages.VarsGetError)
                     {
-                        //check if params
+                        //check if vars
                         var retrievedExprs = GetSimpleMemberAccessStretch(arrayIndexExpr, out var val);
-                        if (HasParams(retrievedExprs))
+                        if (HasVars(retrievedExprs))
                         {
-                            //get the params string
-                            arrayIndexStr = BuildParams(retrievedExprs, resolver, serializer, out var childTypeReturned, useResolvedJsonName: null);
+                            //get the vars string
+                            arrayIndexStr = BuildVars(retrievedExprs, resolver, serializer, out var childTypeReturned, useResolvedJsonName: null);
                         }
                     }
                 }
@@ -861,12 +863,12 @@ namespace Neo4jClient.DataAnnotations
         }
 
         /// <summary>
-        /// Placeholder method for <see cref="Params"/> class calls in expressions.
+        /// Placeholder method for <see cref="Vars"/> class calls in expressions.
         /// </summary>
         /// <typeparam name="TReturn">The last return type of the contiguous access stretch.</typeparam>
         /// <param name="index">The index of the actual expression in the store.</param>
         /// <returns>A default value of the return type.</returns>
-        internal static TReturn GetParams<TReturn>(int index)
+        internal static TReturn GetValue<TReturn>(int index)
         {
             return (TReturn)typeof(TReturn).GetDefaultValue();
         }
@@ -949,8 +951,11 @@ namespace Neo4jClient.DataAnnotations
 
         public static JObject GetFinalProperties(
             LambdaExpression lambdaExpr, EntityResolver resolver,
-            EntityConverter converter, Func<object, string> serializer)
+            EntityConverter converter, Func<object, string> serializer,
+            out bool hasVariablesInProperties)
         {
+            hasVariablesInProperties = false;
+
             //get the properties expression
             if (lambdaExpr != null && (resolver != null || converter != null) && serializer != null)
             {
@@ -1158,27 +1163,27 @@ namespace Neo4jClient.DataAnnotations
                     }
                 }
 
-                //now replace values with neo parameters where appropriate
-                var paramNodes = entityVisitor.SpecialNodePaths.Where(pair => pair.Item2.Type == SpecialNodeType.Params).ToArray();
+                //now replace values with neo variables where appropriate
+                var variableNodes = entityVisitor.SpecialNodePaths.Where(pair => pair.Item2.Type == SpecialNodeType.Variable).ToArray();
 
-                if (paramNodes.Length > 0)
+                if (variableNodes.Length > 0)
                 {
-                    //for params:
+                    //for vars:
                     //a member is identified by the last MemberAssignment, or the first argument of an ElementInit of the first Dictionary<string, object>
                     //title: a.title (assigned to a member)
                     //roles: [a.roles[0]] (ElementInit of an assignment to a member)
-                    //roles: [a.roles[b.index]] (This scenario is same as previous, except with recursive params)
+                    //roles: [a.roles[b.index]] (This scenario is same as previous, except with recursive vars)
                     //in other words, direct assignment, and arrays are supported
 
-                    var propertyKeyToParamNodes = new List<Tuple<string, IEnumerable<object>, SpecialNode, string>>();
+                    var propertyKeyToVarNodes = new List<Tuple<string, IEnumerable<object>, SpecialNode, string>>();
 
-                    foreach (var paramNode in paramNodes)
+                    foreach (var varNode in variableNodes)
                     {
-                        string paramBuiltValue = paramNode.Item2.ConcreteValue as string;
+                        string varBuiltValue = varNode.Item2.ConcreteValue as string;
                         object referenceItem = null;
                         string propertyKey = null;
 
-                        var paths = paramNode.Item1;
+                        var paths = varNode.Item1;
 
                         MemberAssignment assignment = null;
                         MemberListBinding listBinding = null;
@@ -1212,7 +1217,7 @@ namespace Neo4jClient.DataAnnotations
 
                         if (referenceItem == null)
                         {
-                            throw new InvalidOperationException(string.Format(Messages.AmbiguousParamsPathError, paramBuiltValue));
+                            throw new InvalidOperationException(string.Format(Messages.AmbiguousVarsPathError, varBuiltValue));
                         }
 
                         if (memberBinding != null)
@@ -1228,12 +1233,12 @@ namespace Neo4jClient.DataAnnotations
                             }
                             catch (Exception e)
                             {
-                                throw new InvalidOperationException(string.Format(Messages.AmbiguousParamsPathError, paramBuiltValue), e);
+                                throw new InvalidOperationException(string.Format(Messages.AmbiguousVarsPathError, varBuiltValue), e);
                             }
 
                             if (jProperty == null)
                             {
-                                throw new InvalidOperationException(string.Format(Messages.AmbiguousParamsPathError, paramBuiltValue));
+                                throw new InvalidOperationException(string.Format(Messages.AmbiguousVarsPathError, varBuiltValue));
                             }
 
                             propertyKey = jProperty.Name;
@@ -1247,33 +1252,33 @@ namespace Neo4jClient.DataAnnotations
                         }
 
                         if (propertyKey == null
-                            || (paramNode.Item2.FoundWhileVisitingPredicate && predicateJObject[propertyKey] == null) //avoid invalid assignments
+                            || (varNode.Item2.FoundWhileVisitingPredicate && predicateJObject[propertyKey] == null) //avoid invalid assignments
                             )
                         {
                             //trouble
-                            throw new InvalidOperationException(string.Format(Messages.AmbiguousParamsPathError, paramBuiltValue));
+                            throw new InvalidOperationException(string.Format(Messages.AmbiguousVarsPathError, varBuiltValue));
                         }
 
-                        propertyKeyToParamNodes.Add(new Tuple<string, IEnumerable<object>, SpecialNode, string>
+                        propertyKeyToVarNodes.Add(new Tuple<string, IEnumerable<object>, SpecialNode, string>
                                 (propertyKey,
                                 paths.Take(paths.IndexOf(referenceItem) + 1),
-                                paramNode.Item2,
-                                paramBuiltValue));
+                                varNode.Item2,
+                                varBuiltValue));
                     }
 
-                    foreach (var item in propertyKeyToParamNodes)
+                    foreach (var item in propertyKeyToVarNodes)
                     {
-                        //find the value and replace with parameter where appropriate
+                        //find the value and replace with variable where appropriate
                         var key = item.Item1;
                         var pathsLeft = item.Item2.ToArray();
                         var specialNode = item.Item3;
-                        var paramBuiltValue = item.Item4;
+                        var varBuiltValue = item.Item4;
 
                         var getParamsExpr = pathsLeft[0] as MethodCallExpression;
 
                         var instanceJValue = instanceJObject[key];
 
-                        var finalValue = new JRaw(paramBuiltValue);
+                        var finalValue = new JRaw(varBuiltValue);
 
                         //value should be one of two things
                         //array or normal literal
@@ -1309,16 +1314,18 @@ namespace Neo4jClient.DataAnnotations
                             if (index < 0 || index >= jArray.Count)
                             {
                                 //yawa don gas :)
-                                throw new InvalidOperationException(string.Format(Messages.AmbiguousParamsPathError, paramBuiltValue));
+                                throw new InvalidOperationException(string.Format(Messages.AmbiguousVarsPathError, varBuiltValue));
                             }
 
                             //replace the value
                             jArray[index] = finalValue;
+                            hasVariablesInProperties = true;
                             continue;
                         }
 
                         //assign
                         instanceJObject[key] = finalValue;
+                        hasVariablesInProperties = true;
                     }
                 }
 
@@ -1451,7 +1458,7 @@ namespace Neo4jClient.DataAnnotations
 
         public static string BuildPaths(ICypherFluentQuery query, 
             IEnumerable<Expression<Func<IPathBuilder, IPathExtent>>> pathBuildExpressions,
-            PatternBuildStrategy patternBuildStrategy)
+            PropertiesBuildStrategy patternBuildStrategy)
         {
             StringBuilder stringBuilder = new StringBuilder();
 
@@ -1468,6 +1475,62 @@ namespace Neo4jClient.DataAnnotations
             stringBuilder.Append(pathsText);
 
             return stringBuilder.ToString();
+        }
+
+        internal static void GetQueryUtilities(ICypherFluentQuery query, 
+            out IGraphClient client, out ISerializer serializer,
+            out EntityResolver resolver, out EntityConverter converter,
+            out Func<object, string> actualSerializer, out QueryWriter queryWriter)
+        {
+            client = (query as IAttachedReference)?.Client;
+
+            var _serializer = client?.Serializer ?? new CustomJsonSerializer()
+            {
+                JsonContractResolver = client?.JsonContractResolver ?? GraphClient.DefaultJsonContractResolver,
+                JsonConverters = client?.JsonConverters ?? (IEnumerable<JsonConverter>)GraphClient.DefaultJsonConverters
+            };
+
+            serializer = _serializer;
+
+            resolver = client?.JsonContractResolver as EntityResolver ??
+                (serializer as CustomJsonSerializer)?.JsonContractResolver as EntityResolver;
+
+            var converters = new List<JsonConverter>((IEnumerable<JsonConverter>)client?.JsonConverters ?? new JsonConverter[0]);
+            converters.AddRange((serializer as CustomJsonSerializer)?.JsonConverters ?? new JsonConverter[0]);
+
+            converter = converters.FirstOrDefault(c => c is EntityConverter) as EntityConverter;
+
+            actualSerializer = _serializer != null ? (obj) => _serializer.Serialize(obj) : (Func<object, string>)null;
+
+            try
+            {
+                queryWriter = query.GetType()
+                .GetField("QueryWriter", BindingFlags.NonPublic | BindingFlags.Instance)?
+                .GetValue(query) as QueryWriter;
+            }
+            catch
+            {
+                queryWriter = null;
+            }
+        }
+
+        internal static LambdaExpression GetConstraintsAsPropertiesLambda(LambdaExpression constraints, Type type)
+        {
+            var setMethod = GetMethodInfo(() => Extensions.Set<object>(null, null, true), type);
+
+            return Expression.Lambda(Expression.Call(setMethod, Expression.Constant(type.GetDefaultValue(), type),
+                constraints, Expression.Constant(true) //i.e, usePredicateOnly: true
+                ));
+        }
+
+        internal static string GetRandomVariableFor(string entity)
+        {
+            Random random;
+
+            return "___"
+                + $"{entity}"
+                + (random = new Random(DateTime.UtcNow.Millisecond)).Next(1, 100)
+                + random.Next(1, 100);
         }
     }
 }

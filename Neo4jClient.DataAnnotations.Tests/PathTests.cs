@@ -53,13 +53,13 @@ namespace Neo4jClient.DataAnnotations.Tests
                 .Extend(RelationshipDirection.Outgoing);
 
             var pathBuilder = new PathBuilder(query, pathExpr);
-            pathBuilder.PatternBuildStrategy = PatternBuildStrategy.WithParams;
+            pathBuilder.PatternBuildStrategy = PropertiesBuildStrategy.WithParams;
 
             var path = pathBuilder.Path as Path;
 
-            var expected = "(greysAnatomy:Series { greysAnatomy })" +
+            var expected = "(greysAnatomy:Series $greysAnatomy)" +
                 "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { ellenPompeo })" +
+                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->()";
 
             var actual = path.Build();
@@ -79,13 +79,13 @@ namespace Neo4jClient.DataAnnotations.Tests
                 .Extend(RelationshipDirection.Outgoing);
 
             var pathBuilder = new PathBuilder(query, pathExpr);
-            pathBuilder.PatternBuildStrategy = PatternBuildStrategy.WithParamsForValues;
+            pathBuilder.PatternBuildStrategy = PropertiesBuildStrategy.WithParamsForValues;
 
             var path = pathBuilder.Path as Path;
 
-            var expected = "(greysAnatomy:Series { Title: {greysAnatomy}.Title, Year: {greysAnatomy}.Year })" +
+            var expected = "(greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
                 "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { Name: {ellenPompeo}.Name, Born: {ellenPompeo}.Born, Roles: {ellenPompeo}.Roles })" +
+                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->()";
 
             var actual = path.Build();

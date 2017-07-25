@@ -152,7 +152,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             .Hop(1) //not necessary, but for tests
             .Constrain(null, null, (actor) =>
                 actor.Name == "Ellen Pompeo"
-                && actor.Born == Params.Get<ActorNode>("shondaRhimes").Born
+                && actor.Born == Vars.Get<ActorNode>("shondaRhimes").Born
                 && actor.Roles == new string[] { "Meredith Grey" });
         }
     }

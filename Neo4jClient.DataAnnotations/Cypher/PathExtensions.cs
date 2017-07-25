@@ -14,18 +14,18 @@ namespace Neo4jClient.DataAnnotations.Cypher
         #region Pattern
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath Pattern(this IPathBuilder source, string A)
         {
             return SharedPattern(source, A, null, null, null);
@@ -33,18 +33,18 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath Pattern(this IPathBuilder source, string A, RelationshipDirection dir)
         {
             return SharedPattern(source, A, null, null, dir);
@@ -52,18 +52,18 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath Pattern(this IPathBuilder source, string A, string B)
         {
             return SharedPattern(source, A, null, B, null);
@@ -71,18 +71,18 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath Pattern(this IPathBuilder source, string A, string B, RelationshipDirection dir)
         {
             return SharedPattern(source, A, null, B, dir);
@@ -90,18 +90,18 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath Pattern(this IPathBuilder source, string A, string R, string B)
         {
             return SharedPattern(source, A, R, B, null);
@@ -109,18 +109,18 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath Pattern(this IPathBuilder source, string A, string R, string B, RelationshipDirection dir)
         {
             return SharedPattern(source, A, R, B, dir);
@@ -130,19 +130,19 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode> Pattern<TANode>(this IPathBuilder source, string A)
         {
             return SharedPattern<TANode>(source, A, null, null, null);
@@ -150,19 +150,19 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode> Pattern<TANode>(this IPathBuilder source, string A, RelationshipDirection dir)
         {
             return SharedPattern<TANode>(source, A, null, null, dir);
@@ -170,19 +170,19 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode> Pattern<TANode>(this IPathBuilder source, string A, string B)
         {
             return SharedPattern<TANode>(source, A, null, B, null);
@@ -190,19 +190,19 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode> Pattern<TANode>(this IPathBuilder source, string A, string B, RelationshipDirection dir)
         {
             return SharedPattern<TANode>(source, A, null, B, dir);
@@ -210,19 +210,19 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode> Pattern<TANode>(this IPathBuilder source, string A, string R, string B)
         {
             return SharedPattern<TANode>(source, A, R, B, null);
@@ -230,19 +230,19 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode> Pattern<TANode>(this IPathBuilder source, string A, string R, string B, RelationshipDirection dir)
         {
             return SharedPattern<TANode>(source, A, R, B, dir);
@@ -252,20 +252,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, string A)
         {
@@ -274,20 +274,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, string A, RelationshipDirection dir)
         {
@@ -296,20 +296,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, string A, string B)
         {
@@ -318,20 +318,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, string A, string B, RelationshipDirection dir)
         {
@@ -340,20 +340,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, string A, string R, string B)
         {
@@ -362,20 +362,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, string A, string R, string B, RelationshipDirection dir)
         {
@@ -386,20 +386,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="relationship">Selects the property that represents the one-to-one relationship in this pattern. The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="relationship">Selects the property that represents the one-to-one relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship)
         {
@@ -408,20 +408,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="relationship">Selects the property that represents the one-to-one relationship in this pattern. The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="relationship">Selects the property that represents the one-to-one relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship, RelationshipDirection dir)
         {
@@ -430,20 +430,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="relationship">Selects the property that represents the one-to-one relationship in this pattern. The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="relationship">Selects the property that represents the one-to-one relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship, string B)
         {
@@ -452,20 +452,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="relationship">Selects the property that represents the one-to-one relationship in this pattern. The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="relationship">Selects the property that represents the one-to-one relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship, string B, RelationshipDirection dir)
         {
@@ -474,20 +474,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="relationship">Selects the property that represents the one-to-one relationship in this pattern. The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="relationship">Selects the property that represents the one-to-one relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship, string R, string B)
         {
@@ -496,20 +496,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="relationship">Selects the property that represents the one-to-one relationship in this pattern. The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="relationship">Selects the property that represents the one-to-one relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship, string R, string B, RelationshipDirection dir)
         {
@@ -520,20 +520,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="relationship">Selects the property that represents the to-many relationship in this pattern. The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="relationship">Selects the property that represents the to-many relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship)
         {
@@ -542,20 +542,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="relationship">Selects the property that represents the to-many relationship in this pattern. The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="relationship">Selects the property that represents the to-many relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, RelationshipDirection dir)
         {
@@ -564,20 +564,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="relationship">Selects the property that represents the to-many relationship in this pattern. The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="relationship">Selects the property that represents the to-many relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string B)
         {
@@ -586,20 +586,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="relationship">Selects the property that represents the to-many relationship in this pattern. The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="relationship">Selects the property that represents the to-many relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string B, RelationshipDirection dir)
         {
@@ -608,20 +608,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="relationship">Selects the property that represents the to-many relationship in this pattern. The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="relationship">Selects the property that represents the to-many relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string R, string B)
         {
@@ -630,20 +630,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="relationship">Selects the property that represents the to-many relationship in this pattern. The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="relationship">Selects the property that represents the to-many relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string R, string B, RelationshipDirection dir)
         {
@@ -654,21 +654,21 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TRel">The class of Relationship R. If annotated, information like its type could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, string A)
         {
@@ -677,21 +677,21 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TRel">The class of Relationship R. If annotated, information like its type could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, string A, RelationshipDirection dir)
         {
@@ -700,21 +700,21 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TRel">The class of Relationship R. If annotated, information like its type could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, string A, string B)
         {
@@ -723,21 +723,21 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TRel">The class of Relationship R. If annotated, information like its type could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, string A, string B, RelationshipDirection dir)
         {
@@ -746,21 +746,21 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TRel">The class of Relationship R. If annotated, information like its type could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, string A, string R, string B)
         {
@@ -769,21 +769,21 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <typeparam name="TRel">The class of Relationship R. If annotated, information like its type could be gotten from this class.</typeparam>
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="A">Parameter for first node in pattern</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, string A, string R, string B, RelationshipDirection dir)
         {
@@ -794,7 +794,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
@@ -802,14 +802,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="source">Path object from the calling cypher clause</param>
         /// <param name="beginRelationship">Selects the property that represent the one-to-one relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship)
         {
@@ -818,7 +818,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
@@ -826,14 +826,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="source">Path object from the calling cypher clause</param>
         /// <param name="beginRelationship">Selects the property that represent the one-to-one relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship, RelationshipDirection dir)
         {
@@ -842,7 +842,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
@@ -850,14 +850,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="source">Path object from the calling cypher clause</param>
         /// <param name="beginRelationship">Selects the property that represent the one-to-one relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship, string R, string B)
         {
@@ -866,7 +866,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
@@ -874,14 +874,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="source">Path object from the calling cypher clause</param>
         /// <param name="beginRelationship">Selects the property that represent the one-to-one relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship, string R, string B, RelationshipDirection dir)
         {
@@ -892,7 +892,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
@@ -900,14 +900,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="source">Path object from the calling cypher clause</param>
         /// <param name="beginRelationship">Selects the property that represent the to-many relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship)
         {
@@ -916,7 +916,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
@@ -924,14 +924,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="source">Path object from the calling cypher clause</param>
         /// <param name="beginRelationship">Selects the property that represent the to-many relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship, RelationshipDirection dir)
         {
@@ -940,7 +940,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
@@ -948,14 +948,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="source">Path object from the calling cypher clause</param>
         /// <param name="beginRelationship">Selects the property that represent the to-many relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship, string R, string B)
         {
@@ -964,7 +964,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
@@ -972,14 +972,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="source">Path object from the calling cypher clause</param>
         /// <param name="beginRelationship">Selects the property that represent the to-many relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Node A.</param>
-        /// <param name="R">Parameter for relationship</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship, string R, string B, RelationshipDirection dir)
         {
@@ -990,7 +990,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
@@ -999,16 +999,16 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="source">Path object from the calling cypher clause</param>
         /// <param name="beginRelationship">Selects the property that represent the one-to-one relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Node A.</param>
+        /// The variable used in this expression automatically represents Node A.</param>
         /// <param name="endRelationship">Selects the property that connects the other node (Node B) of this one-to-one relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Relationship R.</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// The variable used in this expression automatically represents Relationship R.</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship)
@@ -1018,7 +1018,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
@@ -1027,16 +1027,16 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="source">Path object from the calling cypher clause</param>
         /// <param name="beginRelationship">Selects the property that represent the one-to-one relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Node A.</param>
+        /// The variable used in this expression automatically represents Node A.</param>
         /// <param name="endRelationship">Selects the property that connects the other node (Node B) of this one-to-one relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Relationship R.</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// The variable used in this expression automatically represents Relationship R.</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship, RelationshipDirection dir)
@@ -1046,7 +1046,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
@@ -1055,16 +1055,16 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="source">Path object from the calling cypher clause</param>
         /// <param name="beginRelationship">Selects the property that represent the one-to-one relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Node A.</param>
+        /// The variable used in this expression automatically represents Node A.</param>
         /// <param name="endRelationship">Selects the property that connects the other node (Node B) of this one-to-one relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Relationship R.</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// The variable used in this expression automatically represents Relationship R.</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship, string B)
@@ -1074,7 +1074,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
@@ -1083,16 +1083,16 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="source">Path object from the calling cypher clause</param>
         /// <param name="beginRelationship">Selects the property that represent the one-to-one relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Node A.</param>
+        /// The variable used in this expression automatically represents Node A.</param>
         /// <param name="endRelationship">Selects the property that connects the other node (Node B) of this one-to-one relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Relationship R.</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// The variable used in this expression automatically represents Relationship R.</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship, string B, RelationshipDirection dir)
@@ -1104,7 +1104,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
@@ -1113,16 +1113,16 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="source">Path object from the calling cypher clause</param>
         /// <param name="beginRelationship">Selects the property that represent the to-many relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Node A.</param>
+        /// The variable used in this expression automatically represents Node A.</param>
         /// <param name="endRelationship">Selects the property that connects the other node (Node B) of this one-to-one relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Relationship R.</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// The variable used in this expression automatically represents Relationship R.</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship)
@@ -1132,7 +1132,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
@@ -1141,16 +1141,16 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="source">Path object from the calling cypher clause</param>
         /// <param name="beginRelationship">Selects the property that represent the to-many relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Node A.</param>
+        /// The variable used in this expression automatically represents Node A.</param>
         /// <param name="endRelationship">Selects the property that connects the other node (Node B) of this one-to-one relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Relationship R.</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// The variable used in this expression automatically represents Relationship R.</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship, RelationshipDirection dir)
@@ -1160,7 +1160,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
@@ -1169,16 +1169,16 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="source">Path object from the calling cypher clause</param>
         /// <param name="beginRelationship">Selects the property that represent the to-many relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Node A.</param>
+        /// The variable used in this expression automatically represents Node A.</param>
         /// <param name="endRelationship">Selects the property that connects the other node (Node B) of this one-to-one relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Relationship R.</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// The variable used in this expression automatically represents Relationship R.</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship, string B)
@@ -1188,7 +1188,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// P = (A)-[R]-(B).
-        /// To omit any parameter, pass empty string or null to it.
+        /// To omit any variable, pass empty string or null to it.
         /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
         /// </summary>
         /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
@@ -1197,16 +1197,16 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="source">Path object from the calling cypher clause</param>
         /// <param name="beginRelationship">Selects the property that represent the to-many relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Node A.</param>
+        /// The variable used in this expression automatically represents Node A.</param>
         /// <param name="endRelationship">Selects the property that connects the other node (Node B) of this one-to-one relationship in this pattern.
         /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
-        /// The parameter used in this expression automatically represents Relationship R.</param>
-        /// <param name="B">Parameter for last node in pattern</param>
+        /// The variable used in this expression automatically represents Relationship R.</param>
+        /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
         /// Null value means annotations determine the direction.
         /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
         /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all parameters are null. In most cases, at least one parameter should be named.</exception>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship, string B, RelationshipDirection dir)
@@ -1499,9 +1499,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1516,9 +1516,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1533,9 +1533,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1551,9 +1551,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1568,9 +1568,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1585,9 +1585,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1604,9 +1604,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1621,9 +1621,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1638,9 +1638,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1657,9 +1657,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1674,9 +1674,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1691,9 +1691,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (A)-[:*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -1713,7 +1713,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: (actor) =&gt; actor.movie == Params.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1734,7 +1734,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously. 
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: (actor) =&gt; actor.movie == Params.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1756,7 +1756,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: (actor) =&gt; actor.movie == Params.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1781,7 +1781,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: (actor) =&gt; actor.movie == Params.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1802,7 +1802,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: (actor) =&gt; actor.movie == Params.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1824,7 +1824,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: (actor) =&gt; actor.movie == Params.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1849,7 +1849,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: (actor) =&gt; actor.movie == Params.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1870,7 +1870,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: (actor) =&gt; actor.movie == Params.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1892,7 +1892,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: (actor) =&gt; actor.movie == Params.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1917,7 +1917,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: (actor) =&gt; actor.movie == Params.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1938,7 +1938,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: (actor) =&gt; actor.movie == Params.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1960,7 +1960,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: (actor) =&gt; actor.movie == Params.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1985,7 +1985,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Params.get("shondaRhimes").As&lt;Writer&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2006,7 +2006,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Params.get("shondaRhimes").As&lt;Writer&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2028,7 +2028,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Params.get("shondaRhimes").As&lt;Writer&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2053,7 +2053,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Params.get("shondaRhimes").As&lt;Writer&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2074,7 +2074,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Params.get("shondaRhimes").As&lt;Writer&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2096,7 +2096,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Params.get("shondaRhimes").As&lt;Writer&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2121,7 +2121,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Params.get("shondaRhimes").As&lt;Writer&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2142,7 +2142,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Params.get("shondaRhimes").As&lt;Writer&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2164,7 +2164,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Params.get("shondaRhimes").As&lt;Writer&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2189,7 +2189,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Params.get("shondaRhimes").As&lt;Writer&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2210,7 +2210,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Params.get("shondaRhimes").As&lt;Writer&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2232,7 +2232,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Params.get("shondaRhimes").As&lt;Writer&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2256,7 +2256,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension Extend(this IPath source, RelationshipDirection dir)
@@ -2269,7 +2269,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension Extend(this IPath source, string B, RelationshipDirection dir)
@@ -2282,7 +2282,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension Extend(this IPath source,
@@ -2298,7 +2298,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TBNode> Extend<TBNode>
@@ -2312,7 +2312,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TBNode> Extend<TBNode>
@@ -2326,7 +2326,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TBNode> Extend<TBNode>
@@ -2342,7 +2342,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> Extend<TANode, TBNode>
@@ -2356,7 +2356,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> Extend<TANode, TBNode>
@@ -2370,7 +2370,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> Extend<TANode, TBNode>
@@ -2384,7 +2384,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> Extend<TANode, TBNode>
@@ -2398,7 +2398,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> Extend<TANode, TBNode>
@@ -2412,7 +2412,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> Extend<TANode, TBNode>
@@ -2427,7 +2427,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> Extend<TANode, TBNode>
@@ -2441,7 +2441,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> Extend<TANode, TBNode>
@@ -2455,7 +2455,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> Extend<TANode, TBNode>
@@ -2469,7 +2469,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> Extend<TANode, TBNode>
@@ -2483,7 +2483,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> Extend<TANode, TBNode>
@@ -2497,7 +2497,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> Extend<TANode, TBNode>
@@ -2512,7 +2512,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<CypherObject, TRel, TBNode> Extend<TRel, TBNode>
@@ -2526,7 +2526,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<CypherObject, TRel, TBNode> Extend<TRel, TBNode>
@@ -2540,7 +2540,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<CypherObject, TRel, TBNode> Extend<TRel, TBNode>
@@ -2556,7 +2556,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -2570,7 +2570,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -2584,7 +2584,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -2598,7 +2598,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -2614,7 +2614,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -2628,7 +2628,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -2642,7 +2642,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -2656,7 +2656,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -2672,7 +2672,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -2686,7 +2686,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -2700,7 +2700,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -2714,7 +2714,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -2730,7 +2730,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -2746,7 +2746,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -2762,7 +2762,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -2778,7 +2778,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -2796,7 +2796,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -2812,7 +2812,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -2828,7 +2828,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -2844,7 +2844,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path.
         /// From the sample, B is the new A for this method, R2 is the new R, and C is the new B.
         /// Because this new A here (which is also the old B) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> Extend<TANode, TRel, TBNode>
@@ -3115,9 +3115,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -3132,9 +3132,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -3149,9 +3149,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -3168,9 +3168,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -3185,9 +3185,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -3202,9 +3202,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -3221,9 +3221,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -3238,9 +3238,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -3255,9 +3255,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -3274,9 +3274,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -3291,9 +3291,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -3308,9 +3308,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -3327,9 +3327,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -3344,9 +3344,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -3361,9 +3361,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// (B)-[:*1..6]-(C)
         /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
-        /// To remove either hop parameter, pass <c>null</c> to the parameter. E.g. Omitting 1 means [*..6] which also means no lower bound.
-        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> parameters, or use method provided. E.g. passing 6 and 6 means [*6]
-        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both parameters, or use the no parameter method. E.g passing null means [*]
+        /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
+        /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
+        /// For unbounded hops, that is, Cypher considers any number of hops possible (usually not advised), pass <c>null</c> to both variables, or use the no variable method. E.g passing null means [*]
         /// </summary>
         /// <param name="exact">Fixed number of hops to consider.</param>
         /// <param name="from">Minimum number of hops to consider.</param>
@@ -3575,7 +3575,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. B: () =&gt; writer, where writer is an instance of the class Writer which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, B: () =&gt; new { writer.Name, writer.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Params.get("ellenPompeo").As&lt;Actor&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Vars.get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -3595,7 +3595,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. B: () =&gt; writer, where writer is an instance of the class Writer which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, B: () =&gt; new { writer.Name, writer.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Params.get("ellenPompeo").As&lt;Actor&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Vars.get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -3619,7 +3619,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. B: () =&gt; writer, where writer is an instance of the class Writer which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, B: () =&gt; new { writer.Name, writer.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Params.get("ellenPompeo").As&lt;Actor&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Vars.get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -3639,7 +3639,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. B: () =&gt; writer, where writer is an instance of the class Writer which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, B: () =&gt; new { writer.Name, writer.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Params.get("ellenPompeo").As&lt;Actor&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Vars.get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -3663,7 +3663,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. B: () =&gt; writer, where writer is an instance of the class Writer which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, B: () =&gt; new { writer.Name, writer.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Params.get("ellenPompeo").As&lt;Actor&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Vars.get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -3683,7 +3683,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. B: () =&gt; writer, where writer is an instance of the class Writer which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, B: () =&gt; new { writer.Name, writer.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Params.get("ellenPompeo").As&lt;Actor&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Vars.get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -3707,7 +3707,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. B: () =&gt; writer, where writer is an instance of the class Writer which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, B: () =&gt; new { writer.Name, writer.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Params.get("ellenPompeo").As&lt;Actor&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Vars.get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -3731,7 +3731,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. B: () =&gt; writer, where writer is an instance of the class Writer which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, B: () =&gt; new { writer.Name, writer.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Params.get("ellenPompeo").As&lt;Actor&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Vars.get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -3751,7 +3751,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. B: () =&gt; writer, where writer is an instance of the class Writer which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, B: () =&gt; new { writer.Name, writer.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared parameters with the <see cref="Params"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Params.get("ellenPompeo").As&lt;Actor&gt;().Age }, where parameter shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Vars.get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -3773,7 +3773,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension ThenExtend(this IPathExtension source, RelationshipDirection dir)
@@ -3787,7 +3787,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension ThenExtend(this IPathExtension source, string B, RelationshipDirection dir)
@@ -3801,7 +3801,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension ThenExtend(this IPathExtension source,
@@ -3818,7 +3818,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TBNode> ThenExtend<TBNode>
@@ -3833,7 +3833,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TBNode> ThenExtend<TBNode>
@@ -3848,7 +3848,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TBNode> ThenExtend<TBNode>
@@ -3865,7 +3865,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> ThenExtend<TANode, TBNode>
@@ -3880,7 +3880,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> ThenExtend<TANode, TBNode>
@@ -3895,7 +3895,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> ThenExtend<TANode, TBNode>
@@ -3910,7 +3910,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> ThenExtend<TANode, TBNode>
@@ -3925,7 +3925,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> ThenExtend<TANode, TBNode>
@@ -3940,7 +3940,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> ThenExtend<TANode, TBNode>
@@ -3957,7 +3957,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> ThenExtend<TANode, TBNode>
@@ -3972,7 +3972,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> ThenExtend<TANode, TBNode>
@@ -3987,7 +3987,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> ThenExtend<TANode, TBNode>
@@ -4002,7 +4002,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> ThenExtend<TANode, TBNode>
@@ -4017,7 +4017,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> ThenExtend<TANode, TBNode>
@@ -4032,7 +4032,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TBNode> ThenExtend<TANode, TBNode>
@@ -4049,7 +4049,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<CypherObject, TRel, TBNode> ThenExtend<TRel, TBNode>
@@ -4064,7 +4064,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<CypherObject, TRel, TBNode> ThenExtend<TRel, TBNode>
@@ -4079,7 +4079,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<CypherObject, TRel, TBNode> ThenExtend<TRel, TBNode>
@@ -4096,7 +4096,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> ThenExtend<TANode, TRel, TBNode>
@@ -4112,7 +4112,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> ThenExtend<TANode, TRel, TBNode>
@@ -4128,7 +4128,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> ThenExtend<TANode, TRel, TBNode>
@@ -4144,7 +4144,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> ThenExtend<TANode, TRel, TBNode>
@@ -4162,7 +4162,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> ThenExtend<TANode, TRel, TBNode>
@@ -4178,7 +4178,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> ThenExtend<TANode, TRel, TBNode>
@@ -4194,7 +4194,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> ThenExtend<TANode, TRel, TBNode>
@@ -4210,7 +4210,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Extends an existing path even further.
         /// From the sample, C will be the new A for this method, R3 is the new R, and D is the new B.
         /// Because this new A (that is, C) has earlier on been represented in this pattern, the expression here does not consider the new A.
-        /// Instead, it proceeds with new R, and new B. The method parameters here work like they do in the <see cref="Pattern"/> method.
+        /// Instead, it proceeds with new R, and new B. The method variables here work like they do in the <see cref="Pattern"/> method.
         /// </summary>
         /// <returns></returns>
         public static IPatternedPathExtension<TANode, TRel, TBNode> ThenExtend<TANode, TRel, TBNode>
@@ -4241,12 +4241,12 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         #region Assign
         /// <summary>
-        /// Assigns the entire pattern to the path parameter.
+        /// Assigns the entire pattern to the path variable.
         /// That is, P = (A)-[R]-(B), 
-        /// where P is the path parameter as defined by the lambda expression parameter of type <see cref="IPathBuilder"/> that generated this pattern.
+        /// where P is the path variable as defined by the lambda expression variable of type <see cref="IPathBuilder"/> that generated this pattern.
         /// For example, Match((path) =&gt; path.Pattern("user").Assign()) would generate the Cypher: MATCH path = (user).
-        /// Note that whenever the path parameter is required, always make this the last method called on the <see cref="IPathBuilder"/>.
-        /// Without this method being called, the generated pattern would not be assigned to a path parameter.
+        /// Note that whenever the path variable is required, always make this the last method called on the <see cref="IPathBuilder"/>.
+        /// Without this method being called, the generated pattern would not be assigned to a path variable.
         /// </summary>
         /// <param name="source"></param>
         /// <returns></returns>
@@ -4256,12 +4256,12 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
         /// <summary>
-        /// Assigns the entire pattern to the path parameter.
+        /// Assigns the entire pattern to the path variable.
         /// That is, P = (A)-[R]-(B), 
-        /// where P is the path parameter as defined by the lambda expression parameter of type <see cref="IPathBuilder"/> that generated this pattern.
+        /// where P is the path variable as defined by the lambda expression variable of type <see cref="IPathBuilder"/> that generated this pattern.
         /// For example, Match((path) =&gt; path.Pattern("user").Assign()) would generate the Cypher: MATCH path = (user).
-        /// Note that whenever the path parameter is required, always make this the last method called on the <see cref="IPathBuilder"/>.
-        /// Without this method being called, the generated pattern would not be assigned to a path parameter.
+        /// Note that whenever the path variable is required, always make this the last method called on the <see cref="IPathBuilder"/>.
+        /// Without this method being called, the generated pattern would not be assigned to a path variable.
         /// </summary>
         /// <param name="source"></param>
         /// <returns></returns>

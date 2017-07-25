@@ -18,7 +18,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var ex = Assert.Throws<InvalidOperationException>(() => builder.Pattern(null, null, null));
 
-            Assert.Equal(Messages.NullARBParametersError, ex.Message);
+            Assert.Equal(Messages.NullARBVariablesError, ex.Message);
         }
 
         [Fact]
@@ -70,10 +70,10 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             Assert.NotNull(pattern);
 
-            Assert.NotNull(pattern.AParameter);
-            Assert.True(pattern.AParamIsAuto);
-            Assert.Equal(pattern.RParameter, "R2"); //test this to make sure we are interacting with the right pattern here, and not a previous one.
-            Assert.Equal(pattern.BParameter, "C");
+            Assert.NotNull(pattern.AVariable);
+            Assert.True(pattern.AVarIsAuto);
+            Assert.Equal(pattern.RVariable, "R2"); //test this to make sure we are interacting with the right pattern here, and not a previous one.
+            Assert.Equal(pattern.BVariable, "C");
             Assert.True(pattern.IsExtension);
         }
 

@@ -12,74 +12,74 @@ namespace Neo4jClient.DataAnnotations.Tests
 {
     public class UtilitiesTests
     {
-        public static List<object[]> ParamsData = new List<object[]>()
+        public static List<object[]> VarsData = new List<object[]>()
         {
-            new object[] { (Expression<Func<ActorNode>>)(() => Params.Get<ActorNode>("actor")), "actor" },
+            new object[] { (Expression<Func<ActorNode>>)(() => Vars.Get<ActorNode>("actor")), "actor" },
 
-            new object[] { (Expression<Func<int>>)(() => (int)Params.Get("actor")["address_location_latitude"]),
+            new object[] { (Expression<Func<int>>)(() => (int)Vars.Get("actor")["address_location_latitude"]),
                 "actor.address_location_latitude" },
 
-            new object[] { (Expression<Func<string>>)(() => ((string[])Params.Get("actor")["roles"])[0]),
+            new object[] { (Expression<Func<string>>)(() => ((string[])Vars.Get("actor")["roles"])[0]),
                 "actor.roles[0]" },
 
-            new object[] { (Expression<Func<string>>)(() => (Params.Get("actor")["roles"] as string[])[0]),
+            new object[] { (Expression<Func<string>>)(() => (Vars.Get("actor")["roles"] as string[])[0]),
                 "actor.roles[0]" },
 
-            new object[] { (Expression<Func<string>>)(() => Params.Get<ActorNode>("actor").Roles.ElementAt(2)),
+            new object[] { (Expression<Func<string>>)(() => Vars.Get<ActorNode>("actor").Roles.ElementAt(2)),
                 "actor.Roles[2]" },
 
-            new object[] { (Expression<Func<Location>>)(() => (Params.Get<ActorNode>("actor").Address as AddressWithComplexType).Location),
+            new object[] { (Expression<Func<Location>>)(() => (Vars.Get<ActorNode>("actor").Address as AddressWithComplexType).Location),
                 "actor.NewAddressName.Location" },
 
-            new object[] { (Expression<Func<double>>)(() => (Params.Get<ActorNode>("actor").Address as AddressWithComplexType).Location.Latitude),
+            new object[] { (Expression<Func<double>>)(() => (Vars.Get<ActorNode>("actor").Address as AddressWithComplexType).Location.Latitude),
                 "actor.NewAddressName_Location_Latitude" },
 
             //recursive params
-            new object[] { (Expression<Func<string>>)(() => (Params.Get("actor")["roles"] as string[])[(Params.Get("actor2")["roles"] as string[])[2].As<int>()]),
+            new object[] { (Expression<Func<string>>)(() => (Vars.Get("actor")["roles"] as string[])[(Vars.Get("actor2")["roles"] as string[])[2].As<int>()]),
                 "actor.roles[actor2.roles[2]]" },
 
             //2 levels recursion
-            new object[] { (Expression<Func<string>>)(() => (Params.Get("actor")["roles"].As<string[]>())[
-                (Params.Get("actor2")["roles"] as string[])[Params.Get<ActorNode>("actor3").Born
+            new object[] { (Expression<Func<string>>)(() => (Vars.Get("actor")["roles"].As<string[]>())[
+                (Vars.Get("actor2")["roles"] as string[])[Vars.Get<ActorNode>("actor3").Born
                     ].As<int>()]),
                 "actor.roles[actor2.roles[actor3.Born]]" }
         };
 
         [Theory]
-        [MemberData("ParamsData", MemberType = typeof(UtilitiesTests))]
-        public void ParamsSerializationWithConverter<T>(Expression<Func<T>> expression,
+        [MemberData("VarsData", MemberType = typeof(UtilitiesTests))]
+        public void VarsSerializationWithConverter<T>(Expression<Func<T>> expression,
             string expectedText, bool useResolvedJsonName = true)
         {
             TestUtilities.AddEntityTypes();
 
             var retrievedMembers = Utilities.GetSimpleMemberAccessStretch(expression.Body, out var val);
 
-            Assert.Equal(true, Utilities.HasParams(retrievedMembers));
+            Assert.Equal(true, Utilities.HasVars(retrievedMembers));
 
-            var paramText = Utilities
-                .BuildParams(retrievedMembers, null, TestUtilities.SerializeWithConverter,
+            var varText = Utilities
+                .BuildVars(retrievedMembers, null, TestUtilities.SerializeWithConverter,
                 out var typeReturned, useResolvedJsonName: useResolvedJsonName);
 
-            Assert.Equal(expectedText, paramText);
+            Assert.Equal(expectedText, varText);
             Assert.Equal(typeof(T), typeReturned);
         }
 
         [Theory]
-        [MemberData("ParamsData", MemberType = typeof(UtilitiesTests))]
-        public void ParamsSerializationWithResolver<T>(Expression<Func<T>> expression,
+        [MemberData("VarsData", MemberType = typeof(UtilitiesTests))]
+        public void VarsSerializationWithResolver<T>(Expression<Func<T>> expression,
             string expectedText, bool useResolvedJsonName = true)
         {
             TestUtilities.AddEntityTypes();
 
             var retrievedMembers = Utilities.GetSimpleMemberAccessStretch(expression.Body, out var val);
 
-            Assert.Equal(true, Utilities.HasParams(retrievedMembers));
+            Assert.Equal(true, Utilities.HasVars(retrievedMembers));
 
-            var paramText = Utilities
-                .BuildParams(retrievedMembers, TestUtilities.Resolver, null,
+            var varText = Utilities
+                .BuildVars(retrievedMembers, TestUtilities.Resolver, null,
                 out var typeReturned, useResolvedJsonName: useResolvedJsonName);
 
-            Assert.Equal(expectedText, paramText);
+            Assert.Equal(expectedText, varText);
             Assert.Equal(typeof(T), typeReturned);
         }
 
@@ -100,7 +100,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                     { "Name", TestUtilities.Actor.Name },
                     { "Born", TestUtilities.Actor.Born },
                     { "Address", TestUtilities.Actor.Address }
-                }.Set(a => a["Address"] == Params.Get<ActorNode>("ellenPompeo").Address
+                }.Set(a => a["Address"] == Vars.Get<ActorNode>("ellenPompeo").Address
                     && (int)a["Born"] == 1671 && a["Name"] == "Shonda Rhimes")),
             },
             new object[] {
@@ -121,13 +121,13 @@ namespace Neo4jClient.DataAnnotations.Tests
                     //because this address object would replace the instance address property entirely.
                     //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
                     //This was done mainly for testing. 
-                    //Use a => a.Address.Location.Longitude == (double)Params.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
+                    //Use a => a.Address.Location.Longitude == (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
 
-                    AddressLine = Params.Get<ActorNode>("shondaRhimes").Address.AddressLine,
+                    AddressLine = Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine,
                     Location = new Location()
                     {
                         Latitude = 4.0,
-                        Longitude = (double)Params.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
+                        Longitude = (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
                     }
                 } && a.Name == "Shonda Rhimes"))
             },
@@ -149,13 +149,13 @@ namespace Neo4jClient.DataAnnotations.Tests
                     //because this address object would replace the instance address property entirely.
                     //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
                     //This was done mainly for testing. 
-                    //Use a => a.Address.Location.Longitude == (double)Params.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
+                    //Use a => a.Address.Location.Longitude == (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
 
-                    AddressLine = Params.Get<ActorNode>("shondaRhimes").Address.AddressLine,
+                    AddressLine = Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine,
                     Location = new Location()
                     {
                         Latitude = 4.0,
-                        Longitude = (double)Params.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
+                        Longitude = (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
                     }
                 } && a.Name == "Shonda Rhimes"))
             },
@@ -173,19 +173,19 @@ namespace Neo4jClient.DataAnnotations.Tests
                 },
                 (Expression<Func<object>>)(() => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, Address = TestUtilities.Actor.Address as AddressWithComplexType }
                 .Set(a => a.Address.Location.Longitude == new AddressWithComplexType()
-                {   //Using this style, parameters set inline of a member access may or may not make it to the generated pattern, or even throw an exception.
+                {   //Using this style, variables set inline of a member access may or may not make it to the generated pattern, or even throw an exception.
                     //This is because this MemberInit may be taken as an object value, since it was accessed, and then used directly.
                     //This was done mainly for testing. 
-                    //Use a => a.Address.Location.Longitude == (double)Params.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
+                    //Use a => a.Address.Location.Longitude == (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
 
-                    AddressLine = Params.Get<ActorNode>("shondaRhimes").Address.AddressLine,
+                    AddressLine = Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine,
                     Location = new Location()
                     {
                         Latitude = 4.0,
-                        Longitude = (double)Params.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
+                        Longitude = (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
                     }
                 }.Location.Longitude && a.Name == "Shonda Rhimes")),
-                typeof(InvalidOperationException), string.Format(Messages.AmbiguousParamsPathError, "shondaRhimes.NewAddressName_AddressLine")
+                typeof(InvalidOperationException), string.Format(Messages.AmbiguousVarsPathError, "shondaRhimes.NewAddressName_AddressLine")
             },
             new object[] {
                 new Dictionary<string, dynamic>()
@@ -205,13 +205,13 @@ namespace Neo4jClient.DataAnnotations.Tests
                     //because this address object would replace the instance address property entirely.
                     //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
                     //This was done mainly for testing. 
-                    //Use a => a.Address.Location.Longitude == (double)Params.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
+                    //Use a => a.Address.Location.Longitude == (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
 
-                    AddressLine = Params.Get<ActorNode>("shondaRhimes").Address.AddressLine,
+                    AddressLine = Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine,
                     Location = new Location()
                     {
                         Latitude = 4.0,
-                        Longitude = (double)Params.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
+                        Longitude = (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
                     }
                 } && a.Name == "Shonda Rhimes"))
             },
@@ -228,7 +228,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                     { "NewAddressName_Location_Longitude", "-118.2437" },
                 },
                 (Expression<Func<object>>)(() => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, TestUtilities.Actor.Address }
-                .Set(a => (a.Address as AddressWithComplexType).AddressLine == Params.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes"))
+                .Set(a => (a.Address as AddressWithComplexType).AddressLine == Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes"))
             },
             new object[] {
                 new Dictionary<string, dynamic>()
@@ -243,7 +243,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                     { "NewAddressName_Location_Longitude", "-118.2437" },
                 },
                 (Expression<Func<object>>)(() => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, TestUtilities.Actor.Address }
-                .Set(a => a.Address.AddressLine == Params.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes"))
+                .Set(a => a.Address.AddressLine == Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes"))
             },
             new object[] {
                 new Dictionary<string, dynamic>()
@@ -261,7 +261,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                     { "TestMarkedFK", "0" },
                     { "TestGenericForeignKeyId", "null" },
                 },
-                (Expression<Func<object>>)(() => TestUtilities.Actor.Set(a => a.Born == Params.Get<ActorNode>("ellenPompeo").Born && a.Name == "Shonda Rhimes"))
+                (Expression<Func<object>>)(() => TestUtilities.Actor.Set(a => a.Born == Vars.Get<ActorNode>("ellenPompeo").Born && a.Name == "Shonda Rhimes"))
             },
             new object[] {
                 new Dictionary<string, dynamic>()
@@ -274,7 +274,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                     //the following is purely a test, and not necessarily a good example for neo4j cypher.
                     Address = (TestUtilities.Actor.Address as AddressWithComplexType)._(),
                     Coordinates = new double[] { (TestUtilities.Actor.Address as AddressWithComplexType).Location.Latitude,
-                        (double)Params.Get("shondaRhimes")["NewAddressName_Location_Longitude"] }
+                        (double)Vars.Get("shondaRhimes")["NewAddressName_Location_Longitude"] }
                 })
             },
             new object[] {
@@ -286,17 +286,17 @@ namespace Neo4jClient.DataAnnotations.Tests
                 (Expression<Func<object>>)(() => new
                 {
                     //the following is purely a test, and not necessarily a good example for neo4j cypher.
-                    //avoid using inline Params with outer member access.
+                    //avoid using inline Vars with outer member access.
                     new AddressWithComplexType()
                     {
-                        AddressLine = Params.Get("A")["AddressLine"] as string,
+                        AddressLine = Vars.Get("A")["AddressLine"] as string,
                         Location = new Location()
                         {
-                            Latitude = (double)Params.Get("A")["Location_Latitude"],
+                            Latitude = (double)Vars.Get("A")["Location_Latitude"],
                             Longitude = 56.90
                         }
                     }.Location
-                }), typeof(InvalidOperationException), string.Format(Messages.AmbiguousParamsPathError, "A.AddressLine")
+                }), typeof(InvalidOperationException), string.Format(Messages.AmbiguousVarsPathError, "A.AddressLine")
             },
             new object[] {
                 new Dictionary<string, dynamic>()
@@ -310,7 +310,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 new
                 {
                     Name = "Ellen Pompeo",
-                    Born = Params.Get<ActorNode>("shondaRhimes").Born,
+                    Born = Vars.Get<ActorNode>("shondaRhimes").Born,
                     Roles = new string[] { "Meredith Grey" },
                     Age = 47.ToString()
                 })
@@ -325,7 +325,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             TestUtilities.AddEntityTypes();
 
             Func<JObject> action = () => Utilities.GetFinalProperties
-                    (expression, null, TestUtilities.Converter, TestUtilities.SerializeWithConverter);
+                    (expression, null, TestUtilities.Converter, TestUtilities.SerializeWithConverter, out var hasVars);
 
             FinalPropertiesResolution(action, TestUtilities.SerializeWithConverter,
                 expected, expectedExceptionType, expectedExceptionMessage);
@@ -339,7 +339,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             TestUtilities.AddEntityTypes();
 
             Func<JObject> action = () => Utilities.GetFinalProperties
-                    (expression, TestUtilities.Resolver, null, TestUtilities.SerializeWithResolver);
+                    (expression, TestUtilities.Resolver, null, TestUtilities.SerializeWithResolver, out var hasVars);
 
             FinalPropertiesResolution(action, TestUtilities.SerializeWithResolver,
                 expected, expectedExceptionType, expectedExceptionMessage);

@@ -78,12 +78,12 @@ namespace Neo4jClient.DataAnnotations.Expressions
             }
 
             List<Expression> filtered = Utilities.GetSimpleMemberAccessStretch(node, out var filteredVal);
-            bool isParams = Utilities.HasParams(filtered);
+            bool isVars = Utilities.HasVars(filtered);
 
-            if (isParams)
+            if (isVars)
             {
                 //found a special node.
-                SpecialNode specialNode = AddSpecialNode(node, SpecialNodeType.Params, out var isNew,
+                SpecialNode specialNode = AddSpecialNode(node, SpecialNodeType.Variable, out var isNew,
                     filtered, filteredVal, generatePlaceholder: true, nodePlaceholder: node);
 
                 node = specialNode.Placeholder;
@@ -293,7 +293,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     //root node would change now
                     RootNode = predicateExpression;
 
-                    //clear all params, we don't need them again.
+                    //clear all vars, we don't need them again.
                     SpecialNodes.Clear();
                     SpecialNodePaths.Clear();
                     SpecialNodeExpressions.Clear();
@@ -383,9 +383,9 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
                 if (generatePlaceholder)
                 {
-                    if (type == SpecialNodeType.Params)
+                    if (type == SpecialNodeType.Variable)
                     {
-                        nodePlaceholder = Expression.Call(Defaults.UtilitiesType, "GetParams", new[] { node.Type }, Expression.Constant(index));
+                        nodePlaceholder = Expression.Call(Defaults.UtilitiesType, "GetValue", new[] { node.Type }, Expression.Constant(index));
                     }
                     else
                     {
