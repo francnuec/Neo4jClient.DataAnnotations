@@ -399,6 +399,13 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
             return SharedAssign(path);
         }
+
+        public static IPathExtent SharedShortest(this IPath source, string pathVariable)
+        {
+            var path = SharedShortest(source);
+
+            return SharedAssign(path, pathVariable);
+        }
         #endregion
 
         #region Assign
@@ -407,7 +414,15 @@ namespace Neo4jClient.DataAnnotations.Cypher
             var path = source as Path;
             (path.Builder as PathBuilder).AssignPathVariable = true;
 
-            return path;
+            return source;
+        }
+
+        internal static IPathExtent SharedAssign(this IPathExtent source, string pathVariable)
+        {
+            source = SharedAssign(source);
+            (source.Builder as PathBuilder).PathVariable = pathVariable ?? throw new ArgumentNullException(nameof(pathVariable));
+
+            return source;
         }
         #endregion
     }

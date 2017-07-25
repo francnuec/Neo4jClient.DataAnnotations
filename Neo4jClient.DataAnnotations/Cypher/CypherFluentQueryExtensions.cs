@@ -11,7 +11,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
     {
         /// <summary>
         /// Builds Neo4j pattern using the <see cref="PropertiesBuildStrategy.NoParams"/> strategy, separating them with a comma.
-        /// E.g Given: (path) => path.Pattern("a").Assign(), (path2) => path2.Pattern("b", "c"), you should get the Neo4j pattern: path=(a), (b)-->(c).
+        /// E.g Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: path=(a), (b)--&gt;(c).
         /// </summary>
         /// <param name="query"></param>
         /// <param name="patternDescriptions"></param>
@@ -24,7 +24,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// Builds Neo4j Patterns using the specified <see cref="PropertiesBuildStrategy"/>, separating them with a comma.
-        /// E.g Given: (path) => path.Pattern("a").Assign(), (path2) => path2.Pattern("b", "c"), you should get the Neo4j pattern: path=(a), (b)-->(c).
+        /// E.g Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: path=(a), (b)--&gt;(c).
         /// </summary>
         /// <param name="query"></param>
         /// <param name="patternDescriptions"></param>
@@ -40,7 +40,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// Generates a cypher MATCH statement from the pattern descriptions.
-        /// E.g Given: (path) => path.Pattern("a").Assign(), (path2) => path2.Pattern("b", "c"), you should get the Neo4j pattern: MATCH path=(a), (b)-->(c).
+        /// E.g Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: MATCH path=(a), (b)--&gt;(c).
         /// </summary>
         public static ICypherFluentQuery Match(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
@@ -49,7 +49,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// Generates a cypher OPTIONAL MATCH statement from the pattern descriptions.
-        /// E.g Given: (path) => path.Pattern("a").Assign(), (path2) => path2.Pattern("b", "c"), you should get the Neo4j pattern: OPTIONAL MATCH path=(a), (b)-->(c).
+        /// E.g Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: OPTIONAL MATCH path=(a), (b)--&gt;(c).
         /// </summary>
         public static ICypherFluentQuery OptionalMatch(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
@@ -58,7 +58,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// Generates a cypher MERGE statement from the pattern descriptions.
-        /// E.g Given: (path) => path.Pattern("a").Assign(), (path2) => path2.Pattern("b", "c"), you should get the Neo4j pattern: MERGE path=(a), (b)-->(c).
+        /// E.g Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: MERGE path=(a), (b)--&gt;(c).
         /// </summary>
         public static ICypherFluentQuery Merge(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
@@ -67,7 +67,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// Generates a cypher CREATE statement from the pattern descriptions.
-        /// E.g Given: (path) => path.Pattern("a").Assign(), (path2) => path2.Pattern("b", "c"), you should get the Neo4j pattern: CREATE path=(a), (b)-->(c).
+        /// E.g Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: CREATE path=(a), (b)--&gt;(c).
         /// </summary>
         public static ICypherFluentQuery Create(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
@@ -76,7 +76,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// Generates a cypher CREATE UNIQUE statement from the pattern descriptions.
-        /// E.g Given: (path) => path.Pattern("a").Assign(), (path2) => path2.Pattern("b", "c"), you should get the Neo4j pattern: CREATE UNIQUE path=(a), (b)-->(c).
+        /// E.g Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: CREATE UNIQUE path=(a), (b)--&gt;(c).
         /// </summary>
         public static ICypherFluentQuery CreateUnique(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
@@ -86,7 +86,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         #region Set
         /// <summary>
         /// Generates a cypher SET statement from the predicate.
-        /// E.g. movie => movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie.title = "Grey's Anatomy", movie.year = 2017.
+        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie.title = "Grey's Anatomy", movie.year = 2017.
         /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -95,12 +95,28 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <returns></returns>
         public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query, Expression<Func<T, bool>> predicate)
         {
-            return Set(query, predicate, out var setParam);
+            return Set(query, predicate, null);
         }
 
         /// <summary>
         /// Generates a cypher SET statement from the predicate.
-        /// E.g. movie => movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie.title = "Grey's Anatomy", movie.year = 2017.
+        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie.title = "Grey's Anatomy", movie.year = 2017.
+        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="predicate"></param>
+        /// <param name="variable">Overrides the parameter used in the predicate lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
+        /// <returns></returns>
+        public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query, 
+            Expression<Func<T, bool>> predicate, string variable)
+        {
+            return Set(query, predicate, out var setParam, variable);
+        }
+
+        /// <summary>
+        /// Generates a cypher SET statement from the predicate.
+        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie.title = "Grey's Anatomy", movie.year = 2017.
         /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -108,14 +124,32 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="predicate"></param>
         /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
         /// <returns></returns>
-        public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query, Expression<Func<T, bool>> predicate, out string setParameter)
+        public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query, 
+            Expression<Func<T, bool>> predicate, out string setParameter)
         {
-            return Set(query, predicate, PropertiesBuildStrategy.WithParamsForValues, out setParameter);
+            return Set(query, predicate, out setParameter, null);
         }
 
         /// <summary>
         /// Generates a cypher SET statement from the predicate.
-        /// E.g. movie => movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie.title = "Grey's Anatomy", movie.year = 2017.
+        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie.title = "Grey's Anatomy", movie.year = 2017.
+        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="predicate"></param>
+        /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
+        /// <param name="variable">Overrides the parameter used in the predicate lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
+        /// <returns></returns>
+        public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query, 
+            Expression<Func<T, bool>> predicate, out string setParameter, string variable)
+        {
+            return Set(query, predicate, PropertiesBuildStrategy.WithParamsForValues, out setParameter, variable);
+        }
+
+        /// <summary>
+        /// Generates a cypher SET statement from the predicate.
+        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie.title = "Grey's Anatomy", movie.year = 2017.
         /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -125,12 +159,28 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query,
             Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy)
         {
-            return Set(query, predicate, buildStrategy, out var setParam);
+            return Set(query, predicate, buildStrategy, null);
         }
 
         /// <summary>
         /// Generates a cypher SET statement from the predicate.
-        /// E.g. movie => movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie.title = "Grey's Anatomy", movie.year = 2017.
+        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie.title = "Grey's Anatomy", movie.year = 2017.
+        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="predicate"></param>
+        /// <param name="variable">Overrides the parameter used in the predicate lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
+        /// <returns></returns>
+        public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query,
+            Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy, string variable)
+        {
+            return Set(query, predicate, buildStrategy, out var setParam, variable);
+        }
+
+        /// <summary>
+        /// Generates a cypher SET statement from the predicate.
+        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie.title = "Grey's Anatomy", movie.year = 2017.
         /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -141,6 +191,23 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query, 
             Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy, out string setParameter)
         {
+            return Set(query, predicate, buildStrategy, out setParameter, null);
+        }
+
+        /// <summary>
+        /// Generates a cypher SET statement from the predicate.
+        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie.title = "Grey's Anatomy", movie.year = 2017.
+        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="predicate"></param>
+        /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
+        /// <param name="variable">Overrides the parameter used in the predicate lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
+        /// <returns></returns>
+        public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query,
+            Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy, out string setParameter, string variable)
+        {
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
@@ -150,7 +217,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             var finalProperties = Utilities.GetFinalProperties(Utilities.GetConstraintsAsPropertiesLambda(predicate, typeof(T)), resolver,
                 converter, serializerFunc, out var hasVariables);
 
-            string variable = predicate.Parameters[0].Name;
+            variable = variable ?? predicate.Parameters[0].Name;
             var setParam = Utilities.GetRandomVariableFor($"{variable}_set");
             setParameter = setParam;
 
@@ -183,9 +250,10 @@ namespace Neo4jClient.DataAnnotations.Cypher
             return query.Set(value);
         }
 
+
         /// <summary>
         /// Generates a cypher SET statement from the properties.
-        /// E.g. () => new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
+        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
         /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
         /// </summary>
         /// <returns></returns>
@@ -196,7 +264,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// Generates a cypher SET statement from the properties.
-        /// E.g. () => new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
+        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
         /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
         /// </summary>
         /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
@@ -208,7 +276,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// Generates a cypher SET statement from the properties.
-        /// E.g. () => new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
+        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
         /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
         /// </summary>
         /// <returns></returns>
@@ -220,7 +288,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// Generates a cypher SET statement from the properties.
-        /// E.g. () => new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
+        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
         /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
         /// </summary>
         /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
@@ -233,7 +301,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// Generates a cypher SET statement from the properties.
-        /// E.g. () => new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
+        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
         /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
         /// </summary>
         /// <param name="add">If this is set to true, the SET statement would use the '+=' operator and not the '=' operator.</param>
@@ -245,7 +313,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// Generates a cypher SET statement from the properties.
-        /// E.g. () => new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
+        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
         /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
         /// </summary>
         /// <param name="add">If this is set to true, the SET statement would use the '+=' operator and not the '=' operator.</param>
@@ -259,7 +327,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// Generates a cypher SET statement from the properties.
-        /// E.g. () => new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
+        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
         /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
         /// </summary>
         /// <param name="add">If this is set to true, the SET statement would use the '+=' operator and not the '=' operator.</param>
@@ -272,7 +340,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// Generates a cypher SET statement from the properties.
-        /// E.g. () => new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
+        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
         /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
         /// </summary>
         /// <param name="add">If this is set to true, the SET statement would use the '+=' operator and not the '=' operator.</param>

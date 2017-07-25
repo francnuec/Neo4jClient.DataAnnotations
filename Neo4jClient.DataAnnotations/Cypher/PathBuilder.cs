@@ -27,11 +27,11 @@ namespace Neo4jClient.DataAnnotations.Cypher
             PathVariable = pathVariable;
         }
 
-        public IPathExtent Path { get; set; }
+        public IPathExtent Path { get; protected internal set; }
 
         public PropertiesBuildStrategy PatternBuildStrategy { get; set; }
 
-        public string PathVariable { get; set; }
+        public string PathVariable { get; protected internal set; }
 
         public bool AssignPathVariable { get; protected internal set; }
 

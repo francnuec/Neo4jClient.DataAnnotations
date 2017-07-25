@@ -41,7 +41,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             Assert.All(TestUtilities.EntityTypes, (type) => Assert.True(Neo4jAnnotations.EntityTypes.Contains(type)));
 
-            Assert.Same(GraphClient.DefaultJsonContractResolver, TestUtilities.Resolver);
+            Assert.True(GraphClient.DefaultJsonContractResolver == TestUtilities.Resolver);
         }
 
         [Fact]
@@ -51,7 +51,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             Assert.All(TestUtilities.EntityTypes, (type) => Assert.True(Neo4jAnnotations.EntityTypes.Contains(type)));
 
-            Assert.Same(GraphClient.DefaultJsonConverters[0], TestUtilities.Converter);
+            Assert.True(GraphClient.DefaultJsonConverters[0] == TestUtilities.Converter);
         }
     }
 }

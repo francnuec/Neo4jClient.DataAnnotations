@@ -4231,11 +4231,25 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Calling <see cref="Assign"/> means this should be the last method called on the pattern.
         /// </summary>
         /// <param name="source"></param>
-        /// <param name="A"></param>
         /// <returns></returns>
         public static IPathExtent S(this IPath source)
         {
             return SharedShortest(source);
+        }
+
+        /// <summary>
+        /// P = shortestPath((A)-[R]-(B)).
+        /// Calls the shortestPath function on the generated pattern.
+        /// Note that Cypher allows only non-extended simple patterns for the shortestPath function.
+        /// Also note that this method implicitly calls the <see cref="Assign"/> method because invoking the shortestPath function more likely means you need the path returned.
+        /// Calling <see cref="Assign"/> means this should be the last method called on the pattern.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="pathVariable">Use this to override the path variable (which is default to the lambda expression parameter).</param>
+        /// <returns></returns>
+        public static IPathExtent S(this IPath source, string pathVariable)
+        {
+            return SharedShortest(source, pathVariable);
         }
         #endregion
 
@@ -4264,10 +4278,42 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Without this method being called, the generated pattern would not be assigned to a path variable.
         /// </summary>
         /// <param name="source"></param>
+        /// <param name="pathVariable">Use this to override the path variable (which is default to the lambda expression parameter).</param>
+        /// <returns></returns>
+        public static IPathExtent A(this IPath source, string pathVariable)
+        {
+            return SharedAssign(source, pathVariable);
+        }
+
+        /// <summary>
+        /// Assigns the entire pattern to the path variable.
+        /// That is, P = (A)-[R]-(B), 
+        /// where P is the path variable as defined by the lambda expression variable of type <see cref="IPathBuilder"/> that generated this pattern.
+        /// For example, Match((path) =&gt; path.Pattern("user").Assign()) would generate the Cypher: MATCH path = (user).
+        /// Note that whenever the path variable is required, always make this the last method called on the <see cref="IPathBuilder"/>.
+        /// Without this method being called, the generated pattern would not be assigned to a path variable.
+        /// </summary>
+        /// <param name="source"></param>
         /// <returns></returns>
         public static IPathExtent A(this IPathExtension source)
         {
             return SharedAssign(source);
+        }
+
+        /// <summary>
+        /// Assigns the entire pattern to the path variable.
+        /// That is, P = (A)-[R]-(B), 
+        /// where P is the path variable as defined by the lambda expression variable of type <see cref="IPathBuilder"/> that generated this pattern.
+        /// For example, Match((path) =&gt; path.Pattern("user").Assign()) would generate the Cypher: MATCH path = (user).
+        /// Note that whenever the path variable is required, always make this the last method called on the <see cref="IPathBuilder"/>.
+        /// Without this method being called, the generated pattern would not be assigned to a path variable.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="pathVariable">Use this to override the path variable (which is default to the lambda expression parameter).</param>
+        /// <returns></returns>
+        public static IPathExtent A(this IPathExtension source, string pathVariable)
+        {
+            return SharedAssign(source, pathVariable);
         }
         #endregion
     }

@@ -15,9 +15,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
     public interface IPathBuilder : IPathable, IAnnotated
     {
-        IPathExtent Path { get; set; }
+        IPathExtent Path { get; }
 
-        string PathVariable { get; set; }
+        string PathVariable { get; }
 
         PropertiesBuildStrategy PatternBuildStrategy { get; set; }
 
