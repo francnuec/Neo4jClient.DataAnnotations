@@ -162,7 +162,7 @@ namespace Neo4jClient.DataAnnotations
 
                 if (instance == null && complexProp.CanWrite)
                 {
-                    instance = Activator.CreateInstance(complexProp.PropertyType);
+                    instance = Utilities.CreateInstance(complexProp.PropertyType);
                     complexProp.SetValue(entity, instance);
                 }
 
@@ -263,7 +263,7 @@ namespace Neo4jClient.DataAnnotations
                             }
                             else
                             {
-                                nextInstance = Activator.CreateInstance(lastType);
+                                nextInstance = Utilities.CreateInstance(lastType);
                             }
 
                             //assign the instance
@@ -301,7 +301,7 @@ namespace Neo4jClient.DataAnnotations
             {
                 //most likely using the EntityConverter
                 //create new instance
-                entity = Activator.CreateInstance(entityType);
+                entity = Utilities.CreateInstance(entityType);
             }
 
             currentIndex = index;
@@ -607,7 +607,7 @@ namespace Neo4jClient.DataAnnotations
                 {
                     //most likely the generic method was called
                     //build the entity through its members accessed
-                    object entity = null; //Activator.CreateInstance(entityType);
+                    object entity = null; //Utilities.CreateInstance(entityType);
 
                     var memberNames = GetEntityPathNames(ref entity, ref entityType, expressions, ref currentIndex, resolver, serializer,
                         out var members, out var lastType, useResolvedJsonName: useResolvedJsonName.Value);
@@ -908,7 +908,7 @@ namespace Neo4jClient.DataAnnotations
 
             if (instance == null)
             {
-                instance = Activator.CreateInstance(type);
+                instance = Utilities.CreateInstance(type);
                 isNew = true;
             }
 
@@ -922,7 +922,7 @@ namespace Neo4jClient.DataAnnotations
                 {
                     //it doesn't, so create new instance from child declaring type
                     existingInstance = instance;
-                    instance = Activator.CreateInstance(type);
+                    instance = Utilities.CreateInstance(type);
                     isNew = true;
 
                     //now copy the values from old instance unto this new one
@@ -1531,6 +1531,35 @@ namespace Neo4jClient.DataAnnotations
                 + $"{entity}"
                 + (random = new Random(DateTime.UtcNow.Millisecond)).Next(1, 100)
                 + random.Next(1, 100);
+        }
+
+        internal static object CreateInstance(Type type, bool nonPublic = true)
+        {
+            Object o = null;
+
+            try
+            {
+                o = Activator.CreateInstance(type);
+            }
+            catch (MissingMemberException e)
+            {
+                if (nonPublic)
+                {
+                    var flags = BindingFlags.Instance | BindingFlags.NonPublic;
+
+                    ConstructorInfo parameterlessConstructor = type.GetConstructors(flags)
+                        .Where(c => c.GetParameters() == null || c.GetParameters().Length == 0).FirstOrDefault();
+
+                    if (parameterlessConstructor == null)
+                        throw e; //new MissingMethodException($"No parameterless constructor found for type: '{type.Name}'.");
+
+                    o = parameterlessConstructor.Invoke(new object[0]);
+                }
+                else
+                    throw e;
+            }
+
+            return o;
         }
     }
 }

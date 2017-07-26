@@ -21,7 +21,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            var value = existingValue ?? Activator.CreateInstance(objectType);
+            var value = existingValue ?? Utilities.CreateInstance(objectType);
 
             if (value != null)
             {

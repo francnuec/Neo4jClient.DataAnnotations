@@ -134,7 +134,7 @@ namespace Neo4jClient.DataAnnotations
         public static object GetDefaultValue(this Type type)
         {
             if (type.GetTypeInfo().IsValueType)
-                return Activator.CreateInstance(type);
+                return Utilities.CreateInstance(type);
 
             return null;
         }

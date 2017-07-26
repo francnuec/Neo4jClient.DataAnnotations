@@ -466,7 +466,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
                         try
                         {
-                            entity = Activator.CreateInstance(entityExpr.Type);
+                            entity = Utilities.CreateInstance(entityExpr.Type);
                         }
                         catch
                         {
