@@ -36,7 +36,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->()";
 
-            var actual = path.Build();
+            var actual = path.Build(ref query);
 
             Assert.Equal(expected, actual);
         }
@@ -49,7 +49,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
 
-            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPathMixed(P)
                 .Extend(RelationshipDirection.Outgoing);
 
             var pathBuilder = new PathBuilder(query, pathExpr);
@@ -62,7 +62,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->()";
 
-            var actual = path.Build();
+            var actual = path.Build(ref query);
 
             Assert.Equal(expected, actual);
         }
@@ -88,7 +88,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->()";
 
-            var actual = path.Build();
+            var actual = path.Build(ref query);
 
             Assert.Equal(expected, actual);
         }
@@ -113,7 +113,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->()";
 
-            var actual = pathBuilder.Build();
+            var actual = pathBuilder.Build(ref query);
 
             Assert.Equal(expected, actual);
         }
@@ -137,7 +137,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 ")";
 
-            var actual = pathBuilder.Build();
+            var actual = pathBuilder.Build(ref query);
 
             Assert.Equal(expected, actual);
         }

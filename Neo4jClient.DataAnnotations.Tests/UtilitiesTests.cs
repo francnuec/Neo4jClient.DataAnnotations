@@ -50,7 +50,9 @@ namespace Neo4jClient.DataAnnotations.Tests
         public void VarsSerializationWithConverter<T>(Expression<Func<T>> expression,
             string expectedText, bool useResolvedJsonName = true)
         {
-            TestUtilities.AddEntityTypes();
+            //TestUtilities.AddEntityTypes();
+
+            TestUtilities.RegisterEntityTypes(null, TestUtilities.Converter);
 
             var retrievedMembers = Utilities.GetSimpleMemberAccessStretch(expression.Body, out var val);
 
@@ -69,7 +71,9 @@ namespace Neo4jClient.DataAnnotations.Tests
         public void VarsSerializationWithResolver<T>(Expression<Func<T>> expression,
             string expectedText, bool useResolvedJsonName = true)
         {
-            TestUtilities.AddEntityTypes();
+            //TestUtilities.AddEntityTypes();
+
+            TestUtilities.RegisterEntityTypes(TestUtilities.Resolver, null);
 
             var retrievedMembers = Utilities.GetSimpleMemberAccessStretch(expression.Body, out var val);
 
@@ -322,7 +326,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         public void FinalPropertiesResolutionWithConverter(Dictionary<string, dynamic> expected, LambdaExpression expression,
             Type expectedExceptionType = null, string expectedExceptionMessage = null)
         {
-            TestUtilities.AddEntityTypes();
+            TestUtilities.RegisterEntityTypes(null, TestUtilities.Converter);
 
             Func<JObject> action = () => Utilities.GetFinalProperties
                     (expression, null, TestUtilities.Converter, TestUtilities.SerializeWithConverter, out var hasVars);
@@ -336,7 +340,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         public void FinalPropertiesResolutionWithResolver(Dictionary<string, dynamic> expected, LambdaExpression expression,
             Type expectedExceptionType = null, string expectedExceptionMessage = null)
         {
-            TestUtilities.AddEntityTypes();
+            TestUtilities.RegisterEntityTypes(TestUtilities.Resolver, null);
 
             Func<JObject> action = () => Utilities.GetFinalProperties
                     (expression, TestUtilities.Resolver, null, TestUtilities.SerializeWithResolver, out var hasVars);
@@ -349,8 +353,6 @@ namespace Neo4jClient.DataAnnotations.Tests
             Dictionary<string, dynamic> expected, Type expectedExceptionType = null,
             string expectedExceptionMessage = null)
         {
-            TestUtilities.AddEntityTypes();
-
             if (expectedExceptionType != null)
             {
                 var exception = Assert.Throws(expectedExceptionType, () => action.Invoke());

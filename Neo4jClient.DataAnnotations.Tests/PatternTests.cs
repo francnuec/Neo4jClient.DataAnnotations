@@ -345,7 +345,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             TestUtilities.TestFinalPropertiesForEquality((instance) => serializer.Serialize(instance), expected, aFinalProperties);
 
-            var str = pattern.Build();
+            var str = pattern.Build(ref query);
         }
 
         [Theory]
@@ -367,8 +367,8 @@ namespace Neo4jClient.DataAnnotations.Tests
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })";
             var expectedExt = "-->()";
 
-            var actualMain = path.Patterns[0].Build();
-            var actualExt = path.Patterns[1].Build();
+            var actualMain = path.Patterns[0].Build(ref query);
+            var actualExt = path.Patterns[1].Build(ref query);
 
             Assert.Equal(expectedMain, actualMain);
 
@@ -385,7 +385,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var builder = new PathBuilder(query);
 
-            var path = TestUtilities.BuildTestPath(builder)
+            var path = TestUtilities.BuildTestPathMixed(builder)
                 .Extend(RelationshipDirection.Outgoing)
                 as Path;
 
@@ -397,8 +397,8 @@ namespace Neo4jClient.DataAnnotations.Tests
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })";
             var expectedExt = "-->()";
 
-            var actualMain = path.Patterns[0].Build();
-            var actualExt = path.Patterns[1].Build();
+            var actualMain = path.Patterns[0].Build(ref query);
+            var actualExt = path.Patterns[1].Build(ref query);
 
             Assert.Equal(expectedMain, actualMain);
 
@@ -427,8 +427,8 @@ namespace Neo4jClient.DataAnnotations.Tests
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })";
             var expectedExt = "-->()";
 
-            var actualMain = path.Patterns[0].Build();
-            var actualExt = path.Patterns[1].Build();
+            var actualMain = path.Patterns[0].Build(ref query);
+            var actualExt = path.Patterns[1].Build(ref query);
 
             Assert.Equal(expectedMain, actualMain);
 

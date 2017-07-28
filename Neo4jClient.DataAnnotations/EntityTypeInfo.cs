@@ -95,10 +95,8 @@ namespace Neo4jClient.DataAnnotations
                 if (complexTypedProps != null)
                     return complexTypedProps;
 
-                var typeOfComplexType = typeof(ComplexTypeAttribute);
-
                 complexTypedProps = AllProperties
-                    .Where(p => p.PropertyType.GetTypeInfo().IsDefined(typeOfComplexType))
+                    .Where(p => p.PropertyType.IsComplex())
                     .ToList();
 
                 return complexTypedProps;
@@ -167,11 +165,12 @@ namespace Neo4jClient.DataAnnotations
 
                 foreach (var propInfo in propertiesNotConsidered)
                 {
-                    if ((propInfo.Name.EndsWith("Id") || propInfo.Name.ToLower().EndsWith("_id"))
-                        && Utilities.IsTypeScalar(propInfo.PropertyType)) //it must be scalar to be considered
-                    {
-                        var fkName = propInfo.Name.Substring(0, propInfo.Name.Length - 2).TrimEnd('_');
+                    string fkName = null;
 
+                    if ((propInfo.Name.EndsWith("Id") || propInfo.Name.ToLower().EndsWith("_id"))
+                        && Utilities.IsTypeScalar(propInfo.PropertyType) //it must be scalar to be considered
+                        && !string.IsNullOrWhiteSpace(fkName = propInfo.Name.Substring(0, propInfo.Name.Length - 2).TrimEnd('_'))) 
+                    {
                         //check if this name belongs to a nav property already chosen as foreign key above
                         //but whose defined foreignkey does not point to its scalar property.
                         ForeignKeyProperty foreignKeyProperty = foreignKeyProperties

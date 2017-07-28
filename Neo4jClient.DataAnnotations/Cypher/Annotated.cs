@@ -10,36 +10,32 @@ namespace Neo4jClient.DataAnnotations.Cypher
 {
     public abstract class Annotated : IAnnotated //, ICypherFluentQuery
     {
-        ///// <summary>
-        ///// Gets the <see cref="CypherQuery"/> without a preceding call to <see cref="CommitToCypherQuery"/>.
-        ///// Internally, in the <see cref="CommitToCypherQuery"/> method, use this property to get any methods from <see cref="ICypherFluentQuery"/>.
-        ///// This is to avoid starting an infinite loop.
-        ///// </summary>
-        protected ICypherFluentQuery InternalCypherQuery { get; private set; }
+        private ICypherFluentQuery internalCypherQuery;
 
         public Annotated(ICypherFluentQuery query)
         {
-            this.InternalCypherQuery = query ?? throw new ArgumentNullException(nameof(query));
+            this.internalCypherQuery = query ?? throw new ArgumentNullException(nameof(query));
         }
 
-        //public Annotated(Annotated existing)
-        //    : this(existing?.InternalCypherQuery)
-        //{
-        //    if (existing == null)
-        //        throw new ArgumentNullException(nameof(existing));
-
-        //    //existing.CommitToCypherQuery();
-        //}
-
-        public virtual ICypherFluentQuery CypherQuery
+        public ref ICypherFluentQuery CypherQuery
         {
             get
             {
-                //CommitToCypherQuery();
-                return InternalCypherQuery;
+                return ref internalCypherQuery;
             }
         }
 
-        public abstract string Build();
+        public string Build(ref ICypherFluentQuery query)
+        {
+            internalCypherQuery = query;
+
+            var build = InternalBuild();
+
+            query = CypherQuery;
+
+            return build;
+        }
+
+        protected abstract string InternalBuild();
     }
 }

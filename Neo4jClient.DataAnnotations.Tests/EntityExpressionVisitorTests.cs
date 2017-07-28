@@ -24,7 +24,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         [MemberData("SerializerData", MemberType = typeof(EntityExpressionVisitorTests))]
         public void AnonymousType(EntityResolver resolver, Func<object, string> serializer)
         {
-            TestUtilities.AddEntityTypes();
+            TestUtilities.RegisterEntityTypes(resolver, resolver == null? TestUtilities.Converter : null);
 
             Expression<Func<object>> expression = () =>
                 new { Name = "Ellen Pompeo", Born = Vars.Get<ActorNode>("shondaRhimes").Born,
@@ -63,7 +63,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         [MemberData("SerializerData", MemberType = typeof(EntityExpressionVisitorTests))]
         public void ComplexAnonymousType_ComplexName(EntityResolver resolver, Func<object, string> serializer)
         {
-            TestUtilities.AddEntityTypes();
+            TestUtilities.RegisterEntityTypes(resolver, resolver == null? TestUtilities.Converter : null);
 
             //the following is purely a test, and not necessarily a good example for neo4j cypher.
             Expression<Func<object>> expression = () => new { new AddressWithComplexType()
@@ -109,7 +109,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         [MemberData("SerializerData", MemberType = typeof(EntityExpressionVisitorTests))]
         public void EscapedComplexAnonymousType_SimpleName(EntityResolver resolver, Func<object, string> serializer)
         {
-            TestUtilities.AddEntityTypes();
+            TestUtilities.RegisterEntityTypes(resolver, resolver == null? TestUtilities.Converter : null);
 
             //the following is purely a test, and not necessarily a good example for neo4j cypher.
             Expression<Func<object>> expression = () => new
@@ -152,7 +152,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         [MemberData("SerializerData", MemberType = typeof(EntityExpressionVisitorTests))]
         public void Set(EntityResolver resolver, Func<object, string> serializer)
         {
-            TestUtilities.AddEntityTypes();
+            TestUtilities.RegisterEntityTypes(resolver, resolver == null? TestUtilities.Converter : null);
 
             Expression<Func<object>> expression = () => TestUtilities.Actor.Set(a => a.Born == Vars.Get<ActorNode>("ellenPompeo").Born && a.Name == "Shonda Rhimes");
 
@@ -179,7 +179,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         [MemberData("SerializerData", MemberType = typeof(EntityExpressionVisitorTests))]
         public void AnonymousTypeMemberAccessSet(EntityResolver resolver, Func<object, string> serializer)
         {
-            TestUtilities.AddEntityTypes();
+            TestUtilities.RegisterEntityTypes(resolver, resolver == null? TestUtilities.Converter : null);
 
             Expression<Func<object>> expression = () => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, TestUtilities.Actor.Address }
                 .Set(a => a.Address.AddressLine == Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes");
@@ -221,7 +221,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         [MemberData("SerializerData", MemberType = typeof(EntityExpressionVisitorTests))]
         public void ComplexAnonymousTypeSet(EntityResolver resolver, Func<object, string> serializer)
         {
-            TestUtilities.AddEntityTypes();
+            TestUtilities.RegisterEntityTypes(resolver, resolver == null? TestUtilities.Converter : null);
 
             Expression<Func<object>> expression = () => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, Address = TestUtilities.Actor.Address as AddressWithComplexType }
             .Set(a => a.Address == new AddressWithComplexType()
@@ -274,7 +274,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         [MemberData("SerializerData", MemberType = typeof(EntityExpressionVisitorTests))]
         public void ComplexAnonymousTypeMemberAccessSet(EntityResolver resolver, Func<object, string> serializer)
         {
-            TestUtilities.AddEntityTypes();
+            TestUtilities.RegisterEntityTypes(resolver, resolver == null? TestUtilities.Converter : null);
 
             Expression<Func<object>> expression = () => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, Address = TestUtilities.Actor.Address as AddressWithComplexType }
             .Set(a => a.Address.Location.Longitude == new AddressWithComplexType()
@@ -326,7 +326,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         [MemberData("SerializerData", MemberType = typeof(EntityExpressionVisitorTests))]
         public void AnonymousTypeComplexMemberSet(EntityResolver resolver, Func<object, string> serializer)
         {
-            TestUtilities.AddEntityTypes();
+            TestUtilities.RegisterEntityTypes(resolver, resolver == null? TestUtilities.Converter : null);
 
             Expression<Func<object>> expression = () => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, TestUtilities.Actor.Address }
                 .Set(a => (a.Address as AddressWithComplexType).AddressLine == Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes");
@@ -370,7 +370,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         [MemberData("SerializerData", MemberType = typeof(EntityExpressionVisitorTests))]
         public void AnonymousTypeComplexMemberSet2(EntityResolver resolver, Func<object, string> serializer)
         {
-            TestUtilities.AddEntityTypes();
+            TestUtilities.RegisterEntityTypes(resolver, resolver == null? TestUtilities.Converter : null);
 
             Expression<Func<object>> expression = () => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, TestUtilities.Actor.Address }
             .Set(a => a.Address == new AddressWithComplexType()
@@ -423,7 +423,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         [MemberData("SerializerData", MemberType = typeof(EntityExpressionVisitorTests))]
         public void DictionarySet(EntityResolver resolver, Func<object, string> serializer)
         {
-            TestUtilities.AddEntityTypes();
+            TestUtilities.RegisterEntityTypes(resolver, resolver == null? TestUtilities.Converter : null);
 
             Expression<Func<object>> expression = () => new Dictionary<string, object>()
             {

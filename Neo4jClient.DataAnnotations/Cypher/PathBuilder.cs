@@ -39,11 +39,11 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         //public IPath Origin => throw new NotImplementedException();
 
-        public override string Build()
+        protected override string InternalBuild()
         {
             var builder = new StringBuilder();
 
-            var pathText = Path?.Build();
+            var pathText = Path?.Build(ref CypherQuery);
 
             var pathVariable = PathVariable;
 
@@ -68,7 +68,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         {
             try
             {
-                return $"PathBuilder: {Build()}";
+                return $"PathBuilder: {InternalBuild()}";
             }
             catch
             {

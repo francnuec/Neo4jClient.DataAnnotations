@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 using Xunit;
 
 namespace Neo4jClient.DataAnnotations.Tests
@@ -21,7 +22,9 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             Assert.All(TestUtilities.EntityTypes, (type) => Assert.True(Neo4jAnnotations.EntityTypes.Contains(type)));
 
-            Assert.Equal(GraphClient.DefaultJsonContractResolver.GetType(), typeof(EntityResolver));
+            Assert.Equal(typeof(EntityResolver), GraphClient.DefaultJsonContractResolver.GetType());
+
+            Assert.Contains(GraphClient.DefaultJsonConverters, c => typeof(ResolverDummyConverter) == c.GetType());
         }
 
         [Fact]
@@ -31,7 +34,9 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             Assert.All(TestUtilities.EntityTypes, (type) => Assert.True(Neo4jAnnotations.EntityTypes.Contains(type)));
 
-            Assert.Equal(GraphClient.DefaultJsonConverters[0].GetType(), typeof(EntityConverter));
+            Assert.Contains(GraphClient.DefaultJsonConverters, c => typeof(EntityConverter) == c.GetType());
+
+            //Assert.Equal(typeof(EntityConverter), GraphClient.DefaultJsonConverters.Last().GetType());
         }
 
         [Fact]
@@ -42,6 +47,8 @@ namespace Neo4jClient.DataAnnotations.Tests
             Assert.All(TestUtilities.EntityTypes, (type) => Assert.True(Neo4jAnnotations.EntityTypes.Contains(type)));
 
             Assert.True(GraphClient.DefaultJsonContractResolver == TestUtilities.Resolver);
+
+            Assert.Contains(GraphClient.DefaultJsonConverters, c => typeof(ResolverDummyConverter) == c.GetType());
         }
 
         [Fact]
@@ -51,7 +58,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             Assert.All(TestUtilities.EntityTypes, (type) => Assert.True(Neo4jAnnotations.EntityTypes.Contains(type)));
 
-            Assert.True(GraphClient.DefaultJsonConverters[0] == TestUtilities.Converter);
+            Assert.True(GraphClient.DefaultJsonConverters.Last() == TestUtilities.Converter);
         }
     }
 }

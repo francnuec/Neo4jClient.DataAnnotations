@@ -14,12 +14,20 @@ namespace Neo4jClient.DataAnnotations.Serialization
         {
             var _props = base.CreateProperties(type, memberSerialization);
 
-            if (Neo4jAnnotations.ContainsEntityType(type) && _props.Count > 0)
+            if (Neo4jAnnotations.ContainsEntityType(type))
             {
+                var isComplex = type.IsComplex();
+
                 var properties = new JsonPropertyCollection(type);
 
                 foreach (var prop in _props)
                 {
+                    if (isComplex)
+                    {
+                        prop.NullValueHandling = NullValueHandling.Include; //we need null values for complex types
+                        prop.DefaultValueHandling = DefaultValueHandling.Include; //we need all properties serialized
+                    }
+
                     properties.Add(prop);
                 }
 
@@ -27,6 +35,8 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
                 //check for complextypes
                 var complexTypedProperties = typeInfo.ComplexTypedProperties;
+
+                var complexJsonProperties = new List<JsonProperty>();
 
                 if (complexTypedProperties?.Count > 0)
                 {
@@ -41,48 +51,75 @@ namespace Neo4jClient.DataAnnotations.Serialization
                     .ToDictionary(np => np.JsonProperty, np => np.PropertyInfo);
 
                     //generate new properties with new names for the complex types
-                    foreach (var complexTypedProp in filteredJsonProperties)
+                    foreach (var complexTypedJsonProp in filteredJsonProperties)
                     {
                         //get the complexTypedProperty's own jsonproperties
                         //include derived classes
-                        var derivedTypes = Neo4jAnnotations.GetDerivedEntityTypes(complexTypedProp.Key.PropertyType)?
-                            .Where(t => t.GetTypeInfo().IsDefined(Defaults.ComplexType)).ToList();
+                        var derivedTypes = Neo4jAnnotations.GetDerivedEntityTypes(complexTypedJsonProp.Key.PropertyType)?
+                            .Where(t => t.IsComplex()).ToList();
 
                         if (derivedTypes == null || derivedTypes.Count == 0)
                         {
-                            Neo4jAnnotations.AddEntityType(complexTypedProp.Key.PropertyType);
-                            derivedTypes = new List<Type>() { complexTypedProp.Key.PropertyType };
+                            Neo4jAnnotations.AddEntityType(complexTypedJsonProp.Key.PropertyType);
+                            derivedTypes = new List<Type>() { complexTypedJsonProp.Key.PropertyType };
                         }
 
-                        foreach (var derivedType in derivedTypes)
-                        {
-                            var childProperties = (ResolveContract(derivedType) as JsonObjectContract)?
-                            .Properties?.Where(p => !p.Ignored).ToList();
+                        var childProperties = derivedTypes
+                            .SelectMany(dt => (ResolveContract(dt) as JsonObjectContract)?
+                                .Properties?.Where(p => !p.Ignored && p.PropertyName != Defaults.MetadataPropertyName)
+                                ?? new JsonProperty[0], 
+                                (dt, property) =>
+                                new
+                                {
+                                    DerivedType = dt,
+                                    Property = property
+                                })
+                            .Where(jp => jp.Property != null)
+                            .GroupBy(jp => jp.Property.PropertyName)
+                            .Select(jpg => jpg.FirstOrDefault())
+                            .ToList();
 
-                            foreach (var childProp in childProperties)
+                        foreach (var childProp in childProperties)
+                        {
+                            //add the child to this type's properties
+                            try
                             {
-                                //add the child to this type's properties
-                                try
-                                {
-                                    properties.AddProperty(GetComplexTypedPropertyChild(derivedType, complexTypedProp.Key, childProp));
-                                }
-                                catch (JsonSerializationException e)
-                                {
-                                    //member already exists and is duplicate
-                                }
+                                var newChildProp = GetComplexTypedPropertyChild(childProp.DerivedType, complexTypedJsonProp.Key, childProp.Property);
+                                properties.AddProperty(newChildProp);
+                                complexJsonProperties.Add(newChildProp);
+                            }
+                            catch (JsonSerializationException e)
+                            {
+                                //for some reason member already exists and is duplicate
                             }
                         }
 
                         //ignore all complex typed properties
-                        complexTypedProp.Key.Ignored = true;
+                        complexTypedJsonProp.Key.Ignored = true;
                     }
                 }
 
+                int defaultIdx = -1;
+                _props = properties.OrderBy(p => p.Order ?? defaultIdx++).ToList();
+
+                //create metadata property and add it last
+                var metadataJsonProperty = CreateProperty
+                    (typeof(Defaults).GetProperty("DummyMetadataProperty", 
+                    BindingFlags.Static | BindingFlags.Public), memberSerialization);
+
+                metadataJsonProperty.PropertyName = Defaults.MetadataPropertyName;
+                metadataJsonProperty.ValueProvider = new MetadataValueProvider(type, complexJsonProperties);
+                metadataJsonProperty.ShouldSerialize = (instance) =>
+                {
+                    return !(metadataJsonProperty.ValueProvider as MetadataValueProvider)
+                    .BuildMetadata(instance).IsEmpty();
+                };
+
+                _props.Add(metadataJsonProperty);
+
                 //assign and resolve these properties
                 typeInfo.JsonResolver = this;
-                typeInfo.JsonProperties = new List<JsonProperty>(properties);
-
-                _props = properties.OrderBy(p => p.Order ?? -1).ToList();
+                typeInfo.JsonProperties = new List<JsonProperty>(_props);
             }
 
             return _props;
@@ -127,7 +164,8 @@ namespace Neo4jClient.DataAnnotations.Serialization
             return newProp;
         }
 
-        protected virtual JsonProperty GetComplexTypedPropertyChild(Type complexType, JsonProperty complexTypedProperty, JsonProperty child)
+        protected virtual JsonProperty GetComplexTypedPropertyChild(Type complexType, 
+            JsonProperty complexTypedProperty, JsonProperty child)
         {
             var newChild = GetJsonPropertyDuplicate(child);
 

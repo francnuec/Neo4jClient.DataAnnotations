@@ -1,13 +1,13 @@
-﻿using Neo4jClient.Cypher;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 using System.Linq;
+using Neo4jClient.Cypher;
 
 namespace Neo4jClient.DataAnnotations.Cypher
 {
-    public static partial class CypherFluentQueryExtensions
+    public static class CypherFluentQueryExtensions
     {
         /// <summary>
         /// Builds Neo4j pattern using the <see cref="PropertiesBuildStrategy.NoParams"/> strategy, separating them with a comma.
@@ -33,7 +33,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
             PropertiesBuildStrategy patternBuildStrategy,
             params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
-            return Utilities.BuildPaths(query,
+            return BuildPaths(ref query, patternBuildStrategy, patternDescriptions);
+        }
+
+        private static string BuildPaths(ref ICypherFluentQuery query,
+            PropertiesBuildStrategy patternBuildStrategy,
+            params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
+        {
+            return DataAnnotations.Utilities.BuildPaths(ref query,
                 patternDescriptions ?? throw new ArgumentNullException(nameof(patternDescriptions)),
                 patternBuildStrategy);
         }
@@ -44,7 +51,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// </summary>
         public static ICypherFluentQuery Match(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
-            return query.Match(GetPattern(query, PropertiesBuildStrategy.WithParamsForValues, patternDescriptions));
+            var buildText = BuildPaths(ref query, PropertiesBuildStrategy.WithParamsForValues, patternDescriptions);
+            return query.Match(buildText);
         }
 
         /// <summary>
@@ -53,7 +61,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// </summary>
         public static ICypherFluentQuery OptionalMatch(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
-            return query.OptionalMatch(GetPattern(query, PropertiesBuildStrategy.WithParamsForValues, patternDescriptions));
+            var buildText = BuildPaths(ref query, PropertiesBuildStrategy.WithParamsForValues, patternDescriptions);
+            return query.OptionalMatch(buildText);
         }
 
         /// <summary>
@@ -62,7 +71,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// </summary>
         public static ICypherFluentQuery Merge(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
-            return query.Merge(GetPattern(query, PropertiesBuildStrategy.WithParamsForValues, patternDescriptions));
+            var buildText = BuildPaths(ref query, PropertiesBuildStrategy.WithParamsForValues, patternDescriptions);
+            return query.Merge(buildText);
         }
 
         /// <summary>
@@ -71,7 +81,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// </summary>
         public static ICypherFluentQuery Create(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
-            return query.Create(GetPattern(query, PropertiesBuildStrategy.WithParams, patternDescriptions));
+            var buildText = BuildPaths(ref query, PropertiesBuildStrategy.WithParams, patternDescriptions);
+            return query.Create(buildText);
         }
 
         /// <summary>
@@ -80,10 +91,60 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// </summary>
         public static ICypherFluentQuery CreateUnique(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
-            return query.CreateUnique(GetPattern(query, PropertiesBuildStrategy.WithParams, patternDescriptions));
+            var buildText = BuildPaths(ref query, PropertiesBuildStrategy.WithParams, patternDescriptions);
+            return query.CreateUnique(buildText);
         }
 
         #region Set
+        /// <summary>
+        /// Generates a cypher SET statement from the properties.
+        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
+        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
+        /// </summary>
+        /// <returns></returns>
+        public static ICypherFluentQuery Set(this ICypherFluentQuery query, string variable, Expression<Func<object>> properties)
+        {
+            return Set(query, variable, properties, out var setParam);
+        }
+
+        /// <summary>
+        /// Generates a cypher SET statement from the properties.
+        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
+        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
+        /// </summary>
+        /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
+        /// <returns></returns>
+        public static ICypherFluentQuery Set(this ICypherFluentQuery query, string variable, Expression<Func<object>> properties, out string setParameter)
+        {
+            return Set(query, variable, properties, PropertiesBuildStrategy.WithParams, out setParameter);
+        }
+
+        /// <summary>
+        /// Generates a cypher SET statement from the properties.
+        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
+        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
+        /// </summary>
+        /// <returns></returns>
+        public static ICypherFluentQuery Set(this ICypherFluentQuery query, string variable, 
+            Expression<Func<object>> properties, PropertiesBuildStrategy buildStrategy)
+        {
+            return Set(query, variable, properties, buildStrategy, out var setParam);
+        }
+
+        /// <summary>
+        /// Generates a cypher SET statement from the properties.
+        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
+        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
+        /// </summary>
+        /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
+        /// <returns></returns>
+        public static ICypherFluentQuery Set(this ICypherFluentQuery query, string variable,
+            Expression<Func<object>> properties, PropertiesBuildStrategy buildStrategy, out string setParameter)
+        {
+            return SharedSet(query, variable, properties, buildStrategy, out setParameter, add: false);
+        }
+
+
         /// <summary>
         /// Generates a cypher SET statement from the predicate.
         /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie.title = "Grey's Anatomy", movie.year = 2017.
@@ -108,7 +169,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="predicate"></param>
         /// <param name="variable">Overrides the parameter used in the predicate lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
         /// <returns></returns>
-        public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query, 
+        public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query,
             Expression<Func<T, bool>> predicate, string variable)
         {
             return Set(query, predicate, out var setParam, variable);
@@ -124,7 +185,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="predicate"></param>
         /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
         /// <returns></returns>
-        public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query, 
+        public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query,
             Expression<Func<T, bool>> predicate, out string setParameter)
         {
             return Set(query, predicate, out setParameter, null);
@@ -141,7 +202,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
         /// <param name="variable">Overrides the parameter used in the predicate lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
         /// <returns></returns>
-        public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query, 
+        public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query,
             Expression<Func<T, bool>> predicate, out string setParameter, string variable)
         {
             return Set(query, predicate, PropertiesBuildStrategy.WithParamsForValues, out setParameter, variable);
@@ -188,7 +249,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="predicate"></param>
         /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
         /// <returns></returns>
-        public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query, 
+        public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query,
             Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy, out string setParameter)
         {
             return Set(query, predicate, buildStrategy, out setParameter, null);
@@ -208,17 +269,163 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query,
             Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy, out string setParameter, string variable)
         {
+            return SharedSet(query, predicate, buildStrategy, out setParameter, variable);
+        }
+
+
+        /// <summary>
+        /// Generates a cypher SET statement from the predicate using the "+=" operator.
+        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie += { title: "Grey's Anatomy", year = 2017 }.
+        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="predicate"></param>
+        /// <returns></returns>
+        public static ICypherFluentQuery SetAdd<T>(this ICypherFluentQuery query, Expression<Func<T, bool>> predicate)
+        {
+            return SetAdd(query, predicate, null);
+        }
+
+        /// <summary>
+        /// Generates a cypher SET statement from the predicate using the "+=" operator.
+        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie += { title: "Grey's Anatomy", year = 2017 }.
+        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="predicate"></param>
+        /// <param name="variable">Overrides the parameter used in the predicate lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
+        /// <returns></returns>
+        public static ICypherFluentQuery SetAdd<T>(this ICypherFluentQuery query,
+            Expression<Func<T, bool>> predicate, string variable)
+        {
+            return SetAdd(query, predicate, out var setParam, variable);
+        }
+
+        /// <summary>
+        /// Generates a cypher SET statement from the predicate using the "+=" operator.
+        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie += { title: "Grey's Anatomy", year = 2017 }.
+        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="predicate"></param>
+        /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
+        /// <returns></returns>
+        public static ICypherFluentQuery SetAdd<T>(this ICypherFluentQuery query,
+            Expression<Func<T, bool>> predicate, out string setParameter)
+        {
+            return SetAdd(query, predicate, out setParameter, null);
+        }
+
+        /// <summary>
+        /// Generates a cypher SET statement from the predicate using the "+=" operator.
+        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie += { title: "Grey's Anatomy", year = 2017 }.
+        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="predicate"></param>
+        /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
+        /// <param name="variable">Overrides the parameter used in the predicate lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
+        /// <returns></returns>
+        public static ICypherFluentQuery SetAdd<T>(this ICypherFluentQuery query,
+            Expression<Func<T, bool>> predicate, out string setParameter, string variable)
+        {
+            return SetAdd(query, predicate, PropertiesBuildStrategy.WithParams, out setParameter, variable);
+        }
+
+        /// <summary>
+        /// Generates a cypher SET statement from the predicate using the "+=" operator.
+        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie += { title: "Grey's Anatomy", year = 2017 }.
+        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="predicate"></param>
+        /// <returns></returns>
+        public static ICypherFluentQuery SetAdd<T>(this ICypherFluentQuery query,
+            Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy)
+        {
+            return SetAdd(query, predicate, buildStrategy, null);
+        }
+
+        /// <summary>
+        /// Generates a cypher SET statement from the predicate using the "+=" operator.
+        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie += { title: "Grey's Anatomy", year = 2017 }.
+        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="predicate"></param>
+        /// <param name="variable">Overrides the parameter used in the predicate lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
+        /// <returns></returns>
+        public static ICypherFluentQuery SetAdd<T>(this ICypherFluentQuery query,
+            Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy, string variable)
+        {
+            return SetAdd(query, predicate, buildStrategy, out var setParam, variable);
+        }
+
+        /// <summary>
+        /// Generates a cypher SET statement from the predicate using the "+=" operator.
+        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie += { title: "Grey's Anatomy", year = 2017 }.
+        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="predicate"></param>
+        /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
+        /// <returns></returns>
+        public static ICypherFluentQuery SetAdd<T>(this ICypherFluentQuery query,
+            Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy, out string setParameter)
+        {
+            return SetAdd(query, predicate, buildStrategy, out setParameter, null);
+        }
+
+        /// <summary>
+        /// Generates a cypher SET statement from the predicate using the "+=" operator.
+        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie += { title: "Grey's Anatomy", year = 2017 }.
+        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="predicate"></param>
+        /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
+        /// <param name="variable">Overrides the parameter used in the predicate lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
+        /// <returns></returns>
+        public static ICypherFluentQuery SetAdd<T>(this ICypherFluentQuery query,
+            Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy, out string setParameter, string variable)
+        {
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            Utilities.GetQueryUtilities(query, out var client, out var serializer,
+            var propertiesExpression = Utilities.GetConstraintsAsPropertiesLambda(predicate, typeof(T));
+
+            return SharedSet(query, variable ?? predicate.Parameters[0].Name, propertiesExpression, buildStrategy, out setParameter, add: true);
+        }
+
+
+
+
+        /// <summary>
+        /// Generates a cypher SET statement from the properties.
+        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
+        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
+        /// </summary>
+        /// <param name="add">If this is set to true, the SET statement would use the '+=' operator and not the '=' operator.</param>
+        /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
+        /// <returns></returns>
+        internal static ICypherFluentQuery SharedSet(this ICypherFluentQuery query, string variable,
+            LambdaExpression properties, PropertiesBuildStrategy buildStrategy, out string setParameter, bool add)
+        {
+            DataAnnotations.Utilities.GetQueryUtilities(query, out var client, out var serializer,
                     out var resolver, out var converter, out var serializerFunc, out var queryWriter);
 
-            var finalProperties = Utilities.GetFinalProperties(Utilities.GetConstraintsAsPropertiesLambda(predicate, typeof(T)), resolver,
+            var finalProperties = DataAnnotations.Utilities.GetFinalProperties(properties, resolver,
                 converter, serializerFunc, out var hasVariables);
 
-            variable = variable ?? predicate.Parameters[0].Name;
-            var setParam = Utilities.GetRandomVariableFor($"{variable}_set");
+            string setParam = DataAnnotations.Utilities.GetRandomVariableFor($"{variable}_set");
             setParameter = setParam;
 
             buildStrategy = hasVariables ? PropertiesBuildStrategy.NoParams : buildStrategy;
@@ -230,144 +437,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 case PropertiesBuildStrategy.WithParams:
                 case PropertiesBuildStrategy.WithParamsForValues:
                     {
-                        //in this type of SET statement, both WithParams, and WithParamsForValues are the same
-                        query.WithParam(setParam, finalProperties);
-
-                        value = finalProperties.Properties()
-                                .Select(jp => $"{variable}.{jp.Name} = ${setParam}.{jp.Name}")
-                                .Aggregate((first, second) => $"{first}, {second}");
-                        break;
-                    }
-                case PropertiesBuildStrategy.NoParams:
-                    {
-                        value = finalProperties.Properties()
-                                .Select(jp => $"{variable}.{jp.Name} = {serializerFunc(jp.Value)}")
-                                .Aggregate((first, second) => $"{first}, {second}");
-                        break;
-                    }
-            }
-
-            return query.Set(value);
-        }
-
-
-        /// <summary>
-        /// Generates a cypher SET statement from the properties.
-        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
-        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
-        /// </summary>
-        /// <returns></returns>
-        public static ICypherFluentQuery Set(this ICypherFluentQuery query, string variable, Expression<Func<object>> properties)
-        {
-            return Set(query, variable, properties, out var setParam);
-        }
-
-        /// <summary>
-        /// Generates a cypher SET statement from the properties.
-        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
-        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
-        /// </summary>
-        /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
-        /// <returns></returns>
-        public static ICypherFluentQuery Set(this ICypherFluentQuery query, string variable, Expression<Func<object>> properties, out string setParameter)
-        {
-            return Set(query, variable, properties, false, out setParameter);
-        }
-
-        /// <summary>
-        /// Generates a cypher SET statement from the properties.
-        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
-        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
-        /// </summary>
-        /// <returns></returns>
-        public static ICypherFluentQuery Set(this ICypherFluentQuery query, string variable, 
-            Expression<Func<object>> properties, PropertiesBuildStrategy buildStrategy)
-        {
-            return Set(query, variable, properties, buildStrategy, out var setParam);
-        }
-
-        /// <summary>
-        /// Generates a cypher SET statement from the properties.
-        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
-        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
-        /// </summary>
-        /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
-        /// <returns></returns>
-        public static ICypherFluentQuery Set(this ICypherFluentQuery query, string variable,
-            Expression<Func<object>> properties, PropertiesBuildStrategy buildStrategy, out string setParameter)
-        {
-            return Set(query, variable, properties, false, buildStrategy, out setParameter);
-        }
-
-        /// <summary>
-        /// Generates a cypher SET statement from the properties.
-        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
-        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
-        /// </summary>
-        /// <param name="add">If this is set to true, the SET statement would use the '+=' operator and not the '=' operator.</param>
-        /// <returns></returns>
-        public static ICypherFluentQuery Set(this ICypherFluentQuery query, string variable, Expression<Func<object>> properties, bool add)
-        {
-            return Set(query, variable, properties, add, out var setParam);
-        }
-
-        /// <summary>
-        /// Generates a cypher SET statement from the properties.
-        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
-        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
-        /// </summary>
-        /// <param name="add">If this is set to true, the SET statement would use the '+=' operator and not the '=' operator.</param>
-        /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
-        /// <returns></returns>
-        public static ICypherFluentQuery Set(this ICypherFluentQuery query, string variable,
-            Expression<Func<object>> properties, bool add, out string setParameter)
-        {
-            return Set(query, variable, properties, add, PropertiesBuildStrategy.WithParams, out setParameter);
-        }
-
-        /// <summary>
-        /// Generates a cypher SET statement from the properties.
-        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
-        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
-        /// </summary>
-        /// <param name="add">If this is set to true, the SET statement would use the '+=' operator and not the '=' operator.</param>
-        /// <returns></returns>
-        public static ICypherFluentQuery Set(this ICypherFluentQuery query, string variable,
-            Expression<Func<object>> properties, bool add, PropertiesBuildStrategy buildStrategy)
-        {
-            return Set(query, variable, properties, add, buildStrategy, out var setParam);
-        }
-
-        /// <summary>
-        /// Generates a cypher SET statement from the properties.
-        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
-        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
-        /// </summary>
-        /// <param name="add">If this is set to true, the SET statement would use the '+=' operator and not the '=' operator.</param>
-        /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
-        /// <returns></returns>
-        public static ICypherFluentQuery Set(this ICypherFluentQuery query, string variable, 
-            Expression<Func<object>> properties, bool add, PropertiesBuildStrategy buildStrategy, out string setParameter)
-        {
-            Utilities.GetQueryUtilities(query, out var client, out var serializer,
-                    out var resolver, out var converter, out var serializerFunc, out var queryWriter);
-
-            var finalProperties = Utilities.GetFinalProperties(properties, resolver,
-                converter, serializerFunc, out var hasVariables);
-
-            string setParam = Utilities.GetRandomVariableFor($"{variable}_set");
-            setParameter = setParam;
-
-            buildStrategy = hasVariables ? PropertiesBuildStrategy.NoParams : buildStrategy;
-
-            string value = null;
-
-            switch (buildStrategy)
-            {
-                case PropertiesBuildStrategy.WithParams:
-                case PropertiesBuildStrategy.WithParamsForValues:
-                    {
-                        query.WithParam(setParam, finalProperties);
+                        query = query.WithParam(setParam, finalProperties);
 
                         value = "$" + setParam;
 
@@ -388,9 +458,65 @@ namespace Neo4jClient.DataAnnotations.Cypher
                     }
             }
 
-           var serializedValue = value?.StartsWith("$") != true ? $"{{ {value} }}" : value;
+            var serializedValue = value?.StartsWith("$") != true ? $"{{ {value} }}" : value;
 
-            return query.Set($"{variable} {(add? "+=" : "=")} {serializedValue}");
+            return query.Set($"{variable} {(add ? "+=" : "=")} {serializedValue}");
+        }
+
+        /// <summary>
+        /// Generates a cypher SET statement from the predicate.
+        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie.title = "Grey's Anatomy", movie.year = 2017.
+        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="predicate"></param>
+        /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
+        /// <param name="variable">Overrides the parameter used in the predicate lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
+        /// <returns></returns>
+        internal static ICypherFluentQuery SharedSet<T>(this ICypherFluentQuery query,
+            Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy, out string setParameter, string variable)
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            Utilities.GetQueryUtilities(query, out var client, out var serializer,
+                    out var resolver, out var converter, out var serializerFunc, out var queryWriter);
+
+            var finalProperties = DataAnnotations.Utilities.GetFinalProperties(Utilities.GetConstraintsAsPropertiesLambda(predicate, typeof(T)), resolver,
+                converter, serializerFunc, out var hasVariables);
+
+            variable = variable ?? predicate.Parameters[0].Name;
+            var setParam = DataAnnotations.Utilities.GetRandomVariableFor($"{variable}_set");
+            setParameter = setParam;
+
+            buildStrategy = hasVariables ? PropertiesBuildStrategy.NoParams : buildStrategy;
+
+            string value = null;
+
+            switch (buildStrategy)
+            {
+                case PropertiesBuildStrategy.WithParams:
+                case PropertiesBuildStrategy.WithParamsForValues:
+                    {
+                        //in this type of SET statement, both WithParams, and WithParamsForValues are the same
+                        query = query.WithParam(setParam, finalProperties);
+
+                        value = finalProperties.Properties()
+                                .Select(jp => $"{variable}.{jp.Name} = ${setParam}.{jp.Name}")
+                                .Aggregate((first, second) => $"{first}, {second}");
+                        break;
+                    }
+                case PropertiesBuildStrategy.NoParams:
+                    {
+                        value = finalProperties.Properties()
+                                .Select(jp => $"{variable}.{jp.Name} = {serializerFunc(jp.Value)}")
+                                .Aggregate((first, second) => $"{first}, {second}");
+                        break;
+                    }
+            }
+
+            return query.Set(value);
         }
         #endregion
     }

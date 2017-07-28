@@ -27,7 +27,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         private ISerializer serializer;
         private Func<object, string> serializerFunc;
         private IGraphClient client;
-        private QueryWriter queryWriter;
+        private Func<ICypherFluentQuery, QueryWriter> queryWriter;
 
         public IPathExtent Path { get; protected internal set; }
 
@@ -255,6 +255,11 @@ namespace Neo4jClient.DataAnnotations.Cypher
             {
                 abSelector = value;
                 abSelSet = value != null;
+
+                if (value != null && AVarIsAuto)
+                {
+                    AVariable = null; //allow it to reset to this
+                }
             }
         }
 
@@ -298,6 +303,11 @@ namespace Neo4jClient.DataAnnotations.Cypher
             {
                 arSelector = value;
                 arSelSet = value != null;
+
+                if (value != null && AVarIsAuto)
+                {
+                    AVariable = null; //allow it to reset to this
+                }
             }
         }
 
@@ -340,6 +350,11 @@ namespace Neo4jClient.DataAnnotations.Cypher
             {
                 rbSelector = value;
                 rbSelSet = value != null;
+
+                if (value != null && RVarIsAuto)
+                {
+                    RVariable = null; //allow it to reset to this
+                }
             }
         }
 
@@ -705,7 +720,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
 
-        public override string Build()
+        protected override string InternalBuild()
         {
             //CHECK LIST
             //Variables
@@ -767,7 +782,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         {
             try
             {
-                return Build();
+                return InternalBuild();
             }
             catch
             {
@@ -897,8 +912,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             {
                 builder.Append(variable);
                 //don't continue is this is already bound
-                //this is a crude test.
-                alreadyBound = pattern.queryWriter?.ContainsParameterWithKey(variable) == true;
+                alreadyBound = IsAlreadyBound(pattern, variable);
             }
 
             if (!alreadyBound)
@@ -912,7 +926,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 {
                     ResolveInternalUtilities(pattern);
 
-                    string properties = BuildProperties(finalProperties, pattern.InternalCypherQuery, Variable,
+                    string properties = BuildProperties(finalProperties, ref pattern.CypherQuery, Variable,
                         finalPropsHasVars? PropertiesBuildStrategy.NoParams : pattern.BuildStrategy, pattern.serializerFunc);
 
                     if (properties != null && properties != "{  }")
@@ -923,6 +937,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
             return $"({builder.ToString()})";
         }
 
+        internal static bool IsAlreadyBound(Pattern pattern, string variable)
+        {
+            //this is a crude test.
+            bool alreadyBound = pattern.queryWriter != null 
+                && pattern.queryWriter(pattern.CypherQuery)?.ContainsParameterWithKey(variable) == true;
+
+            if (!alreadyBound)
+            {
+                alreadyBound = pattern.CypherQuery.Query?.QueryParameters?.ContainsKey(variable) == true;
+            }
+            
+            return alreadyBound;
+        }
+
         internal static string BuildRelationship(Pattern pattern,
             string variable, bool variableIsAuto, string Variable, //NOTE: this call order is important, and method signature should not be reshuffled.
             IEnumerable<string> types, Tuple<int?, int?> hops, JObject finalProperties, bool finalPropsHasVars)
@@ -931,57 +959,64 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
             StringBuilder builder = new StringBuilder();
 
+            bool alreadyBound = false;
+
             if (!variableIsAuto && variable != null)
             {
                 builder.Append(variable);
+
+                alreadyBound = IsAlreadyBound(pattern, variable);
             }
 
-            if (types?.Count() > 0)
+            if (!alreadyBound)
             {
-                builder.Append(":" + types.Aggregate((first, second) => $"{first}|{second}"));
-            }
-
-            if (hops != null)
-            {
-                builder.Append("*");
-
-                if (hops.Item1 != null || hops.Item2 != null)
+                if (types?.Count() > 0)
                 {
-                    if (hops.Item1 == hops.Item2)
+                    builder.Append(":" + types.Aggregate((first, second) => $"{first}|{second}"));
+                }
+
+                if (hops != null)
+                {
+                    builder.Append("*");
+
+                    if (hops.Item1 != null || hops.Item2 != null)
                     {
-                        builder.Append(hops.Item1);
-                    }
-                    else
-                    {
-                        if (hops.Item1 != null)
+                        if (hops.Item1 == hops.Item2)
                         {
                             builder.Append(hops.Item1);
                         }
-
-                        builder.Append("..");
-
-                        if (hops.Item2 != null)
+                        else
                         {
-                            builder.Append(hops.Item2);
+                            if (hops.Item1 != null)
+                            {
+                                builder.Append(hops.Item1);
+                            }
+
+                            builder.Append("..");
+
+                            if (hops.Item2 != null)
+                            {
+                                builder.Append(hops.Item2);
+                            }
                         }
                     }
                 }
-            }
 
-            if (finalProperties?.Count > 0)
-            {
-                string properties = BuildProperties(finalProperties, pattern.InternalCypherQuery, Variable,
-                    finalPropsHasVars ? PropertiesBuildStrategy.NoParams : pattern.BuildStrategy, pattern.serializerFunc);
+                if (finalProperties?.Count > 0)
+                {
+                    string properties = BuildProperties(finalProperties, ref pattern.CypherQuery, Variable,
+                        finalPropsHasVars ? PropertiesBuildStrategy.NoParams : pattern.BuildStrategy, pattern.serializerFunc);
 
-                if (properties != null && properties != "{  }")
-                    builder.Append($" {properties}");
+                    if (properties != null && properties != "{  }")
+                        builder.Append($" {properties}");
+                }
             }
 
             return $"[{builder.ToString()}]";
         }
 
         internal static string BuildProperties
-            (JObject finalProperties, ICypherFluentQuery query, string Variable,
+            (JObject finalProperties, ref ICypherFluentQuery query, string Variable,
             PropertiesBuildStrategy buildStrategy, Func<object, string> serializer)
         {
             string value = null;
@@ -991,7 +1026,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 case PropertiesBuildStrategy.WithParams:
                 case PropertiesBuildStrategy.WithParamsForValues:
                     {
-                        query.WithParam(Variable, finalProperties);
+                        query = query.WithParam(Variable, finalProperties);
 
                         value = "$" + Variable;
 
@@ -1654,7 +1689,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         {
             if (pattern.client == null || pattern.serializer == null || (pattern.entityResolver == null && pattern.entityConverter == null))
             {
-                Utilities.GetQueryUtilities(pattern.InternalCypherQuery, out var client, out var serializer,
+                Utilities.GetQueryUtilities(pattern.CypherQuery, out var client, out var serializer,
                     out var resolver, out var converter, out var serializerFunc, out var queryWriter);
 
                 pattern.client = client;

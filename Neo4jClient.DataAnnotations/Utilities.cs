@@ -87,8 +87,23 @@ namespace Neo4jClient.DataAnnotations
         {
             var iEnumerableType = typeof(IEnumerable<>);
 
-            var interfaceType = type.GetInterfaces()?.Where(i => i.GetTypeInfo().IsGenericType
-                && i.GetGenericTypeDefinition() == iEnumerableType).FirstOrDefault();
+            var interfaces = type.GetInterfaces()?.ToList();
+
+            if (interfaces == null)
+            {
+                if (!type.GetTypeInfo().IsInterface)
+                    return null;
+
+                interfaces = new List<Type>();
+            }
+
+            if (type.GetTypeInfo().IsInterface)
+            {
+                interfaces.Insert(0, type);
+            }
+
+            var interfaceType = interfaces?.Where(i => i.GetTypeInfo().IsGenericType
+            && i.GetGenericTypeDefinition() == iEnumerableType).FirstOrDefault();
 
             return interfaceType?.GetGenericArguments().SingleOrDefault();
         }
@@ -344,8 +359,8 @@ namespace Neo4jClient.DataAnnotations
                 //if none found, or name returns empty, try all members then.
 
                 var membersToUse = members.Where(m =>
-                    !((m.Key as PropertyInfo)?.PropertyType ?? (m.Key as FieldInfo)?.FieldType)?
-                    .GetTypeInfo().IsDefined(Defaults.ComplexType) == true)
+                    !((m.Key as PropertyInfo)?.PropertyType ?? 
+                    (m.Key as FieldInfo)?.FieldType)?.IsComplex() == true)
                     .OrderBy(m => m.Value.Item1).ToList();
 
                 bool repeatedMemberNames = false;
@@ -396,9 +411,9 @@ namespace Neo4jClient.DataAnnotations
                         && resolver == null //don't doubt the result if the EntityResolver was present
                         && (string.IsNullOrWhiteSpace(name)
                         || (name == m.Key.Name
-                            && (parentType?.GetTypeInfo().IsDefined(Defaults.ComplexType) == true
-                            || m.Key.DeclaringType.GetTypeInfo().IsDefined(Defaults.ComplexType)
-                            || m.Value.Item2.GetTypeInfo().IsDefined(Defaults.ComplexType))))
+                            && (parentType?.IsComplex() == true
+                            || m.Key.DeclaringType.IsComplex()
+                            || m.Value.Item2.IsComplex())))
                         )
                         {
                             //maybe we were wrong and the jsonMaps are empty
@@ -514,7 +529,7 @@ namespace Neo4jClient.DataAnnotations
                 }
             }
 
-            if (type == null || !type.GetTypeInfo().IsDefined(Defaults.ComplexType))
+            if (type == null || !type.IsComplex())
                 return new List<Expression>();
 
             var result = new List<Expression>();
@@ -553,7 +568,7 @@ namespace Neo4jClient.DataAnnotations
             expression = expression?.Uncast(out var cast, Defaults.ObjectType); //in case this is coming from a dictionary
             MethodCallExpression methodExpr = null;
             return expression != null && (methodExpr = expression as MethodCallExpression) != null
-                && methodExpr.Method.IsEquivalentTo("_", Defaults.ExtensionsType);
+                && methodExpr.Method.IsEquivalentTo("_", Defaults.ObjectExtensionsType);
         }
 
         public static bool HasVars(List<Expression> expressions)
@@ -882,7 +897,7 @@ namespace Neo4jClient.DataAnnotations
         {
             methodExpr = null;
             return (methodExpr = expression as MethodCallExpression) != null
-                && methodExpr.Method.IsEquivalentTo("Set", Defaults.ExtensionsType);
+                && methodExpr.Method.IsEquivalentTo("Set", Defaults.ObjectExtensionsType);
         }
 
         public static void CheckIfComplexTypeInstanceIsNull(object instance, string propertyName, Type declaringType)
@@ -1456,31 +1471,33 @@ namespace Neo4jClient.DataAnnotations
             return filteredProps;
         }
 
-        public static string BuildPaths(ICypherFluentQuery query, 
+        public static string BuildPaths(ref ICypherFluentQuery query, 
             IEnumerable<Expression<Func<IPathBuilder, IPathExtent>>> pathBuildExpressions,
             PropertiesBuildStrategy patternBuildStrategy)
         {
             StringBuilder stringBuilder = new StringBuilder();
 
-            var pathsText = pathBuildExpressions.Select(pathExpr =>
+            var pathBuilds = new List<string>();
+
+            foreach(var pathExpr in pathBuildExpressions)
             {
-                var pathBuilder = new PathBuilder(query, pathExpr)
+                pathBuilds.Add(new PathBuilder(query, pathExpr)
                 {
                     PatternBuildStrategy = patternBuildStrategy
-                };
+                }.Build(ref query));
+            }
 
-                return pathBuilder.Build();
-            }).Aggregate((first, second) => $"{first}, {second}");
+            var pathsText = pathBuilds.Aggregate((first, second) => $"{first}, {second}");
 
             stringBuilder.Append(pathsText);
 
             return stringBuilder.ToString();
         }
 
-        internal static void GetQueryUtilities(ICypherFluentQuery query, 
+        internal static void GetQueryUtilities(ICypherFluentQuery query,
             out IGraphClient client, out ISerializer serializer,
             out EntityResolver resolver, out EntityConverter converter,
-            out Func<object, string> actualSerializer, out QueryWriter queryWriter)
+            out Func<object, string> actualSerializer, out Func<ICypherFluentQuery, QueryWriter> queryWriter)
         {
             client = (query as IAttachedReference)?.Client;
 
@@ -1489,6 +1506,8 @@ namespace Neo4jClient.DataAnnotations
                 JsonContractResolver = client?.JsonContractResolver ?? GraphClient.DefaultJsonContractResolver,
                 JsonConverters = client?.JsonConverters ?? (IEnumerable<JsonConverter>)GraphClient.DefaultJsonConverters
             };
+
+            var customJsonSerializer = _serializer as CustomJsonSerializer;
 
             serializer = _serializer;
 
@@ -1500,23 +1519,43 @@ namespace Neo4jClient.DataAnnotations
 
             converter = converters.FirstOrDefault(c => c is EntityConverter) as EntityConverter;
 
-            actualSerializer = _serializer != null ? (obj) => _serializer.Serialize(obj) : (Func<object, string>)null;
+            if (_serializer != null)
+            {
+                actualSerializer = (obj) =>
+                {
+                    NullValueHandling? nullHandling = null;
+                    if (customJsonSerializer != null)
+                    {
+                        nullHandling = customJsonSerializer.NullHandling; //save it.
+                        customJsonSerializer.NullHandling = NullValueHandling.Include; //change it. we need all values
+                    }
 
-            try
-            {
-                queryWriter = query.GetType()
-                .GetField("QueryWriter", BindingFlags.NonPublic | BindingFlags.Instance)?
-                .GetValue(query) as QueryWriter;
+                    var serialized = _serializer.Serialize(obj);
+
+                    if (customJsonSerializer != null)
+                        customJsonSerializer.NullHandling = nullHandling.Value; //restore it.
+
+                    return serialized;
+                };
             }
-            catch
+            else
             {
-                queryWriter = null;
+                actualSerializer = null;
             }
+
+            var queryWriterInfo = query.GetType()
+                    .GetField("QueryWriter", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            queryWriter = (q) =>
+            {
+                QueryWriter qw = queryWriterInfo?.GetValue(query) as QueryWriter;
+                return qw;
+            };
         }
 
         internal static LambdaExpression GetConstraintsAsPropertiesLambda(LambdaExpression constraints, Type type)
         {
-            var setMethod = GetMethodInfo(() => Extensions.Set<object>(null, null, true), type);
+            var setMethod = GetMethodInfo(() => ObjectExtensions.Set<object>(null, null, true), type);
 
             return Expression.Lambda(Expression.Call(setMethod, Expression.Constant(type.GetDefaultValue(), type),
                 constraints, Expression.Constant(true) //i.e, usePredicateOnly: true
@@ -1560,6 +1599,124 @@ namespace Neo4jClient.DataAnnotations
             }
 
             return o;
+        }
+
+        public static string SerializeMetadata(Metadata metadata)
+        {
+            //only distinct values
+            metadata.NullProperties = metadata.NullProperties.Distinct().ToList();
+            return JsonConvert.SerializeObject(metadata);
+        }
+
+        public static Metadata DeserializeMetadata(string metadataJson)
+        {
+            return JsonConvert.DeserializeObject<Metadata>(metadataJson);
+        }
+
+        internal static void EnsureRightJObject(ref JObject valueJObject)
+        {
+            //the neo4jclient guys really messed things up here
+            //so use heuristics to determine if we are passing the right data or not, and then get the right data
+            //this is for deserialization only
+
+            //example json received
+            /*
+             {
+              "extensions": {},
+              "metadata": {
+                "id": 176,
+                "labels": [
+                  "IdentityUser"
+                ]
+              },
+              "paged_traverse": "http://localhost:7474/db/data/node/176/paged/traverse/{returnType}{?pageSize,leaseTime}",
+              "outgoing_relationships": "http://localhost:7474/db/data/node/176/relationships/out",
+              "outgoing_typed_relationships": "http://localhost:7474/db/data/node/176/relationships/out/{-list|&|types}",
+              "labels": "http://localhost:7474/db/data/node/176/labels",
+              "create_relationship": "http://localhost:7474/db/data/node/176/relationships",
+              "traverse": "http://localhost:7474/db/data/node/176/traverse/{returnType}",
+              "all_relationships": "http://localhost:7474/db/data/node/176/relationships/all",
+              "all_typed_relationships": "http://localhost:7474/db/data/node/176/relationships/all/{-list|&|types}",
+              "property": "http://localhost:7474/db/data/node/176/properties/{key}",
+              "self": "http://localhost:7474/db/data/node/176",
+              "incoming_relationships": "http://localhost:7474/db/data/node/176/relationships/in",
+              "properties": "http://localhost:7474/db/data/node/176/properties",
+              "incoming_typed_relationships": "http://localhost:7474/db/data/node/176/relationships/in/{-list|&|types}",
+              "data": {
+                actual data ...
+              }
+            } 
+             */
+
+            var expectedProps = new Dictionary<string, JTokenType>()
+            {
+                //{ "data", JTokenType.Object },
+                { "metadata", JTokenType.Object },
+                { "self", JTokenType.String },
+            };
+
+            var jObject = valueJObject;
+
+            if (expectedProps.All(prop => jObject[prop.Key]?.Type == prop.Value))
+            {
+                //hopefully we are right
+                //replace the jObject with "data"
+                valueJObject = jObject["data"] as JObject;
+            }
+        }
+
+        internal static void EnsureSerializerInstance(ref JsonSerializer serializer)
+        {
+            if (serializer == null)
+            {
+                //this is strange, but the Neo4jClient folks forgot to pass a serializer to this method
+                serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings()
+                {
+                    Converters = GraphClient.DefaultJsonConverters?.Reverse().ToList(),
+                    ContractResolver = GraphClient.DefaultJsonContractResolver,
+                    ObjectCreationHandling = ObjectCreationHandling.Auto,
+                    NullValueHandling = NullValueHandling.Include,
+                    DefaultValueHandling = DefaultValueHandling.Include
+                });
+            }
+        }
+
+        internal static void RemoveThisConverter(Type converterType, JsonSerializer serializer, out List<Tuple<JsonConverter, int>> convertersRemoved)
+        {
+            convertersRemoved = new List<Tuple<JsonConverter, int>>();
+
+            for (int i = 0, l = serializer.Converters.Count; i < l; i++)
+            {
+                var converter = serializer.Converters[i];
+                if (converterType.IsAssignableFrom(converter.GetType()))
+                {
+                    convertersRemoved.Add(new Tuple<JsonConverter, int>(converter, i));
+                }
+            }
+
+            foreach (var converter in convertersRemoved)
+            {
+                serializer.Converters.Remove(converter.Item1);
+            }
+        }
+
+        internal static void RestoreThisConverter(JsonSerializer serializer, List<Tuple<JsonConverter, int>> convertersRemoved,
+            bool clearConvertersRemovedList = true)
+        {
+            foreach (var converter in convertersRemoved)
+            {
+                try
+                {
+                    serializer.Converters.Insert(converter.Item2, converter.Item1);
+                }
+                catch
+                {
+                    serializer.Converters.Add(converter.Item1);
+                }
+            }
+
+            if (clearConvertersRemovedList)
+                convertersRemoved.Clear();
         }
     }
 }

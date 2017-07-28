@@ -4,6 +4,7 @@ using System.Text;
 using System.Collections;
 using System.Threading.Tasks;
 using System.Linq;
+using Neo4jClient.Cypher;
 
 namespace Neo4jClient.DataAnnotations.Cypher
 {
@@ -51,11 +52,11 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         public IPathExtent Current => this;
 
-        public override string Build()
+        protected override string InternalBuild()
         {
             var builder = new StringBuilder();
 
-            var patternText = Patterns.Select(p => p.Build()).Aggregate((pattern, extension) => pattern + extension);
+            var patternText = Patterns.Select(p => p.Build(ref CypherQuery)).Aggregate((pattern, extension) => pattern + extension);
 
             builder.Append(patternText);
 
@@ -83,7 +84,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         void Init()
         {
             //Add a new pattern
-            Patterns.Add(new Pattern(InternalCypherQuery, this));
+            Patterns.Add(new Pattern(CypherQuery, this));
         }
     }
 }

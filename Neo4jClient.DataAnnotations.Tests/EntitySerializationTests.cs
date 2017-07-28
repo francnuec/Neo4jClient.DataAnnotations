@@ -1,4 +1,5 @@
 ﻿using Neo4jClient.DataAnnotations.Cypher;
+using Neo4jClient.DataAnnotations.Serialization;
 using Neo4jClient.DataAnnotations.Tests.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -30,9 +31,12 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(EntitySerializationTests))]
-        public void NullComplexTypePropertyWrite_InvalidOperationException(string serializerName, Func < object, string> serializer)
+        public void NullComplexTypePropertyWrite_InvalidOperationException(string serializerName, Func<object, string> serializer)
         {
-            TestUtilities.AddEntityTypes();
+            if (serializerName.StartsWith("Resolver"))
+                TestUtilities.RegisterEntityTypes(TestUtilities.Resolver, null);
+            else
+                TestUtilities.RegisterEntityTypes(null, TestUtilities.Converter);
 
             var actor = new ActorNode();
 
@@ -45,7 +49,10 @@ namespace Neo4jClient.DataAnnotations.Tests
         [MemberData("SerializerData", MemberType = typeof(EntitySerializationTests))]
         public void EntityWrite(string serializerName, Func<object, string> serializer)
         {
-            TestUtilities.AddEntityTypes();
+            if (serializerName.StartsWith("Resolver"))
+                TestUtilities.RegisterEntityTypes(TestUtilities.Resolver, null);
+            else
+                TestUtilities.RegisterEntityTypes(null, TestUtilities.Converter);
 
             var actor = new ActorNode<int>()
             {
@@ -83,6 +90,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 { "TestForeignKeyId", new Tuple<JTokenType, dynamic>(JTokenType.Integer, 0) },
                 { "TestMarkedFK", new Tuple<JTokenType, dynamic>(JTokenType.Integer, 0) },
                 { "TestGenericForeignKeyId", new Tuple<JTokenType, dynamic>(JTokenType.Null, null) },
+                { "__ncdannotationsmeta__", new Tuple<JTokenType, dynamic>(JTokenType.String, "{\"null_props\":[\"NewAddressName_AddressLine\"]}") }
             };
 
             var jToken = JToken.Parse(serialized) as JObject;
@@ -124,7 +132,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 { "Name", "Ellen Pompeo" },
                 { "Born", 1969 },
                 { "Roles", new string[] { "Meredith Grey" }},
-                { "NewAddressName_AddressLine", null },
+                //{ "NewAddressName_AddressLine", null },
                 { "NewAddressName_City", "Los Angeles" },
                 { "NewAddressName_State", "California" },
                 { "NewAddressName_Country", "US" },
@@ -135,13 +143,19 @@ namespace Neo4jClient.DataAnnotations.Tests
                 { "TestForeignKeyId", 0 },
                 { "TestMarkedFK", 0 },
                 { "TestGenericForeignKeyId", null },
+                { "__ncdannotationsmeta__", "{\"null_props\":[\"NewAddressName_AddressLine\",\"NewAddressName_City\",\"NewAddressName_State\",\"NewAddressName_Country\"]}" }
             };
 
-            TestUtilities.AddEntityTypes();
+            if (settingsName.StartsWith("Resolver"))
+                TestUtilities.RegisterEntityTypes(TestUtilities.Resolver, null);
+            else
+                TestUtilities.RegisterEntityTypes(null, TestUtilities.Converter);
 
             var actorJObject = JObject.FromObject(actorTokens);
 
-            var actor = actorJObject.ToObject<ActorNode<int>>(JsonSerializer.CreateDefault(deserializerSettings));
+            var serializer = JsonSerializer.CreateDefault(deserializerSettings);
+
+            var actor = actorJObject.ToObject<ActorNode<int>>(serializer);
 
             Assert.NotNull(actor);
 
@@ -156,6 +170,9 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             foreach (var token in actorTokens)
             {
+                if (token.Key == Defaults.MetadataPropertyName)
+                    continue;
+
                 var jsonProp = jsonProperties.Where(jp => jp.PropertyName == token.Key).SingleOrDefault(); //has to be just one
 
                 Assert.NotNull(jsonProp);

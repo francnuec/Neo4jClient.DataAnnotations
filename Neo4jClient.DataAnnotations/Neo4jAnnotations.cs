@@ -65,11 +65,30 @@ namespace Neo4jClient.DataAnnotations
             InternalRegister(entityTypes, null, converter);
         }
 
+        /// <summary>
+        /// Registers a <see cref="System.Type"/> with Neo4jClient.DataAnnotations.
+        /// This method also autmatically adds contained complex types. However, derived and/or base types must be added independently.
+        /// </summary>
+        /// <param name="entityType"></param>
         public static void AddEntityType(Type entityType)
         {
             if (!EntityTypes.Contains(entityType))
             {
                 entityTypes[entityType] = null;
+
+                //check if they have complex properties and add automatically
+                var complexTypes = entityType.GetProperties()?
+                    .Select(p => p.PropertyType)
+                    .Distinct()
+                    .Where(t => t.IsComplex());
+
+                if (complexTypes != null)
+                {
+                    foreach (var complexType in complexTypes)
+                    {
+                        AddEntityType(complexType);
+                    }
+                }
             }
         }
 
@@ -98,6 +117,12 @@ namespace Neo4jClient.DataAnnotations
             //    throw new ArgumentNullException(nameof(entityTypes), "Neo4jClient.DataAnnotations needs to know all your entity types (including complex types) and their derived types aforehand in order to do efficient work.");
             //}
 
+            var _converters = new List<JsonConverter>();
+            var defaultConverters = GraphClient.DefaultJsonConverters;
+
+            if (defaultConverters != null)
+                _converters.AddRange(defaultConverters);
+
             if (entityResolver != null)
             {
                 var defaultResolver = GraphClient.DefaultJsonContractResolver;
@@ -105,6 +130,15 @@ namespace Neo4jClient.DataAnnotations
                 if (defaultResolver == null || !typeof(EntityResolver).IsAssignableFrom(defaultResolver.GetType()))
                 {
                     Defaults.EntityResolver = entityResolver;
+
+                    var dummyConverterType = typeof(ResolverDummyConverter);
+                    if (defaultConverters == null || !defaultConverters.Any(c => dummyConverterType.IsAssignableFrom(c.GetType())))
+                    {
+                        //add a dummy converter that just proxies entityresolver deserialization
+                        //we do this because neo4jclient currently doesn't use ContractResolvers at deserialization, but they use converters.
+                        Defaults.ResolverDummyConverter = new ResolverDummyConverter();
+                        _converters.Add(Defaults.ResolverDummyConverter);
+                    }
 
                     try
                     {
@@ -124,30 +158,31 @@ namespace Neo4jClient.DataAnnotations
             {
                 var entityConverterType = typeof(EntityConverter);
 
-                var defaultConverters = GraphClient.DefaultJsonConverters;
-
                 if (defaultConverters == null || !defaultConverters.Any(c => entityConverterType.IsAssignableFrom(c.GetType())))
                 {
+                    //we may have to mix this two (resolver and conveter) eventually because of some choices of the neo4jclient team.
+                    //entityConverter._canRead = true;
                     Defaults.EntityConverter = entityConverter;
 
-                    var _converters = new List<JsonConverter>();
                     _converters.Add(entityConverter);
-                    _converters.AddRange(defaultConverters ?? new JsonConverter[0]);
-
-                    try
-                    {
-                        //try reflection to insert this converter in the original array
-                        typeof(GraphClient)
-                            .GetField("DefaultJsonConverters", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)
-                            .SetValue(null, _converters.ToArray());
-                    }
-                    catch
-                    {
-
-                    }
                 }
             }
 
+            if (_converters.Count != defaultConverters?.Length)
+            {
+                try
+                {
+                    //try reflection to set the converters in the original array
+                    typeof(GraphClient)
+                        .GetField("DefaultJsonConverters", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)
+                        .SetValue(null, _converters.ToArray());
+                }
+                catch
+                {
+
+                }
+            }
+            
             if (entityTypes != null)
             {
                 foreach (var entityType in entityTypes)

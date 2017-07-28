@@ -1,4 +1,5 @@
-﻿using Neo4jClient.DataAnnotations.Cypher;
+﻿using Neo4jClient.Cypher;
+using Neo4jClient.DataAnnotations.Cypher;
 using Neo4jClient.DataAnnotations.Serialization;
 using Neo4jClient.DataAnnotations.Tests.Models;
 using Neo4jClient.Serialization;
@@ -44,7 +45,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
 
-            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPathMixed(P)
                 .Extend(RelationshipDirection.Outgoing);
 
             var actual = query.GetPattern(PropertiesBuildStrategy.WithParams, pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic));
@@ -149,7 +150,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
 
-            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPathMixed(P)
                 .Extend(RelationshipDirection.Outgoing);
 
             var actual = query.Create(pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic)).Query.QueryText;
@@ -171,7 +172,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
 
-            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPathMixed(P)
                 .Extend(RelationshipDirection.Outgoing);
 
             var actual = query.CreateUnique(pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic)).Query.QueryText;
@@ -244,25 +245,6 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
-        public void SetPropertiesAdd(string serializerName, EntityResolver resolver, EntityConverter converter)
-        {
-            TestUtilities.RegisterEntityTypes(resolver, converter);
-
-            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
-
-            var actual = query.Set("movie", () => new MovieNode()
-            {
-                Title = "Grey's Anatomy",
-                Year = 2017
-            }, add: true, setParameter: out var setParam).Query.QueryText;
-
-            var expected = $"SET movie += ${setParam}";
-
-            Assert.Equal(expected, actual);
-        }
-
-        [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
         public void SetPropertiesWithParamsForValues(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -282,17 +264,30 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
-        public void SetPropertiesAddNoParams(string serializerName, EntityResolver resolver, EntityConverter converter)
+        public void SetAdd(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
 
             var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
 
-            var actual = query.Set("movie", () => new MovieNode()
-            {
-                Title = "Grey's Anatomy",
-                Year = 2017
-            }, true, PropertiesBuildStrategy.NoParams).Query.QueryText;
+            var actual = query.SetAdd((MovieNode movie) => movie.Title == "Grey's Anatomy" 
+            && movie.Year == 2017, setParameter: out var setParam).Query.QueryText;
+
+            var expected = $"SET movie += ${setParam}";
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        public void SetAddNoParams(string serializerName, EntityResolver resolver, EntityConverter converter)
+        {
+            TestUtilities.RegisterEntityTypes(resolver, converter);
+
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+
+            var actual = query.SetAdd((MovieNode m) => m.Title == "Grey's Anatomy"
+            && m.Year == 2017, PropertiesBuildStrategy.NoParams, "movie").Query.QueryText;
 
             var expected = $"SET movie += {{ Title: \"Grey's Anatomy\", Year: 2017 }}";
 

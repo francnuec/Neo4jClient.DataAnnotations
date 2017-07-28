@@ -14,6 +14,8 @@ using NSubstitute;
 using Newtonsoft.Json.Serialization;
 using Neo4jClient.DataAnnotations.Cypher;
 
+[assembly: CollectionBehavior(CollectionBehavior.CollectionPerClass)]
+
 namespace Neo4jClient.DataAnnotations.Tests
 {
     public class TestUtilities
@@ -21,6 +23,8 @@ namespace Neo4jClient.DataAnnotations.Tests
         public static EntityResolver Resolver { get; } = new EntityResolver();
 
         public static EntityConverter Converter { get; } = new EntityConverter();
+
+        public static ResolverDummyConverter DummyConverter { get; } = new ResolverDummyConverter();
 
         public static JsonSerializerSettings SerializerSettingsWithConverter = new JsonSerializerSettings()
         {
@@ -30,7 +34,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         public static JsonSerializerSettings SerializerSettingsWithResolver = new JsonSerializerSettings()
         {
-            //Converters = new List<JsonConverter>() { new EntityConverter() },
+            Converters = new List<JsonConverter>() { DummyConverter },
             ContractResolver = Resolver,
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
         };
@@ -79,13 +83,13 @@ namespace Neo4jClient.DataAnnotations.Tests
             typeof(AddressThirdLevel), typeof(SomeComplexType)
         };
 
-        public static void AddEntityTypes()
-        {
-            foreach (var entityType in EntityTypes)
-            {
-                Neo4jAnnotations.AddEntityType(entityType);
-            }
-        }
+        //public static void AddEntityTypes()
+        //{
+        //    foreach (var entityType in EntityTypes)
+        //    {
+        //        Neo4jAnnotations.AddEntityType(entityType);
+        //    }
+        //}
 
         public static void RegisterEntityTypes(EntityResolver resolver, EntityConverter converter)
         {
@@ -112,6 +116,9 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             foreach (var prop in finalProperties.Properties())
             {
+                if (prop.Name == Defaults.MetadataPropertyName)
+                    continue; //accept this one.
+
                 Assert.Contains(prop.Name, expected.Keys);
 
                 var expectedValue = expected[prop.Name];
@@ -139,7 +146,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             return new CypherFluentQuery(clientSubstitute);
         }
 
-        public static IPath BuildTestPath(IPathBuilder P)
+        public static IPath BuildTestPathMixed(IPathBuilder P)
         {
             return P
             .Pattern<MovieNode, MovieActorRelationship, ActorNode>("greysAnatomy", "acted_in", "ellenPompeo")
@@ -154,6 +161,19 @@ namespace Neo4jClient.DataAnnotations.Tests
                 actor.Name == "Ellen Pompeo"
                 && actor.Born == Vars.Get<ActorNode>("shondaRhimes").Born
                 && actor.Roles == new string[] { "Meredith Grey" });
+        }
+
+        public static IPath BuildTestPath(IPathBuilder P)
+        {
+            return P
+            .Pattern<MovieNode, MovieActorRelationship, ActorNode>("greysAnatomy", "acted_in", "ellenPompeo")
+            .Label(new[] { "Series" }, new[] { "STARRED_IN" }, new[] { "Female" }, true, false, false)
+            .Constrain((movie) => movie.Title == "Grey's Anatomy" && movie.Year == 2017, null, (actor) =>
+                actor.Name == "Ellen Pompeo"
+                && actor.Born == Vars.Get<ActorNode>("shondaRhimes").Born
+                && actor.Roles == new string[] { "Meredith Grey" })
+            .Hop(1) //not necessary, but for tests
+            ;
         }
     }
 }

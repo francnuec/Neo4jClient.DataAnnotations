@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using System.Reflection;
+using System.IO;
 
 namespace Neo4jClient.DataAnnotations.Serialization
 {
@@ -12,15 +13,18 @@ namespace Neo4jClient.DataAnnotations.Serialization
     {
         public override bool CanConvert(Type objectType)
         {
-            return Neo4jAnnotations.ContainsEntityType(objectType);
+            return Defaults.EntityResolver == null &&
+                Neo4jAnnotations.ContainsEntityType(objectType);
         }
 
-        public override bool CanRead => true;
+        public override bool CanRead => Defaults.EntityResolver == null;
 
-        public override bool CanWrite => true;
+        public override bool CanWrite => Defaults.EntityResolver == null;
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
+            Utilities.EnsureSerializerInstance(ref serializer);
+
             var value = existingValue ?? Utilities.CreateInstance(objectType);
 
             if (value != null)
@@ -32,27 +36,59 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 //set necessarily things
                 InitializeEntityInfo(entityInfo, serializer);
 
+                var thisConverterType = typeof(EntityConverter);
+
                 //temporarily remove this converter from the main serializer to avoid an unending loop
                 List<Tuple<JsonConverter, int>> entityConverters;
-                RemoveThisConverter(serializer, out entityConverters);
+                Utilities.RemoveThisConverter(thisConverterType, serializer, out entityConverters);
 
                 //now convert to JObject
                 var valueJObject = serializer.Deserialize<JObject>(reader);
 
+                Utilities.EnsureRightJObject(ref valueJObject);
+
+                if (valueJObject == null || valueJObject.Type == JTokenType.Null)
+                    return null;
+
+                //get the metadata
+                var metadataPropValue = valueJObject[Defaults.MetadataPropertyName];
+                Metadata metadata = null;
+
+                if (metadataPropValue != null && metadataPropValue.Type != JTokenType.Null)
+                {
+                    valueJObject.Remove(Defaults.MetadataPropertyName);
+
+                    metadata = Utilities.DeserializeMetadata(metadataPropValue.ToObject<string>());
+
+                    if (metadata?.NullProperties?.Count > 0)
+                    {
+                        //add all the null properties to the object so it can deserialize them too
+                        foreach (var nullProp in metadata.NullProperties)
+                        {
+                            var existingProp = valueJObject.Property(nullProp);
+                            //should be null, but in any case, be careful not to replace any existing values
+                            if (existingProp == null)
+                            {
+                                valueJObject.Add(nullProp, null);
+                            }
+                        }
+                    }
+                }
+
                 //restore the removed converters
-                RestoreThisConverter(serializer, entityConverters);
+                Utilities.RestoreThisConverter(serializer, entityConverters);
 
                 HandleComplexTypedPropsRead(serializer, value, valueJObject, entityInfo);
 
-                //remove all object tokens that may still remain
-                RemoveJsonObjectProperties(valueJObject, entityInfo);
+                ////remove all object tokens that may still remain
+                //RemoveJsonObjectProperties(valueJObject, entityInfo);
 
-                RemoveThisConverter(serializer, out entityConverters);
+                Utilities.RemoveThisConverter(thisConverterType, serializer, out entityConverters);
 
                 //finally deserialize
                 serializer.Populate(new JTokenReader(valueJObject), value);
 
-                RestoreThisConverter(serializer, entityConverters);
+                Utilities.RestoreThisConverter(serializer, entityConverters);
             }
             else
             {
@@ -64,6 +100,8 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
+            Utilities.EnsureSerializerInstance(ref serializer);
+
             if (value != null)
             {
                 var valueType = value.GetType();
@@ -73,27 +111,46 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 //set necessarily things
                 InitializeEntityInfo(entityInfo, serializer);
 
+                var thisConverterType = typeof(EntityConverter);
+
                 //temporarily remove this converter from the main serializer to avoid an unending loop
                 List<Tuple<JsonConverter, int>> entityConverters;
-                RemoveThisConverter(serializer, out entityConverters);
+                Utilities.RemoveThisConverter(thisConverterType, serializer, out entityConverters);
 
                 //now convert to JObject
                 var valueJObject = JObject.FromObject(value, serializer);
 
                 //restore the removed converters
-                RestoreThisConverter(serializer, entityConverters);
+                Utilities.RestoreThisConverter(serializer, entityConverters);
 
-                HandleComplexTypedPropsWrite(serializer, value, valueJObject, entityInfo);
+                var nullValueHandling = serializer.NullValueHandling;
+                var defaultValueHandling = serializer.DefaultValueHandling;
+                serializer.NullValueHandling = NullValueHandling.Include; //we need null values for complex types
+                serializer.DefaultValueHandling = DefaultValueHandling.Include; //we need all properties for complex types
+
+                var metadata = new Metadata();
+
+                HandleComplexTypedPropsWrite(serializer, value, valueJObject, entityInfo, metadata);
 
                 //remove all object tokens that may still remain
                 RemoveJsonObjectProperties(valueJObject, entityInfo);
 
-                RemoveThisConverter(serializer, out entityConverters);
+                Utilities.RemoveThisConverter(thisConverterType, serializer, out entityConverters);
 
-                //finally serialize
+                if (!metadata.IsEmpty())
+                {
+                    //serialize the metadata to the object
+                    valueJObject.Add(Defaults.MetadataPropertyName, Utilities.SerializeMetadata(metadata));
+                }
+
+                //finally serialize object
                 serializer.Serialize(writer, valueJObject);
 
-                RestoreThisConverter(serializer, entityConverters);
+                //restore the handlings
+                serializer.NullValueHandling = nullValueHandling;
+                serializer.DefaultValueHandling = defaultValueHandling;
+
+                Utilities.RestoreThisConverter(serializer, entityConverters);
             }
             else
             {
@@ -146,46 +203,6 @@ namespace Neo4jClient.DataAnnotations.Serialization
             }
         }
 
-        private static void RemoveThisConverter(JsonSerializer serializer, out List<Tuple<JsonConverter, int>> entityConverters)
-        {
-            entityConverters = new List<Tuple<JsonConverter, int>>();
-
-            var thisConverterType = typeof(EntityConverter);
-
-            for (int i = 0, l = serializer.Converters.Count; i < l; i++)
-            {
-                var converter = serializer.Converters[i];
-                if (converter.GetType() == thisConverterType)
-                {
-                    entityConverters.Add(new Tuple<JsonConverter, int>(converter, i));
-                }
-            }
-
-            foreach (var converter in entityConverters)
-            {
-                serializer.Converters.Remove(converter.Item1);
-            }
-        }
-
-        private static void RestoreThisConverter(JsonSerializer serializer, List<Tuple<JsonConverter, int>> entityConverters,
-            bool clearList = true)
-        {
-            foreach (var converter in entityConverters)
-            {
-                try
-                {
-                    serializer.Converters.Insert(converter.Item2, converter.Item1);
-                }
-                catch
-                {
-                    serializer.Converters.Add(converter.Item1);
-                }
-            }
-
-            if (clearList)
-                entityConverters.Clear();
-        }
-
         private static void HandleComplexTypedPropsRead(JsonSerializer serializer,
             object value, JObject valueJObject, EntityTypeInfo entityInfo)
         {
@@ -208,7 +225,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
                 var childProps = valueJObject.Properties().Where(jp => jp.Name.StartsWith(propJsonName)
                 //an actual complex type property should not be found on the entity
-                && !entityInfo.JsonNamePropertyMap.Any(map => map.Key == jp.Name 
+                && !entityInfo.JsonNamePropertyMap.Any(map => map.Key == jp.Name
                 && entityInfo.AllProperties.Contains(map.Value))
                 ).ToArray();
 
@@ -264,7 +281,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 prop.SetValue(value, propValue);
 
                 //remove the childprops from entity
-                foreach(var childProp in childProps)
+                foreach (var childProp in childProps)
                 {
                     //this check was defered till now because we needed the right property type
                     if (childProp.Value.Type == JTokenType.Object)
@@ -282,7 +299,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
         }
 
         private static void HandleComplexTypedPropsWrite(JsonSerializer serializer,
-            object value, JObject valueJObject, EntityTypeInfo entityInfo)
+            object value, JObject valueJObject, EntityTypeInfo entityInfo, Metadata metadata)
         {
             var complexTypedProps = entityInfo.ComplexTypedProperties;
 
@@ -337,12 +354,25 @@ namespace Neo4jClient.DataAnnotations.Serialization
                         throw new InvalidOperationException(string.Format(Messages.NestedComplexTypesError, propValueType.Name));
                     }
 
+                    if (propChild.Name == Defaults.MetadataPropertyName)
+                    {
+                        //skip the metadata property
+                        //test the properties direct
+                        continue;
+                    }
+
                     //add to the parent object itself.
                     var newProp = new JProperty(propJsonName + Defaults.ComplexTypeNameSeparator + propChild.Name, propChild.Value);
                     currentProp.AddAfterSelf(newProp);
                     currentProp = newProp;
 
                     entityInfo.JsonNamePropertyMap[newProp.Name] = propValueInfo.JsonNamePropertyMap[propChild.Name];
+
+                    if (newProp.Value == null || newProp.Value.Type == JTokenType.Null)
+                    {
+                        //we need to store this in metadata because neo4j does not store null properties.
+                        metadata.NullProperties.Add(newProp.Name);
+                    }
                 }
 
                 if (temp != null)

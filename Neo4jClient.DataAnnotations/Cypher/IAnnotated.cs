@@ -9,9 +9,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
     public interface IAnnotated
     {
         [EditorBrowsable(EditorBrowsableState.Never)]
-        ICypherFluentQuery CypherQuery { get; }
+        ref ICypherFluentQuery CypherQuery { get; }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        string Build();
+        string Build(ref ICypherFluentQuery currentQuery);
     }
 }
