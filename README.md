@@ -12,14 +12,14 @@ I use [Entity Framework](https://github.com/aspnet/EntityFramework) with SQL dat
 For our quick introduction into this library, let's try to model the popular Neo4j actors-movies example with annotations. Here's our `ActorNode` model:
 
     [Table("Actor")]
-    public class ActorNode : PersonNode
+    public class ActorNode
     { 
-	public ActorNode()
-	{
-	    Address = new Address();
-	}
+	    public ActorNode()
+	    {
+	    	Address = new Address();
+	    }
 	    
-    	public string Name { get; set; }
+	    public string Name { get; set; }
         public int Born { get; set; }
         public Address Address { get; set; }
         public string[] Roles { get; set; }
@@ -37,7 +37,7 @@ Here are a few things to note from this `ActorNode` model class:
  
  - The `InversePropertyAttribute` annotation points to an `Actors` property on the other end of the relationship (that is, in the `MovieNode` class), describing the many-to-many relationship that exists between actors and movies. That is, an actor acts in many movies, while each movie also has many actors.
 
- - The `ColumnAttribute` annotation indicates that an outgoing relationship named "ACTED_IN" exists between actors and movies. That is, we just described the Neo4j pattern: `(actor:Actor)-[acted_in:ACTED_IN]->(movie:Movie)`. Only one `ColumnAttribute` is needed between the two models, and the model that hosts this `ColumnAttribute` is the start of the outgoing direction of the relationship that ends in the other model.
+ - The `ColumnAttribute` annotation indicates that an outgoing relationship named `ACTED_IN` exists between actors and movies. That is, we just described the Neo4j pattern: `(actor:Actor)-[acted_in:ACTED_IN]->(movie:Movie)`. Only one `ColumnAttribute` is needed between the two models, and the model that hosts this `ColumnAttribute` is the start of the outgoing direction of the relationship that ends in the other model.
 
  - The `Address` property is a complex property. That is, it's return type (`Address` class) is annotated with the `ComplexTypeAttribute`. By default, all properties with non-primitive or array return types are taken as navigational properties (that is, they help describe relationships between models), and hence automatically removed from the final json output as Neo4j cannot store complex object graphs. However, we often need these complex graphs in our models, so to make this possible, you can annotate any class that would serve as a complex object with the `ComplexTypeAttribute`. `Neo4jClient.DataAnnotations` takes care of serializing this object for you by exploding its properties, and including them as scalars of the main json output, just like Entity Framework would. 
 
@@ -57,11 +57,11 @@ Here are our `Address` and `MovieNode` models. Same observations apply as in the
     [Table("Movie")]
     public class MovieNode
     {
-	public int Year { get; set; }
-	public string Title { get; set; }
-
-	[InverseProperty("Movies")]
-	public ICollection<ActorNode> Actors { get; set; }
+	    public int Year { get; set; }
+	    public string Title { get; set; }
+	    
+	    [InverseProperty("Movies")]
+	    public ICollection<ActorNode> Actors { get; set; }
     }
 
 Now that we have described our models, we need to use them in our Cypher queries. To do this, we'd use the fluent interface this library exposes on the Neo4jClient methods. This interface also allows you to modify your patterns on demand, overriding select existing data attributes. Remember to add:
@@ -126,7 +126,6 @@ For ASP.NET core projects, the best place to register is within the `ConfigureSe
         var entityTypes = new Type[] { typeof(ActorNode), typeof(Address), typeof(MovieNode) };
         Neo4jAnnotations.RegisterWithResolver(entityTypes);
     }
-    
 Ideally, this library needs to know all your entity types (i.e., model classes) early on, so as to best determine how to construct the class hierarchies. For simple classes with no inheritances, you may probably skip adding any entity types. But if your models have derived types, especially for complex type models, it's best to input all entity types at the point of registration.
 
 ----------
