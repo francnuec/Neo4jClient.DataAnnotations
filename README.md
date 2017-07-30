@@ -1,11 +1,12 @@
-## Neo4jClient.DataAnnotations ##
-Use POCO classes in the Neo4jClient library ORM style. Annotate with `System.ComponentModel.DataAnnotations.Schema` attributes. Supports Complex Types too. 
+# Neo4jClient.DataAnnotations #
+Use POCO classes in the [Neo4jClient](https://github.com/Readify/Neo4jClient) library ORM style. Annotate with [`System.ComponentModel.DataAnnotations.Schema`](https://msdn.microsoft.com/en-us/library/system.componentmodel.dataannotations.schema) attributes. Supports Complex Types too.
 
-Get it on [Nuget](https://www.nuget.org/packages/Neo4jClient.DataAnnotations/1.0.1-beta)
+Get it on [Nuget](https://www.nuget.org/packages/Neo4jClient.DataAnnotations/1.0.1-beta):
 
 > **PM> Install-Package Neo4jClient.DataAnnotations -Pre**
 
 ### Quick Intro ###
+----------
 I use [Entity Framework](https://github.com/aspnet/EntityFramework) with SQL databases. So when I needed a no-sql databse like Neo4j, I always wanted something similar to and with the ease of Entity Framework, especially so I could reuse my existing models to make my Neo4j queries. Hence, this library follows the same annotations pattern as Entity Framework, and allows POCO models in Neo4j pattern descriptions. If you've ever used Entity Framework, understanding and integrating this library is a piece of cake.
 
 For our quick introduction into this library, let's try to model the popular Neo4j actors-movies example with annotations. Here's our `ActorNode` model:
@@ -13,12 +14,12 @@ For our quick introduction into this library, let's try to model the popular Neo
     [Table("Actor")]
     public class ActorNode : PersonNode
     { 
-	    public ActorNode()
-	    {
-		    Address = new Address();
-	    }
+	public ActorNode()
+	{
+	    Address = new Address();
+	}
 	    
-	    public string Name { get; set; }
+    	public string Name { get; set; }
         public int Born { get; set; }
         public Address Address { get; set; }
         public string[] Roles { get; set; }
@@ -56,11 +57,11 @@ Here are our `Address` and `MovieNode` models. Same observations apply as in the
     [Table("Movie")]
     public class MovieNode
     {
-	    public int Year { get; set; }
-	    public string Title { get; set; }
-	    
-	    [InverseProperty("Movies")]
-	    public ICollection<ActorNode> Actors { get; set; }
+	public int Year { get; set; }
+	public string Title { get; set; }
+
+	[InverseProperty("Movies")]
+	public ICollection<ActorNode> Actors { get; set; }
     }
 
 Now that we have described our models, we need to use them in our Cypher queries. To do this, we'd use the fluent interface this library exposes on the Neo4jClient methods. This interface also allows you to modify your patterns on demand, overriding select existing data attributes. Remember to add:
@@ -125,6 +126,7 @@ For ASP.NET core projects, the best place to register is within the `ConfigureSe
         var entityTypes = new Type[] { typeof(ActorNode), typeof(Address), typeof(MovieNode) };
         Neo4jAnnotations.RegisterWithResolver(entityTypes);
     }
+    
 Ideally, this library needs to know all your entity types (i.e., model classes) early on, so as to best determine how to construct the class hierarchies. For simple classes with no inheritances, you may probably skip adding any entity types. But if your models have derived types, especially for complex type models, it's best to input all entity types at the point of registration.
 
 ----------
@@ -134,4 +136,6 @@ If you encounter an exception anywhere, kindly raise an issue, so we can deal wi
 
 Cheers.
 
+>  
+>  
 > Written with [StackEdit](https://stackedit.io/).
