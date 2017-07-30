@@ -131,7 +131,7 @@ Ideally, this library needs to know all your entity types (i.e., model classes) 
 ----------
 ... and we're done.
 
-If you encounter an exception anywhere, kindly raise an issue, so we can deal with it. If you're are trying to figure out how to describe a pattern or your models, ask your question in an issue too, and we'd hopefully use your scenario as an example for others.
+If you encounter an exception anywhere, kindly raise an issue, so we can deal with it. If you're are trying to figure out how to describe your models, or a Neo4j pattern, ask your question in an issue too, and we'd hopefully use your scenario as an example for everyone else.
 
 Cheers.
 
