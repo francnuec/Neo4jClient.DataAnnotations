@@ -1497,7 +1497,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         #region Hop
         /// <summary>
-        /// (A)-[:*1..6]-(B)
+        /// (A)-[*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
         /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
         /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
@@ -1514,7 +1514,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
         /// <summary>
-        /// (A)-[:*1..6]-(B)
+        /// (A)-[*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
         /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
         /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
@@ -1531,7 +1531,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
         /// <summary>
-        /// (A)-[:*1..6]-(B)
+        /// (A)-[*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
         /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
         /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
@@ -1549,7 +1549,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
 
         /// <summary>
-        /// (A)-[:*1..6]-(B)
+        /// (A)-[*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
         /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
         /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
@@ -1566,7 +1566,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
         /// <summary>
-        /// (A)-[:*1..6]-(B)
+        /// (A)-[*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
         /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
         /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
@@ -1583,7 +1583,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
         /// <summary>
-        /// (A)-[:*1..6]-(B)
+        /// (A)-[*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
         /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
         /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
@@ -1602,7 +1602,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
 
         /// <summary>
-        /// (A)-[:*1..6]-(B)
+        /// (A)-[*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
         /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
         /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
@@ -1619,7 +1619,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
         /// <summary>
-        /// (A)-[:*1..6]-(B)
+        /// (A)-[*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
         /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
         /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
@@ -1636,7 +1636,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
         /// <summary>
-        /// (A)-[:*1..6]-(B)
+        /// (A)-[*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
         /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
         /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
@@ -1655,7 +1655,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
 
         /// <summary>
-        /// (A)-[:*1..6]-(B)
+        /// (A)-[*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
         /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
         /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
@@ -1672,7 +1672,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
         /// <summary>
-        /// (A)-[:*1..6]-(B)
+        /// (A)-[*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
         /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
         /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]
@@ -1689,7 +1689,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
         /// <summary>
-        /// (A)-[:*1..6]-(B)
+        /// (A)-[*1..6]-(B)
         /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
         /// To remove either hop variable, pass <c>null</c> to the variable. E.g. Omitting 1 means [*..6] which also means no lower bound.
         /// For fixed number of hops, pass the same value to the <paramref name="from"/> and <paramref name="to"/> variables, or use method provided. E.g. passing 6 and 6 means [*6]

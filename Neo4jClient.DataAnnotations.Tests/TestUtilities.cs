@@ -149,7 +149,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         public static IPath BuildTestPathMixed(IPathBuilder P)
         {
             return P
-            .Pattern<MovieNode, MovieActorRelationship, ActorNode>("greysAnatomy", "acted_in", "ellenPompeo")
+            .Pattern<MovieNode, MovieActorRelationship, ActorNode>("greysAnatomy", "ellenPompeo")
             .Label(new[] { "Series" }, new[] { "STARRED_IN" }, new[] { "Female" }, true, false, false)
             .Prop(() => new MovieNode() //could have used constrain, but would be good to test both methods
             {
@@ -166,7 +166,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         public static IPath BuildTestPath(IPathBuilder P)
         {
             return P
-            .Pattern<MovieNode, MovieActorRelationship, ActorNode>("greysAnatomy", "acted_in", "ellenPompeo")
+            .Pattern<MovieNode, MovieActorRelationship, ActorNode>("greysAnatomy", "ellenPompeo")
             .Label(new[] { "Series" }, new[] { "STARRED_IN" }, new[] { "Female" }, true, false, false)
             .Constrain((movie) => movie.Title == "Grey's Anatomy" && movie.Year == 2017, null, (actor) =>
                 actor.Name == "Ellen Pompeo"

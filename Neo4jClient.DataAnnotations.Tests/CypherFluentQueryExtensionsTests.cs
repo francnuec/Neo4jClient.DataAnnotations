@@ -30,7 +30,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var actual = query.GetPattern(pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic));
 
             var expected = "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
-                "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
+                "<-[:STARRED_IN|ACTED_IN*1]-" +
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->(), (a)--(b)";
 
@@ -51,7 +51,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var actual = query.GetPattern(PropertiesBuildStrategy.WithParams, pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic));
 
             var expected = "(greysAnatomy:Series $greysAnatomy)" +
-                "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
+                "<-[:STARRED_IN|ACTED_IN*1]-" +
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->(), (a)--(b)";
 
@@ -72,7 +72,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var actual = query.GetPattern(PropertiesBuildStrategy.WithParamsForValues, pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic));
 
             var expected = "(greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
-                "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
+                "<-[:STARRED_IN|ACTED_IN*1]-" +
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->(), (a)--(b)";
 
@@ -93,7 +93,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var actual = query.Match(pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic)).Query.QueryText;
 
             var expected = "MATCH (greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
-                "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
+                "<-[:STARRED_IN|ACTED_IN*1]-" +
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->(), (a)--(b)";
 
@@ -114,7 +114,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var actual = query.OptionalMatch(pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic)).Query.QueryText;
 
             var expected = "OPTIONAL MATCH (greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
-                "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
+                "<-[:STARRED_IN|ACTED_IN*1]-" +
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->(), (a)--(b)";
 
@@ -135,7 +135,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var actual = query.Merge(pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic)).Query.QueryText;
 
             var expected = "MERGE (greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
-                "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
+                "<-[:STARRED_IN|ACTED_IN*1]-" +
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->(), (a)--(b)";
 
@@ -157,7 +157,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             //This scenario is probably unlikely in a real neo4j situation, but for tests sakes.
             var expected = "CREATE (greysAnatomy:Series $greysAnatomy)" +
-                "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
+                "<-[:STARRED_IN|ACTED_IN*1]-" +
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->(), (a)--(b)";
 
@@ -179,7 +179,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             //This scenario is probably unlikely in a real neo4j situation, but for tests sakes.
             var expected = "CREATE UNIQUE (greysAnatomy:Series $greysAnatomy)" +
-                "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
+                "<-[:STARRED_IN|ACTED_IN*1]-" +
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->(), (a)--(b)";
 

@@ -32,7 +32,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var path = pathBuilder.Path as Path;
 
             var expected = "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
-                "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
+                "<-[:STARRED_IN|ACTED_IN*1]-" +
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->()";
 
@@ -58,7 +58,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var path = pathBuilder.Path as Path;
 
             var expected = "(greysAnatomy:Series $greysAnatomy)" +
-                "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
+                "<-[:STARRED_IN|ACTED_IN*1]-" +
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->()";
 
@@ -84,7 +84,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var path = pathBuilder.Path as Path;
 
             var expected = "(greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
-                "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
+                "<-[:STARRED_IN|ACTED_IN*1]-" +
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->()";
 
@@ -109,7 +109,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var expected = "P=" + 
                 "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
-                "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
+                "<-[:STARRED_IN|ACTED_IN*1]-" +
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->()";
 
@@ -133,7 +133,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var expected = "P=shortestPath(" + 
                 "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
-                "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
+                "<-[:STARRED_IN|ACTED_IN*1]-" +
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 ")";
 

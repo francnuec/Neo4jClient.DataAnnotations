@@ -363,7 +363,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 as Path;
 
             var expectedMain = "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
-                "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
+                "<-[:STARRED_IN|ACTED_IN*1]-" +
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })";
             var expectedExt = "-->()";
 
@@ -392,7 +392,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             path.Patterns.ForEach(p => p.BuildStrategy = PropertiesBuildStrategy.WithParams);
 
             var expectedMain = "(greysAnatomy:Series $greysAnatomy)" +
-                "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
+                "<-[:STARRED_IN|ACTED_IN*1]-" +
                 //becase of the inner shondaRhimes variable, it would use the NoParams strategy instead for the ellenPompeo props.
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })";
             var expectedExt = "-->()";
@@ -422,7 +422,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             path.Patterns.ForEach(p => p.BuildStrategy = PropertiesBuildStrategy.WithParamsForValues);
 
             var expectedMain = "(greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
-                "<-[acted_in:STARRED_IN|ACTED_IN*1]-" +
+                "<-[:STARRED_IN|ACTED_IN*1]-" +
                 //becase of the inner shondaRhimes variable, it would use the NoParams strategy instead for the ellenPompeo props.
                 "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })";
             var expectedExt = "-->()";

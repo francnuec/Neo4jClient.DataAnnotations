@@ -934,7 +934,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 }
             }
 
-            return $"({builder.ToString()})";
+            return $"({builder.ToString().Trim()})";
         }
 
         internal static bool IsAlreadyBound(Pattern pattern, string variable)
@@ -959,60 +959,76 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
             StringBuilder builder = new StringBuilder();
 
-            bool alreadyBound = false;
-
-            if (!variableIsAuto && variable != null)
+            string hopsText = null;
+            if (hops != null)
             {
-                builder.Append(variable);
+                builder.Append("*");
 
-                alreadyBound = IsAlreadyBound(pattern, variable);
-            }
-
-            if (!alreadyBound)
-            {
-                if (types?.Count() > 0)
+                if (hops.Item1 != null || hops.Item2 != null)
                 {
-                    builder.Append(":" + types.Aggregate((first, second) => $"{first}|{second}"));
-                }
-
-                if (hops != null)
-                {
-                    builder.Append("*");
-
-                    if (hops.Item1 != null || hops.Item2 != null)
+                    if (hops.Item1 == hops.Item2)
                     {
-                        if (hops.Item1 == hops.Item2)
+                        builder.Append(hops.Item1);
+                    }
+                    else
+                    {
+                        if (hops.Item1 != null)
                         {
                             builder.Append(hops.Item1);
                         }
-                        else
+
+                        builder.Append("..");
+
+                        if (hops.Item2 != null)
                         {
-                            if (hops.Item1 != null)
-                            {
-                                builder.Append(hops.Item1);
-                            }
-
-                            builder.Append("..");
-
-                            if (hops.Item2 != null)
-                            {
-                                builder.Append(hops.Item2);
-                            }
+                            builder.Append(hops.Item2);
                         }
                     }
                 }
 
-                if (finalProperties?.Count > 0)
-                {
-                    string properties = BuildProperties(finalProperties, ref pattern.CypherQuery, Variable,
-                        finalPropsHasVars ? PropertiesBuildStrategy.NoParams : pattern.BuildStrategy, pattern.serializerFunc);
+                hopsText = builder.ToString();
+                builder.Clear();
+            }
 
-                    if (properties != null && properties != "{  }")
-                        builder.Append($" {properties}");
+            bool hasHops = hopsText != null;
+            bool alreadyBound = false;
+
+            if (!variableIsAuto && variable != null)
+            {
+                if (!hasHops)
+                {
+                    builder.Append(variable);
+                    alreadyBound = IsAlreadyBound(pattern, variable);
+                }
+                else
+                {
+                    //Neo4j has deprecated variable for hops relationships i.e. something like: MATCH (a)-[r*1..2]-(b) RETURN a, r, b; r is no longer allowed in this case.
+                    //The advised pattern to use is: MATCH p = (a)-[*1..2]-(b) RETURN a, relationships(p) AS r, b.
+                    //So here, we just automatically assign the path variable for the user.
+                    pattern.Path = pattern.Path?.SharedAssign();
                 }
             }
 
-            return $"[{builder.ToString()}]";
+            if ((hasHops || !alreadyBound) && types?.Count() > 0) //add types even with hops. if the types needs to be skipped, the user should explicitly specify null types.
+            {
+                builder.Append(":" + types.Aggregate((first, second) => $"{first}|{second}"));
+            }
+
+            if (hasHops)
+            {
+                builder.Append(hopsText);
+            }
+
+            if ((hasHops || !alreadyBound) && finalProperties?.Count > 0) //add the properties even with hops.
+            {
+                string properties = BuildProperties(finalProperties, ref pattern.CypherQuery, Variable,
+                    finalPropsHasVars ? PropertiesBuildStrategy.NoParams : pattern.BuildStrategy, pattern.serializerFunc);
+
+                if (properties != null && properties != "{  }")
+                    builder.Append($" {properties}");
+            }
+
+            return $"[{builder.ToString().Trim()}]";
         }
 
         internal static string BuildProperties
