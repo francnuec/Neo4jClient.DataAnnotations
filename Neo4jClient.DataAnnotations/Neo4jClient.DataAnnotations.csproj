@@ -11,7 +11,7 @@
     <PackageTags>nosql cypher neo4j entity orm poco</PackageTags>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <PackageReleaseNotes>Visit project site for usage and instructions.</PackageReleaseNotes>
-    <Version>1.0.1-beta</Version>
+    <Version>1.0.2</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

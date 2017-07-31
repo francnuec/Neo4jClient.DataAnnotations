@@ -275,40 +275,5 @@ namespace Neo4jClient.DataAnnotations
 
             return list;
         }
-
-        //internal static void Register(IGraphClient client)
-        //{
-        //    if (client.JsonContractResolver == null)
-        //    {
-        //        throw new InvalidOperationException("You need a json contract resolver of type DefaultContractResolver.");
-        //    }
-
-        //    var entityConverterType = typeof(EntityConverter);
-
-        //    var entityConverter = new EntityConverter();
-
-        //    IList<JsonConverter> converters = client.JsonConverters;
-
-        //    if (converters == null)
-        //    {
-        //        throw new InvalidOperationException("You need a list of JsonConverters set.");
-        //    }
-
-        //    AddConverter(entityConverter, entityConverterType, converters);
-
-        //    var executionConfig = client.ExecutionConfiguration;
-
-        //    if (executionConfig != null && executionConfig.JsonConverters != converters)
-        //    {
-        //        converters = executionConfig.JsonConverters as IList<JsonConverter>;
-
-        //        if (converters != null)
-        //        {
-        //            AddConverter(entityConverter, entityConverterType, converters);
-        //        }
-        //    }
-
-        //    InternalRegister(entityConverter, entityConverterType);
-        //}
     }
 }
