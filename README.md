@@ -3,7 +3,7 @@ Use POCO classes in the [Neo4jClient](https://github.com/Readify/Neo4jClient) li
 
 Get it on [Nuget](https://www.nuget.org/packages/Neo4jClient.DataAnnotations):
 
-> **PM> Install-Package Neo4jClient.DataAnnotations -Pre**
+> **PM> Install-Package Neo4jClient.DataAnnotations**
 
 ### Quick Intro ###
 ----------
