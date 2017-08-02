@@ -39,7 +39,28 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
-        public void PatternWithParamsStrategy_GetPattern(string serializerName, EntityResolver resolver, EntityConverter converter)
+        public void PatternNoParamsStrategy_WithPattern(string serializerName, EntityResolver resolver, EntityConverter converter)
+        {
+            TestUtilities.RegisterEntityTypes(resolver, converter);
+
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
+                .Extend(RelationshipDirection.Outgoing);
+
+            query = query.WithPattern(out var actual, pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic));
+
+            var expected = "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
+                "<-[:STARRED_IN|ACTED_IN*1]-" +
+                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
+                "-->(), (a)--(b)";
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        public void PatternWithParamsStrategy_WithPattern(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
 
@@ -48,7 +69,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPathMixed(P)
                 .Extend(RelationshipDirection.Outgoing);
 
-            var actual = query.GetPattern(PropertiesBuildStrategy.WithParams, pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic));
+            query = query.WithPattern(out var actual, PropertiesBuildStrategy.WithParams, pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic));
 
             var expected = "(greysAnatomy:Series $greysAnatomy)" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
@@ -60,7 +81,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
-        public void PatternWithParamsForValuesStrategy_GetPattern(string serializerName, EntityResolver resolver, EntityConverter converter)
+        public void PatternWithParamsForValuesStrategy_WithPattern(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
 
@@ -69,7 +90,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
                 .Extend(RelationshipDirection.Outgoing);
 
-            var actual = query.GetPattern(PropertiesBuildStrategy.WithParamsForValues, pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic));
+            query = query.WithPattern(out var actual, PropertiesBuildStrategy.WithParamsForValues, pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic));
 
             var expected = "(greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
