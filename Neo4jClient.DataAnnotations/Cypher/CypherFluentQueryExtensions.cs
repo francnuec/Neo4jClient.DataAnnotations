@@ -50,7 +50,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static ICypherFluentQuery WithPattern(this ICypherFluentQuery query, out string pattern,
             params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
-            return WithPattern(query, out pattern, PropertiesBuildStrategy.NoParams, patternDescriptions);
+            return WithPattern(query, out pattern, PropertiesBuildStrategy.WithParamsForValues, patternDescriptions);
         }
 
         /// <summary>

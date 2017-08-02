@@ -48,7 +48,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
                 .Extend(RelationshipDirection.Outgoing);
 
-            query = query.WithPattern(out var actual, pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic));
+            query = query.WithPattern(out var actual, PropertiesBuildStrategy.NoParams, pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic));
 
             var expected = "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
@@ -90,7 +90,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
                 .Extend(RelationshipDirection.Outgoing);
 
-            query = query.WithPattern(out var actual, PropertiesBuildStrategy.WithParamsForValues, pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic));
+            query = query.WithPattern(out var actual, pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic));
 
             var expected = "(greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
