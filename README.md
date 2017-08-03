@@ -111,7 +111,7 @@ With annotations:
 
 The above examples employ really simple scenarios to explain this library. The real advantage you'd get from using this library would be in describing really complex patterns (with maybe complex properties too), and then the library accurately interprets your intentions.
 
-You can check the unit tests for more usage examples. To see this library used in an actual project, head over to my [Neo4j.AspNetCore.Identity](https://github.com/francnuec/Neo4j.AspNetCore.Identity) project to study the code and sample.
+See this [wiki page](https://github.com/francnuec/Neo4jClient.DataAnnotations/wiki) for more examples. You can also check the unit tests. To see this library used in an actual project, head over to my [Neo4j.AspNetCore.Identity](https://github.com/francnuec/Neo4j.AspNetCore.Identity) project to study the code and sample.
 
 ### Neo4jClient Integration ###
 ----------
