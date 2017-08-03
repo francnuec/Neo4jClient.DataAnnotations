@@ -59,7 +59,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var expected = "(greysAnatomy:Series $greysAnatomy)" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
+                "(ellenPompeo:Female:Actor { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
                 "-->()";
 
             var actual = path.Build(ref query);
@@ -85,7 +85,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var expected = "(greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
+                "(ellenPompeo:Female:Actor { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
                 "-->()";
 
             var actual = path.Build(ref query);

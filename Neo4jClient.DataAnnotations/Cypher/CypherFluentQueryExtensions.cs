@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Linq;
 using Neo4jClient.Cypher;
+using Newtonsoft.Json.Linq;
 
 namespace Neo4jClient.DataAnnotations.Cypher
 {
@@ -493,16 +494,17 @@ namespace Neo4jClient.DataAnnotations.Cypher
         internal static ICypherFluentQuery SharedSet(this ICypherFluentQuery query, string variable,
             LambdaExpression properties, PropertiesBuildStrategy buildStrategy, out string setParameter, bool add)
         {
-            DataAnnotations.Utilities.GetQueryUtilities(query, out var client, out var serializer,
+            Utilities.GetQueryUtilities(query, out var client, out var serializer,
                     out var resolver, out var converter, out var serializerFunc, out var queryWriter);
 
-            var finalProperties = DataAnnotations.Utilities.GetFinalProperties(properties, resolver,
+            var finalProperties = Utilities.GetFinalProperties(properties, resolver,
                 converter, serializerFunc, out var hasVariables);
 
-            string setParam = DataAnnotations.Utilities.GetRandomVariableFor($"{variable}_set");
+            string setParam = Utilities.GetRandomVariableFor($"{variable}_set");
             setParameter = setParam;
 
-            buildStrategy = hasVariables ? PropertiesBuildStrategy.NoParams : buildStrategy;
+            buildStrategy = hasVariables && buildStrategy == PropertiesBuildStrategy.WithParams ? 
+                PropertiesBuildStrategy.WithParamsForValues : buildStrategy;
 
             string value = null;
 
@@ -518,7 +520,18 @@ namespace Neo4jClient.DataAnnotations.Cypher
                         if (buildStrategy == PropertiesBuildStrategy.WithParamsForValues)
                         {
                             value = finalProperties.Properties()
-                                .Select(jp => $"{jp.Name}: ${setParam}.{jp.Name}")
+                                .Select(jp =>
+                                {
+                                    if (jp.Value?.Type == JTokenType.Raw)
+                                    {
+                                        //most likely a query variable
+                                        //do not use a parameter in this case
+                                        //write directly instead
+                                        return $"{jp.Name}: {serializerFunc(jp.Value)}";
+                                    }
+
+                                    return $"{jp.Name}: ${setParam}.{jp.Name}";
+                                })
                                 .Aggregate((first, second) => $"{first}, {second}");
                         }
                         break;
@@ -557,14 +570,15 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Utilities.GetQueryUtilities(query, out var client, out var serializer,
                     out var resolver, out var converter, out var serializerFunc, out var queryWriter);
 
-            var finalProperties = DataAnnotations.Utilities.GetFinalProperties(Utilities.GetConstraintsAsPropertiesLambda(predicate, typeof(T)), resolver,
+            var finalProperties = Utilities.GetFinalProperties(Utilities.GetConstraintsAsPropertiesLambda(predicate, typeof(T)), resolver,
                 converter, serializerFunc, out var hasVariables);
 
             variable = variable ?? predicate.Parameters[0].Name;
-            var setParam = DataAnnotations.Utilities.GetRandomVariableFor($"{variable}_set");
+            var setParam = Utilities.GetRandomVariableFor($"{variable}_set");
             setParameter = setParam;
 
-            buildStrategy = hasVariables ? PropertiesBuildStrategy.NoParams : buildStrategy;
+            buildStrategy = hasVariables && buildStrategy == PropertiesBuildStrategy.WithParams ? 
+                PropertiesBuildStrategy.WithParamsForValues : buildStrategy;
 
             string value = null;
 
@@ -577,8 +591,19 @@ namespace Neo4jClient.DataAnnotations.Cypher
                         query = query.WithParam(setParam, finalProperties);
 
                         value = finalProperties.Properties()
-                                .Select(jp => $"{variable}.{jp.Name} = ${setParam}.{jp.Name}")
-                                .Aggregate((first, second) => $"{first}, {second}");
+                            .Select(jp =>
+                            {
+                                if (jp.Value?.Type == JTokenType.Raw)
+                                {
+                                    //most likely a query variable
+                                    //do not use a parameter in this case
+                                    //write directly instead
+                                    return $"{variable}.{jp.Name} = {serializerFunc(jp.Value)}";
+                                }
+
+                                return $"{variable}.{jp.Name} = ${setParam}.{jp.Name}";
+                            })
+                            .Aggregate((first, second) => $"{first}, {second}");
                         break;
                     }
                 case PropertiesBuildStrategy.NoParams:

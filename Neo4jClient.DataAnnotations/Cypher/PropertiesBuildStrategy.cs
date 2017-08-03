@@ -7,12 +7,12 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// Writes the properties directly into the generated pattern.
         /// E.g. (a:Movie { title: "Grey's Anatomy", year: 2017 }
-        /// NOTE that if you have variables in your properties, <see cref="NoParams"/> is used always, irrespective of the supplied <see cref="PropertiesBuildStrategy"/>.
         /// </summary>
         NoParams = 0,
         /// <summary>
         /// Stores the properties via a <see cref="ICypherFluentQuery.WithParam(string, object)"/> call, and replaces it with a parameter.
         /// E.g. (a:Movie { movie }), where "movie" is the parameter. This style can be used for the CREATE and CREATE UNIQUE statements.
+        /// NOTE that if you have variables in your properties with this strategy set, <see cref="WithParamsForValues"/> is used instead.
         /// </summary>
         WithParams,
         /// <summary>

@@ -73,7 +73,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var expected = "(greysAnatomy:Series $greysAnatomy)" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
+                "(ellenPompeo:Female:Actor { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
                 "-->(), (a)--(b)";
 
             Assert.Equal(expected, actual);
@@ -94,7 +94,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var expected = "(greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
+                "(ellenPompeo:Female:Actor { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
                 "-->(), (a)--(b)";
 
             Assert.Equal(expected, actual);
@@ -115,7 +115,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var expected = "MATCH (greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
+                "(ellenPompeo:Female:Actor { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
                 "-->(), (a)--(b)";
 
             Assert.Equal(expected, actual);
@@ -136,7 +136,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var expected = "OPTIONAL MATCH (greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
+                "(ellenPompeo:Female:Actor { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
                 "-->(), (a)--(b)";
 
             Assert.Equal(expected, actual);
@@ -157,7 +157,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var expected = "MERGE (greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
+                "(ellenPompeo:Female:Actor { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
                 "-->(), (a)--(b)";
 
             Assert.Equal(expected, actual);
@@ -179,7 +179,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             //This scenario is probably unlikely in a real neo4j situation, but for tests sakes.
             var expected = "CREATE (greysAnatomy:Series $greysAnatomy)" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
+                "(ellenPompeo:Female:Actor { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
                 "-->(), (a)--(b)";
 
             Assert.Equal(expected, actual);
@@ -201,7 +201,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             //This scenario is probably unlikely in a real neo4j situation, but for tests sakes.
             var expected = "CREATE UNIQUE (greysAnatomy:Series $greysAnatomy)" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
+                "(ellenPompeo:Female:Actor { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
                 "-->(), (a)--(b)";
 
             Assert.Equal(expected, actual);
@@ -218,9 +218,9 @@ namespace Neo4jClient.DataAnnotations.Tests
             var actual = query.Set((ActorNode actor) =>
                 actor.Name == "Ellen Pompeo"
                 && actor.Born == Vars.Get<ActorNode>("shondaRhimes").Born
-                && actor.Roles == new string[] { "Meredith Grey" }).Query.QueryText;
+                && actor.Roles == new string[] { "Meredith Grey" }, out var setParam).Query.QueryText;
 
-            var expected = "SET actor.Name = \"Ellen Pompeo\", actor.Born = shondaRhimes.Born, actor.Roles = [\r\n  \"Meredith Grey\"\r\n]";
+            var expected = $"SET actor.Name = ${setParam}.Name, actor.Born = shondaRhimes.Born, actor.Roles = ${setParam}.Roles";
 
             Assert.Equal(expected, actual);
         }
@@ -239,7 +239,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 && actor.Roles == new string[] { "Meredith Grey" },
                 PropertiesBuildStrategy.WithParams, out var setParam).Query.QueryText;
 
-            //When using Set predicate, WithParams strategy is the same as WithParamsForValues (except of course, an inline variable was encountered, then it becomes NoParams)
+            //When using Set predicate, WithParams strategy is the same as WithParamsForValues
             var expected = $"SET actor.Name = ${setParam}.Name, actor.Born = ${setParam}.Born, actor.Roles = ${setParam}.Roles";
 
             Assert.Equal(expected, actual);

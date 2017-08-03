@@ -927,7 +927,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
                     ResolveInternalUtilities(pattern);
 
                     string properties = BuildProperties(finalProperties, ref pattern.CypherQuery, Variable,
-                        finalPropsHasVars? PropertiesBuildStrategy.NoParams : pattern.BuildStrategy, pattern.serializerFunc);
+                        finalPropsHasVars && pattern.BuildStrategy == PropertiesBuildStrategy.WithParams? 
+                        PropertiesBuildStrategy.WithParamsForValues : pattern.BuildStrategy, pattern.serializerFunc);
 
                     if (properties != null && properties != "{  }")
                         builder.Append($" {properties}");
@@ -1022,7 +1023,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
             if ((hasHops || !alreadyBound) && finalProperties?.Count > 0) //add the properties even with hops.
             {
                 string properties = BuildProperties(finalProperties, ref pattern.CypherQuery, Variable,
-                    finalPropsHasVars ? PropertiesBuildStrategy.NoParams : pattern.BuildStrategy, pattern.serializerFunc);
+                    finalPropsHasVars && pattern.BuildStrategy == PropertiesBuildStrategy.WithParams? 
+                        PropertiesBuildStrategy.WithParamsForValues : pattern.BuildStrategy, pattern.serializerFunc);
 
                 if (properties != null && properties != "{  }")
                     builder.Append($" {properties}");
@@ -1049,7 +1051,18 @@ namespace Neo4jClient.DataAnnotations.Cypher
                         if (buildStrategy == PropertiesBuildStrategy.WithParamsForValues)
                         {
                             value = finalProperties.Properties()
-                                .Select(jp => $"{jp.Name}: ${Variable}.{jp.Name}")
+                                .Select(jp =>
+                                {
+                                    if (jp.Value?.Type == JTokenType.Raw)
+                                    {
+                                        //most likely a query variable
+                                        //do not use a parameter in this case
+                                        //write directly instead
+                                        return $"{jp.Name}: {serializer(jp.Value)}";
+                                    }
+
+                                    return $"{jp.Name}: ${Variable}.{jp.Name}";
+                                })
                                 .Aggregate((first, second) => $"{first}, {second}");
                         }
                         break;

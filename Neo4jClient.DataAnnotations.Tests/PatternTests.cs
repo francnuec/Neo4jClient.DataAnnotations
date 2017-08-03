@@ -393,8 +393,8 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var expectedMain = "(greysAnatomy:Series $greysAnatomy)" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                //becase of the inner shondaRhimes variable, it would use the NoParams strategy instead for the ellenPompeo props.
-                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })";
+                //becase of the inner shondaRhimes variable, it would use the WithParamsForValues strategy instead for the ellenPompeo props.
+                "(ellenPompeo:Female:Actor { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })";
             var expectedExt = "-->()";
 
             var actualMain = path.Patterns[0].Build(ref query);
@@ -423,8 +423,8 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var expectedMain = "(greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                //becase of the inner shondaRhimes variable, it would use the NoParams strategy instead for the ellenPompeo props.
-                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })";
+                //becase of the inner shondaRhimes variable, it would use the WithParamsForValues strategy instead for the ellenPompeo props.
+                "(ellenPompeo:Female:Actor { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })";
             var expectedExt = "-->()";
 
             var actualMain = path.Patterns[0].Build(ref query);
