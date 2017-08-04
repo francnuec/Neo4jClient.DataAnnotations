@@ -1718,5 +1718,38 @@ namespace Neo4jClient.DataAnnotations
             if (clearConvertersRemovedList)
                 convertersRemoved.Clear();
         }
+
+        internal static string BuildWithParamsForValues(JObject finalProperties, Func<object, string> serializer, 
+            Func<string, string> getKey, string separator, Func<string, string> getValue, out bool hasRaw, out JObject newFinalProperties)
+        {
+            bool _hasRaw = false;
+            JObject _newFinalProperties = null;
+
+            var value = finalProperties.Properties()
+                .Select(jp =>
+                {
+                    if (jp.Value?.Type == JTokenType.Raw)
+                    {
+                        //most likely a query variable
+                        //do not use a parameter in this case
+                        //write directly instead
+                        //and remove from properties
+                        _hasRaw = true;
+                        if(_newFinalProperties == null)
+                            _newFinalProperties = finalProperties.DeepClone() as JObject;
+
+                        _newFinalProperties.Remove(jp.Name);
+                        return $"{getKey(jp.Name)}{separator}{serializer(jp.Value)}";
+                    }
+
+                    return $"{getKey(jp.Name)}{separator}{getValue(jp.Name)}";
+                })
+                .Aggregate((first, second) => $"{first}, {second}");
+
+            hasRaw = _hasRaw;
+            newFinalProperties = _newFinalProperties;
+
+            return value;
+        }
     }
 }

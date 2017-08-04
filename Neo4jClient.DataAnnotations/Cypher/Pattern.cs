@@ -1044,27 +1044,21 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 case PropertiesBuildStrategy.WithParams:
                 case PropertiesBuildStrategy.WithParamsForValues:
                     {
-                        query = query.WithParam(Variable, finalProperties);
+                        var _finalProperties = finalProperties;
 
                         value = "$" + Variable;
 
                         if (buildStrategy == PropertiesBuildStrategy.WithParamsForValues)
                         {
-                            value = finalProperties.Properties()
-                                .Select(jp =>
-                                {
-                                    if (jp.Value?.Type == JTokenType.Raw)
-                                    {
-                                        //most likely a query variable
-                                        //do not use a parameter in this case
-                                        //write directly instead
-                                        return $"{jp.Name}: {serializer(jp.Value)}";
-                                    }
+                            value = Utilities.BuildWithParamsForValues(finalProperties, serializer,
+                                getKey: (propertyName) => propertyName, separator: ": ",
+                                getValue: (propertyName) => $"${Variable}.{propertyName}",
+                                hasRaw: out var hasRaw, newFinalProperties: out var newFinalProperties);
 
-                                    return $"{jp.Name}: ${Variable}.{jp.Name}";
-                                })
-                                .Aggregate((first, second) => $"{first}, {second}");
+                            _finalProperties = newFinalProperties ?? _finalProperties;
                         }
+
+                        query = query.WithParam(Variable, _finalProperties);
                         break;
                     }
                 case PropertiesBuildStrategy.NoParams:

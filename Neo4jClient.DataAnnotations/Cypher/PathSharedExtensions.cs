@@ -102,7 +102,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
         (this IPathable source, LambdaExpression relationship, string R, string B, RelationshipDirection? dir,
             bool testARBForNull = false)
         {
-            if(relationship == null)
+            //for the sake of our tests, leave this here, and don't fall for the VS intellisense refactoring bait.
+            if (relationship == null)
             {
                 throw new ArgumentNullException(nameof(relationship));
             }
@@ -121,6 +122,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             LambdaExpression endRelationship, string R, string B, RelationshipDirection? dir,
             bool testARBForNull = false)
         {
+            //for the sake of our tests, leave this here, and don't fall for the VS intellisense refactoring bait.
             if (beginRelationship == null)
             {
                 throw new ArgumentNullException(nameof(beginRelationship));
