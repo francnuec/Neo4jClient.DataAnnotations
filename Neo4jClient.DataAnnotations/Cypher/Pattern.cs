@@ -663,7 +663,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                     {
                         //still null
                         //maybe the selectors were set manually, so find nav here from selected property.
-                        aNavProp = Utilities.GetPropertyInfo(sel, AType, null);
+                        aNavProp = Utilities.GetPropertyInfo(sel.Body, AType, null);
                     }
                 }
 
@@ -694,7 +694,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
                         var otherType = sel.Parameters[0].Type;
                         var otherTypeInfo = Neo4jAnnotations.GetEntityTypeInfo(otherType);
-                        var selectedProp = Utilities.GetPropertyInfo(sel, otherType, BType);
+                        var selectedProp = Utilities.GetPropertyInfo(sel.Body, otherType, BType);
 
                         var navigationProp =
                             GetNavigationPropertyBetweenTypes(otherTypeInfo, BTypeInfo,

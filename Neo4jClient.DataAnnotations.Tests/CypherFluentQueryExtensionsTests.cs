@@ -314,5 +314,131 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             Assert.Equal(expected, actual);
         }
+
+        [Theory]
+        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        public void Index(string serializerName, EntityResolver resolver, EntityConverter converter)
+        {
+            TestUtilities.RegisterEntityTypes(resolver, converter);
+
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+
+            var actual = query.CreateIndex((ActorNode actor) => actor.Address.AddressLine).Query.QueryText;
+
+            var expected = "CREATE INDEX ON :Actor(NewAddressName_AddressLine)";
+
+            Assert.Equal(expected, actual);
+
+            //test DROP too
+            actual = query.DropIndex((ActorNode actor) => actor.Address.AddressLine).Query.QueryText;
+            expected = "DROP INDEX ON :Actor(NewAddressName_AddressLine)";
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        public void CompositeIndex(string serializerName, EntityResolver resolver, EntityConverter converter)
+        {
+            TestUtilities.RegisterEntityTypes(resolver, converter);
+
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+
+            var actual = query.CreateIndex((ActorNode actor) => new { (actor.Address as AddressWithComplexType).Location, actor.Name }).Query.QueryText;
+
+            var expected = "CREATE INDEX ON :Actor(NewAddressName_Location_Latitude, NewAddressName_Location_Longitude, Name)";
+
+            Assert.Equal(expected, actual);
+
+            //test DROP too
+            actual = query.DropIndex((ActorNode actor) => new { (actor.Address as AddressWithComplexType).Location, actor.Name }).Query.QueryText;
+            expected = "DROP INDEX ON :Actor(NewAddressName_Location_Latitude, NewAddressName_Location_Longitude, Name)";
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        public void UniqueConstraint(string serializerName, EntityResolver resolver, EntityConverter converter)
+        {
+            TestUtilities.RegisterEntityTypes(resolver, converter);
+
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+
+            var actual = query.CreateUniqueConstraint((ActorNode actor) => actor.Address.AddressLine).Query.QueryText;
+
+            var expected = "CREATE CONSTRAINT ON (actor:Actor) ASSERT actor.NewAddressName_AddressLine IS UNIQUE";
+
+            Assert.Equal(expected, actual);
+
+            //test DROP too
+            actual = query.DropUniqueConstraint((ActorNode actor) => actor.Address.AddressLine).Query.QueryText;
+            expected = "DROP CONSTRAINT ON (actor:Actor) ASSERT actor.NewAddressName_AddressLine IS UNIQUE";
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        public void ExistsConstraint(string serializerName, EntityResolver resolver, EntityConverter converter)
+        {
+            TestUtilities.RegisterEntityTypes(resolver, converter);
+
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+
+            var actual = query.CreateExistsConstraint((ActorNode actor) => actor.Address.AddressLine).Query.QueryText;
+
+            var expected = "CREATE CONSTRAINT ON (actor:Actor) ASSERT exists(actor.NewAddressName_AddressLine)";
+
+            Assert.Equal(expected, actual);
+
+            //test DROP too
+            actual = query.DropExistsConstraint((ActorNode actor) => actor.Address.AddressLine).Query.QueryText;
+            expected = "DROP CONSTRAINT ON (actor:Actor) ASSERT exists(actor.NewAddressName_AddressLine)";
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        public void RelationshipExistsConstraint(string serializerName, EntityResolver resolver, EntityConverter converter)
+        {
+            TestUtilities.RegisterEntityTypes(resolver, converter);
+
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+
+            var actual = query.CreateExistsConstraint((MovieActorRelationship rel) => rel.Roles, isRelationship: true).Query.QueryText;
+
+            var expected = "CREATE CONSTRAINT ON ()-[rel:ACTED_IN]-() ASSERT exists(rel.Roles)";
+
+            Assert.Equal(expected, actual);
+
+            //test DROP too
+            actual = query.DropExistsConstraint((MovieActorRelationship rel) => rel.Roles, isRelationship: true).Query.QueryText;
+            expected = "DROP CONSTRAINT ON ()-[rel:ACTED_IN]-() ASSERT exists(rel.Roles)";
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        public void KeyConstraint(string serializerName, EntityResolver resolver, EntityConverter converter)
+        {
+            TestUtilities.RegisterEntityTypes(resolver, converter);
+
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+
+            var actual = query.CreateKeyConstraint((ActorNode actor) => new { (actor.Address as AddressWithComplexType).Location, actor.Name }).Query.QueryText;
+
+            var expected = "CREATE CONSTRAINT ON (actor:Actor) ASSERT (actor.NewAddressName_Location_Latitude, actor.NewAddressName_Location_Longitude, actor.Name) IS NODE KEY";
+
+            Assert.Equal(expected, actual);
+
+            //test DROP too
+            actual = query.DropKeyConstraint((ActorNode actor) => new { (actor.Address as AddressWithComplexType).Location, actor.Name }).Query.QueryText;
+            expected = "DROP CONSTRAINT ON (actor:Actor) ASSERT (actor.NewAddressName_Location_Latitude, actor.NewAddressName_Location_Longitude, actor.Name) IS NODE KEY";
+
+            Assert.Equal(expected, actual);
+        }
     }
 }

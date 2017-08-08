@@ -42,23 +42,31 @@ namespace Neo4jClient.DataAnnotations
 
         public static PropertyInfo GetPropertyInfo<TSource, TProperty>(Expression<Func<TSource, TProperty>> propertyLambda)
         {
-            return GetPropertyInfo(propertyLambda, typeof(TSource), typeof(TProperty));
+            return GetPropertyInfo(propertyLambda.Body, typeof(TSource), typeof(TProperty));
         }
 
-        public static PropertyInfo GetPropertyInfo(LambdaExpression propertyLambda, Type sourceType, Type propertyType,
-             bool includeIEnumerableArg = true)
+        //public static PropertyInfo GetPropertyInfo(LambdaExpression propertyLambda, Type sourceType, Type propertyType,
+        //     bool includeIEnumerableArg = true, bool acceptObjectTypeCast = false)
+        //{
+        //    return GetPropertyInfo(propertyLambda.Body, sourceType, propertyType, includeIEnumerableArg, acceptObjectTypeCast);
+        //}
+
+        public static PropertyInfo GetPropertyInfo(Expression expr, Type sourceType, Type propertyType,
+             bool includeIEnumerableArg = true, bool acceptObjectTypeCast = false)
         {
-            MemberExpression memberExpr = propertyLambda.Body as MemberExpression;
+            MemberExpression memberExpr = (!acceptObjectTypeCast ? expr :
+                expr?.Uncast(out var cast, castToRemove: Defaults.ObjectType)) as MemberExpression;
+
             if (memberExpr == null)
                 throw new ArgumentException(string.Format(
                     "Expression '{0}' refers to a method, not a property.",
-                    propertyLambda.ToString()));
+                    expr.ToString()));
 
             PropertyInfo propInfo = memberExpr.Member as PropertyInfo;
             if (propInfo == null)
                 throw new ArgumentException(string.Format(
                     "Expression '{0}' refers to a field, not a property.",
-                    propertyLambda.ToString()));
+                    expr.ToString()));
 
             if (sourceType != null)
             {
@@ -66,7 +74,7 @@ namespace Neo4jClient.DataAnnotations
                 !propInfo.DeclaringType.IsAssignableFrom(sourceType))
                     throw new ArgumentException(string.Format(
                         "Expresion '{0}' refers to a property that is not from type '{1}'.",
-                        propertyLambda.ToString(),
+                        expr.ToString(),
                         sourceType));
             }
 
@@ -1750,6 +1758,84 @@ namespace Neo4jClient.DataAnnotations
             newFinalProperties = _newFinalProperties;
 
             return value;
+        }
+
+        internal static string[] GetFinalPropertyNames<T>(Expression<Func<T, object>> properties,
+            EntityResolver resolver,
+            EntityConverter converter, Func<object, string> serializer,
+            bool makeNamesMemberAccess = false)
+        {
+            if (properties == null)
+                throw new ArgumentNullException(nameof(properties));
+
+            //for constraints and indexes, expecting:
+            //a => a.Property
+            //a => new { a.Property1, a.Property2 }
+
+            var sourceType = typeof(T);
+            var parameterExpr = properties.Parameters.First();
+            //get the body without an object cast if present
+            var bodyExpr = properties.Body.Uncast(out var cast, castToRemove: typeof(object));
+
+            LambdaExpression lambdaToParse = null;
+
+            if (bodyExpr.NodeType == ExpressionType.MemberAccess)
+            {
+                PropertyInfo propertyInfo = null;
+                MemberExpression memExpr = bodyExpr as MemberExpression;
+                Type parentType = null;
+
+                //recurvesively find the last memberexpression member
+                while (memExpr != null)
+                {
+                    parentType = memExpr.Expression.Type;
+
+                    try
+                    {
+                        //do this for tests sakes
+                        propertyInfo = GetPropertyInfo(memExpr, parentType, null, includeIEnumerableArg: false, acceptObjectTypeCast: true); 
+                    }
+                    catch
+                    {
+                        break; //something went wrong
+                    }
+
+                    memExpr = memExpr.Expression?.Uncast(out var memCast) as MemberExpression;
+                }
+                
+
+                if (propertyInfo != null && parentType == sourceType)
+                {
+                    //passed test
+                    //create a predicate lambda so we can parse this
+                    //i.e., a => a.Property == default(a.Property.GetType())
+                    var predicateExpr = Expression.Lambda(Expression.Equal(bodyExpr, Expression.Constant(bodyExpr.Type.GetDefaultValue())), parameterExpr);
+                    lambdaToParse = GetConstraintsAsPropertiesLambda(predicateExpr, sourceType);
+                }
+            }
+
+            if (lambdaToParse == null)
+            {
+                //replace the parameter with an instance of the source type
+                var sourceInstance = CreateInstance(sourceType);
+                InitializeComplexTypedProperties(sourceInstance);
+
+                var sourceInstanceExpr = Expression.Constant(sourceInstance);
+
+                var newBodyExpr = new ParameterExpressionVisitor(
+                    new Dictionary<string, Expression>() { { parameterExpr.Name, sourceInstanceExpr } }
+                    ).Visit(bodyExpr);
+
+                //further build all paths presented, just to dot our I's
+                newBodyExpr = new PathBuildExpressionVisitor(new List<object> { sourceInstance }).Visit(newBodyExpr);
+
+                lambdaToParse = Expression.Lambda(newBodyExpr);
+            }
+
+            var finalProperties = GetFinalProperties(lambdaToParse, resolver, converter, serializer, out var hasVariablesInProperties);
+            var param = parameterExpr.Name;
+
+            return finalProperties.Properties().Select(p => !makeNamesMemberAccess? p.Name : $"{param}.{p.Name}").ToArray();
         }
     }
 }
