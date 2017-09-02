@@ -168,7 +168,7 @@ namespace Neo4jClient.DataAnnotations
                     string fkName = null;
 
                     if ((propInfo.Name.EndsWith("Id") || propInfo.Name.ToLower().EndsWith("_id"))
-                        && Utilities.IsTypeScalar(propInfo.PropertyType) //it must be scalar to be considered
+                        && Utilities.IsScalarType(propInfo.PropertyType) //it must be scalar to be considered
                         && !string.IsNullOrWhiteSpace(fkName = propInfo.Name.Substring(0, propInfo.Name.Length - 2).TrimEnd('_'))) 
                     {
                         //check if this name belongs to a nav property already chosen as foreign key above
@@ -210,7 +210,7 @@ namespace Neo4jClient.DataAnnotations
         private void AssignForeignKey(ForeignKeyProperty property, PropertyInfo propertyInfo)
         {
             //check if its scalar
-            if (Utilities.IsTypeScalar(propertyInfo.PropertyType))
+            if (Utilities.IsScalarType(propertyInfo.PropertyType))
             {
                 //only assign if scalar property hasn't been earlier on assigned.
                 //if it has been assigned, skip. it may mean the propertyinfo has nothing to do with foreignkeys and was just a coincedence.
@@ -234,7 +234,7 @@ namespace Neo4jClient.DataAnnotations
             {
                 return navigationProps ?? (navigationProps = 
                     AllProperties
-                    .Where(p => !Utilities.IsTypeScalar(p.PropertyType))
+                    .Where(p => !Utilities.IsScalarType(p.PropertyType))
                     .Except(ComplexTypedProperties)
                     .ToList());
             }

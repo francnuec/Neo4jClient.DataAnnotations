@@ -312,7 +312,7 @@ namespace Neo4jClient.DataAnnotations
 
         public static bool IsScalar(this Type type)
         {
-            return Utilities.IsTypeScalar(type);
+            return Utilities.IsScalarType(type);
         }
 
         /// <summary>

@@ -12,11 +12,11 @@
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <PackageReleaseNotes>Visit project site for usage and instructions.
 
-*Added methods to create and drop indexes and constraints.
-*Fixed bugs.</PackageReleaseNotes>
-    <Version>1.0.6</Version>
-    <FileVersion>1.0.6.0</FileVersion>
-    <AssemblyVersion>1.0.6.0</AssemblyVersion>
+*Fixed a bug not allowing enums be serialized.
+*Fixed other bugs.</PackageReleaseNotes>
+    <Version>1.0.7</Version>
+    <FileVersion>1.0.7.0</FileVersion>
+    <AssemblyVersion>1.0.7.0</AssemblyVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

@@ -687,7 +687,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
         #endregion
 
-        #region CreateIndex
+        #region Index
         /// <summary>
         /// Creates a single-property or composite index on properties of a label.
         /// E.g., query.CreateIndex((Actor actor) => actor.Name) should generate the cypher statement: CREATE INDEX ON :Actor(name). This is for a single-property index.
@@ -717,6 +717,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
         {
             return SharedIndex(query, "DROP", properties);
         }
+
+
 
         internal static ICypherFluentQuery SharedIndex<T>(this ICypherFluentQuery query, string clause, Expression<Func<T, object>> properties)
         {

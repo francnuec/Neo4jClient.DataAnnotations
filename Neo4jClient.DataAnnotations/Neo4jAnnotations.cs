@@ -23,6 +23,17 @@ namespace Neo4jClient.DataAnnotations
         private static ConcurrentDictionary<Type, object> entityTypes 
             = new ConcurrentDictionary<Type, object>();
 
+        public static List<Type> KnownScalarTypes { get; } = new List<Type>()
+        {
+            typeof(string), typeof(Uri), typeof(Guid),
+            typeof(DateTime), typeof(DateTimeOffset), typeof(TimeSpan),
+            typeof(Decimal), typeof(IntPtr), typeof(Version)
+        };
+
+        public static List<Type> KnownNonScalarTypes { get; } = new List<Type>();
+
+        internal static ConcurrentDictionary<Type, bool> processedScalarTypes { get; }
+        = new ConcurrentDictionary<Type, bool>();
 
         public static ICollection<Type> EntityTypes { get { return entityTypes.Keys; } }
 

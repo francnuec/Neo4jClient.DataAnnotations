@@ -183,7 +183,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
                     if (entityInfo.JsonNamePropertyMap.TryGetValue(child.Name, out var memberInfo))
                     {
                         var propInfo = memberInfo as PropertyInfo;
-                        if (!Utilities.IsTypeScalar(propInfo?.PropertyType))
+                        if (!Utilities.IsScalarType(propInfo?.PropertyType))
                         {
                             remove = true;
                         }

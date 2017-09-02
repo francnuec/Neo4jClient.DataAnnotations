@@ -9,7 +9,7 @@ namespace Neo4jClient.DataAnnotations.Tests.Models
 {
     [Table("Actor")]
     public class ActorNode : PersonNode
-    { 
+    {
         public string[] Roles { get; set; }
 
         public int TestForeignKeyId { get; set; }
@@ -25,7 +25,7 @@ namespace Neo4jClient.DataAnnotations.Tests.Models
         /// This inverse property points to the <see cref="ActorNode"/> property on the <see cref="MovieActorRelationship"/> class, because the relationship information itself has been abstracted to that class.
         /// </summary>
         [InverseProperty("Actor")]
-        public virtual ICollection<MovieActorRelationship> Movies { get; set;  }
+        public virtual ICollection<MovieActorRelationship> Movies { get; set; }
     }
 
     public class ActorNode<T> : ActorNode where T : struct

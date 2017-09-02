@@ -124,27 +124,104 @@ namespace Neo4jClient.DataAnnotations
                 type.GetGenericArguments().FirstOrDefault() : null);
         }
 
-        public static bool IsTypeScalar(Type type)
+        //public static bool IsTypeScalar(Type type)
+        //{
+        //    if (Neo4jAnnotations.KnownScalarTypes.Contains(type))
+        //        return true;
+
+        //    Type originalType = type;
+
+        //    repeat:
+        //    var typeInfo = type?.GetTypeInfo();
+        //    if (typeInfo != null && !(
+        //        (originalType != type && Neo4jAnnotations.KnownScalarTypes.Contains(type))
+        //        || typeInfo.IsPrimitive
+        //        || typeInfo.IsEnum
+        //        || typeInfo.IsDefined(Defaults.NeoScalarType)))
+        //    {
+        //        //check if it's an array/iEnumerable before concluding
+        //        Type genericType = null;
+
+        //        if ((genericType = GetEnumerableGenericType(type)) != null
+        //            || (genericType = GetNullableUnderlyingType(type)) != null)
+        //        {
+        //            type = genericType;
+        //            goto repeat;
+        //        }
+
+        //        return false;
+        //    }
+
+        //    if (type != null)
+        //    {
+        //        try
+        //        {
+        //            Neo4jAnnotations.KnownScalarTypes.Add(originalType);
+        //        }
+        //        catch
+        //        {
+
+        //        }
+
+        //        return true;
+        //    }
+
+        //    return false;
+        //}
+
+        public static bool IsScalarType(Type type)
         {
-            repeat:
-            if (type != null && !(Defaults.ScalarTypes.Contains(type)
-                || type.GetTypeInfo().IsPrimitive
-                || type.GetTypeInfo().IsDefined(Defaults.NeoScalarType)))
+            if (Neo4jAnnotations.processedScalarTypes.TryGetValue(type, out var isScalar))
+                return isScalar;
+
+            Func<Type, bool> isNav = (_type) =>
             {
-                //check if it's an array/iEnumerable before concluding
-                Type genericType = null;
+                var _typeInfo = _type?.GetTypeInfo();
+                var ret = (_typeInfo.IsClass
+                || _typeInfo.IsInterface
+                || _typeInfo.IsDefined(Defaults.NeoNonScalarType)
+                || Neo4jAnnotations.KnownNonScalarTypes.Contains(_type))
+                && !Neo4jAnnotations.KnownScalarTypes.Contains(_type)
+                && !_typeInfo.IsDefined(Defaults.NeoScalarType);
 
-                if ((genericType = GetEnumerableGenericType(type)) != null
-                    || (genericType = GetNullableUnderlyingType(type)) != null)
+                return ret;
+            };
+
+            if (type != null && isNav(type))
+            {
+                //check for an array/iEnumerable/nullable before concluding
+                Type genericArgument = GetEnumerableGenericType(type) ?? GetNullableUnderlyingType(type);
+
+                if (genericArgument == null || isNav(genericArgument))
                 {
-                    type = genericType;
-                    goto repeat;
-                }
+                    try
+                    {
+                        Neo4jAnnotations.processedScalarTypes[type] = false;
+                    }
+                    catch
+                    {
 
-                return false;
+                    }
+
+                    return false;
+                }
             }
 
-            return type != null;
+            if (type != null)
+            {
+                try
+                {
+                    Neo4jAnnotations.processedScalarTypes[type] = true;
+                }
+                catch
+                {
+
+                }
+
+                return true;
+            }
+
+            return false;
         }
 
         public static MethodInfo GetMethodInfo(Expression<Action> expression, params Type[] typeArguments)
@@ -280,7 +357,7 @@ namespace Neo4jClient.DataAnnotations
 
                                 nextInstance = Array.CreateInstance(lastType.GetElementType(), lengths);
                             }
-                            else if (IsTypeScalar(lastType))
+                            else if (IsScalarType(lastType))
                             {
                                 nextInstance = lastType.GetDefaultValue();
                             }
@@ -548,7 +625,7 @@ namespace Neo4jClient.DataAnnotations
             {
                 Expression memberExpr = exprNotNull ? Expression.MakeMemberAccess(expression, prop) : null;
 
-                if (IsTypeScalar(prop.PropertyType))
+                if (IsScalarType(prop.PropertyType))
                 {
                     result.Add(memberExpr);
                     inversePaths.Add(new List<MemberInfo>() { prop });

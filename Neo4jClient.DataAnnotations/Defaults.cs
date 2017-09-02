@@ -23,6 +23,7 @@ namespace Neo4jClient.DataAnnotations
         public static readonly Type ExtensionsType = typeof(Extensions);
         public static readonly Type ObjectExtensionsType = typeof(ObjectExtensions);
         public static readonly Type NeoScalarType = typeof(NeoScalarAttribute);
+        public static readonly Type NeoNonScalarType = typeof(NeoNonScalarAttribute);
         public static readonly Type ObjectType = typeof(object);
         public static readonly Type DictionaryType = typeof(IDictionary<,>);
         public static readonly Type UtilitiesType = typeof(Utilities);
@@ -33,12 +34,6 @@ namespace Neo4jClient.DataAnnotations
         public static Serialization.EntityResolver EntityResolver { get; internal set; }
         public static Serialization.EntityConverter EntityConverter { get; internal set; }
         public static Serialization.ResolverDummyConverter ResolverDummyConverter { get; internal set; }
-
-        public static List<Type> ScalarTypes { get; } = new List<Type>()
-        {
-            typeof(string), typeof(Uri), typeof(Guid),
-            typeof(DateTime), typeof(DateTimeOffset), typeof(TimeSpan)
-        };
 
         public const BindingFlags MemberSearchBindingFlags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
 
