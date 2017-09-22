@@ -535,59 +535,11 @@ namespace Neo4jClient.DataAnnotations
 
         internal static List<Expression> ExplodeComplexTypeMemberAccess(Expression expression, out List<List<MemberInfo>> inversePaths)
         {
-            //Type type = expression.Type;
-
-            //if (type == null || !type.GetTypeInfo().IsDefined(Defaults.ComplexType))
-            //{
-            //    inversePaths = new List<List<MemberInfo>>();
-            //    return new List<Expression>();
-            //}
-
-            //ExpandComplexType(type, out inversePaths);
-
-            //var result = new List<Expression>();
-
-            //foreach (var inversePath in inversePaths)
-            //{
-            //    var newExpr = expression;
-
-            //    foreach (var member in inversePath.AsEnumerable().Reverse())
-            //    {
-            //        newExpr = Expression.MakeMemberAccess(newExpr, member);
-            //    }
-
-            //    if (newExpr != expression)
-            //        result.Add(newExpr);
-            //}
-
-            //return result;
-
             return ExplodeComplexTypeAndMemberAccess(ref expression, expression.Type, out inversePaths, shouldTryCast: true);
         }
 
         internal static void ExplodeComplexType(Type type, out List<List<MemberInfo>> inversePaths)
         {
-            //inversePaths = new List<List<MemberInfo>>();
-
-            //if (type == null || !type.GetTypeInfo().IsDefined(Defaults.ComplexType))
-            //    return;
-
-            //var info = Neo4jAnnotations.GetEntityTypeInfo(type);
-
-            //foreach (var prop in info.AllProperties)
-            //{
-            //    if (IsTypeScalar(prop.PropertyType))
-            //    {
-            //        inversePaths.Add(new List<MemberInfo>() { prop });
-            //    }
-            //    else
-            //    {
-            //        //recursively check till we hit the last scalar property
-            //        ExpandComplexType(prop.PropertyType, out var members);
-            //        inversePaths.AddRange(members.Select(ml => { ml.Add(prop); return ml; }));
-            //    }
-            //}
-
             Expression empty = null;
             ExplodeComplexTypeAndMemberAccess(ref empty, type, out inversePaths, shouldTryCast: false);
         }
@@ -666,7 +618,7 @@ namespace Neo4jClient.DataAnnotations
             methodExpr = null;
             return expressions != null && expressions.Count > 0
                 && (methodExpr = expressions[0] as MethodCallExpression) != null
-                && methodExpr.Method.IsEquivalentTo("Get", Defaults.ParamsType);
+                && methodExpr.Method.IsEquivalentTo("Get", Defaults.VarsType);
         }
 
         public static string BuildVars(List<Expression> expressions, EntityResolver resolver,
@@ -982,7 +934,7 @@ namespace Neo4jClient.DataAnnotations
         {
             methodExpr = null;
             return (methodExpr = expression as MethodCallExpression) != null
-                && methodExpr.Method.IsEquivalentTo("Set", Defaults.ObjectExtensionsType);
+                && methodExpr.Method.IsEquivalentTo("_Set", Defaults.ObjectExtensionsType);
         }
 
         public static void CheckIfComplexTypeInstanceIsNull(object instance, string propertyName, Type declaringType)
@@ -1633,14 +1585,14 @@ namespace Neo4jClient.DataAnnotations
 
             queryWriter = (q) =>
             {
-                QueryWriter qw = queryWriterInfo?.GetValue(query) as QueryWriter;
+                QueryWriter qw = queryWriterInfo?.GetValue(q) as QueryWriter;
                 return qw;
             };
         }
 
         internal static LambdaExpression GetConstraintsAsPropertiesLambda(LambdaExpression constraints, Type type)
         {
-            var setMethod = GetMethodInfo(() => ObjectExtensions.Set<object>(null, null, true), type);
+            var setMethod = GetMethodInfo(() => ObjectExtensions._Set<object>(null, null, true), type);
 
             return Expression.Lambda(Expression.Call(setMethod, Expression.Constant(type.GetDefaultValue(), type),
                 constraints, Expression.Constant(true) //i.e, usePredicateOnly: true
@@ -1657,13 +1609,13 @@ namespace Neo4jClient.DataAnnotations
                 + random.Next(1, 100);
         }
 
-        internal static object CreateInstance(Type type, bool nonPublic = true)
+        internal static object CreateInstance(Type type, bool nonPublic = true, object[] parameters = null)
         {
-            Object o = null;
+            object o = null;
 
             try
             {
-                o = Activator.CreateInstance(type);
+                o = Activator.CreateInstance(type, parameters);
             }
             catch (MissingMemberException e)
             {
@@ -1671,13 +1623,29 @@ namespace Neo4jClient.DataAnnotations
                 {
                     var flags = BindingFlags.Instance | BindingFlags.NonPublic;
 
-                    ConstructorInfo parameterlessConstructor = type.GetConstructors(flags)
-                        .Where(c => c.GetParameters() == null || c.GetParameters().Length == 0).FirstOrDefault();
+                    parameters = parameters ?? new object[0];
 
-                    if (parameterlessConstructor == null)
-                        throw e; //new MissingMethodException($"No parameterless constructor found for type: '{type.Name}'.");
+                    var constructors = type.GetConstructors(flags)
+                        .Where(c => (c.GetParameters()?.Length ?? 0) == parameters.Length);
 
-                    o = parameterlessConstructor.Invoke(new object[0]);
+                    if (constructors?.Count() > 0)
+                    {
+                        foreach (var constructor in constructors)
+                        {
+                            try
+                            {
+                                o = constructor.Invoke(parameters);
+                                break;
+                            }
+                            catch
+                            {
+
+                            }
+                        }
+                    }
+
+                    if (o == null)
+                        throw e;
                 }
                 else
                     throw e;
@@ -1837,7 +1805,39 @@ namespace Neo4jClient.DataAnnotations
             return value;
         }
 
+        /// <summary>
+        /// For constraints and indexes, expecting:
+        /// a =&gt; a.Property
+        /// a =&gt; new { a.Property1, a.Property2 }
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="properties"></param>
+        /// <param name="resolver"></param>
+        /// <param name="converter"></param>
+        /// <param name="serializer"></param>
+        /// <param name="makeNamesMemberAccess"></param>
+        /// <returns></returns>
         internal static string[] GetFinalPropertyNames<T>(Expression<Func<T, object>> properties,
+            EntityResolver resolver,
+            EntityConverter converter, Func<object, string> serializer,
+            bool makeNamesMemberAccess = false)
+        {
+            return GetFinalPropertyNames(typeof(T), properties, resolver, converter, serializer, makeNamesMemberAccess);
+        }
+
+        /// <summary>
+        /// For constraints and indexes, expecting:
+        /// a =&gt; a.Property
+        /// a =&gt; new { a.Property1, a.Property2 }
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="properties"></param>
+        /// <param name="resolver"></param>
+        /// <param name="converter"></param>
+        /// <param name="serializer"></param>
+        /// <param name="makeNamesMemberAccess"></param>
+        internal static string[] GetFinalPropertyNames(Type sourceType,
+            LambdaExpression properties,
             EntityResolver resolver,
             EntityConverter converter, Func<object, string> serializer,
             bool makeNamesMemberAccess = false)
@@ -1849,12 +1849,12 @@ namespace Neo4jClient.DataAnnotations
             //a => a.Property
             //a => new { a.Property1, a.Property2 }
 
-            var sourceType = typeof(T);
             var parameterExpr = properties.Parameters.First();
-            //get the body without an object cast if present
-            var bodyExpr = properties.Body.Uncast(out var cast, castToRemove: typeof(object));
 
             LambdaExpression lambdaToParse = null;
+
+            //get the body without an object cast if present
+            var bodyExpr = properties.Body.Uncast(out var cast, castToRemove: typeof(object));
 
             if (bodyExpr.NodeType == ExpressionType.MemberAccess)
             {
@@ -1870,7 +1870,7 @@ namespace Neo4jClient.DataAnnotations
                     try
                     {
                         //do this for tests sakes
-                        propertyInfo = GetPropertyInfo(memExpr, parentType, null, includeIEnumerableArg: false, acceptObjectTypeCast: true); 
+                        propertyInfo = GetPropertyInfo(memExpr, parentType, null, includeIEnumerableArg: false, acceptObjectTypeCast: true);
                     }
                     catch
                     {
@@ -1879,7 +1879,7 @@ namespace Neo4jClient.DataAnnotations
 
                     memExpr = memExpr.Expression?.Uncast(out var memCast) as MemberExpression;
                 }
-                
+
 
                 if (propertyInfo != null && parentType == sourceType)
                 {
@@ -1912,7 +1912,7 @@ namespace Neo4jClient.DataAnnotations
             var finalProperties = GetFinalProperties(lambdaToParse, resolver, converter, serializer, out var hasVariablesInProperties);
             var param = parameterExpr.Name;
 
-            return finalProperties.Properties().Select(p => !makeNamesMemberAccess? p.Name : $"{param}.{p.Name}").ToArray();
+            return finalProperties.Properties().Select(p => !makeNamesMemberAccess ? p.Name : $"{param}.{p.Name}").ToArray();
         }
     }
 }

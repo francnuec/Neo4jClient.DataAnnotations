@@ -35,13 +35,13 @@ namespace Neo4jClient.DataAnnotations.Tests
                 "actor.NewAddressName_Location_Latitude" },
 
             //recursive params
-            new object[] { (Expression<Func<string>>)(() => (Vars.Get("actor")["roles"] as string[])[(Vars.Get("actor2")["roles"] as string[])[2].As<int>()]),
+            new object[] { (Expression<Func<string>>)(() => (Vars.Get("actor")["roles"] as string[])[(Vars.Get("actor2")["roles"] as string[])[2]._As<int>()]),
                 "actor.roles[actor2.roles[2]]" },
 
             //2 levels recursion
-            new object[] { (Expression<Func<string>>)(() => (Vars.Get("actor")["roles"].As<string[]>())[
+            new object[] { (Expression<Func<string>>)(() => (Vars.Get("actor")["roles"]._As<string[]>())[
                 (Vars.Get("actor2")["roles"] as string[])[Vars.Get<ActorNode>("actor3").Born
-                    ].As<int>()]),
+                    ]._As<int>()]),
                 "actor.roles[actor2.roles[actor3.Born]]" }
         };
 
@@ -104,7 +104,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                     { "Name", TestUtilities.Actor.Name },
                     { "Born", TestUtilities.Actor.Born },
                     { "Address", TestUtilities.Actor.Address }
-                }.Set(a => a["Address"] == Vars.Get<ActorNode>("ellenPompeo").Address
+                }._Set(a => a["Address"] == Vars.Get<ActorNode>("ellenPompeo").Address
                     && (int)a["Born"] == 1671 && a["Name"] == "Shonda Rhimes")),
             },
             new object[] {
@@ -120,7 +120,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                     { "NewAddressName_Location_Longitude", "ellenPompeo.NewAddressName_Location_Longitude" },
                 },
                 (Expression<Func<object>>)(() => new { TestUtilities.NormalAddressActor.Name, TestUtilities.NormalAddressActor.Born, TestUtilities.NormalAddressActor.Address }
-                .Set(a => a.Address == new AddressWithComplexType()
+                ._Set(a => a.Address == new AddressWithComplexType()
                 {   //Use this style only if you're sure all the properties here are assigned, 
                     //because this address object would replace the instance address property entirely.
                     //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
@@ -148,7 +148,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                     { "NewAddressName_Location_Longitude", "ellenPompeo.NewAddressName_Location_Longitude" },
                 },
                 (Expression<Func<object>>)(() => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, Address = TestUtilities.Actor.Address }
-                .Set(a => a.Address == new AddressWithComplexType()
+                ._Set(a => a.Address == new AddressWithComplexType()
                 {   //Use this style only if you're sure all the properties here are assigned, 
                     //because this address object would replace the instance address property entirely.
                     //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
@@ -176,7 +176,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                     { "NewAddressName_Location_Longitude", "ellenPompeo.NewAddressName_Location_Longitude" },
                 },
                 (Expression<Func<object>>)(() => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, Address = TestUtilities.Actor.Address as AddressWithComplexType }
-                .Set(a => a.Address.Location.Longitude == new AddressWithComplexType()
+                ._Set(a => a.Address.Location.Longitude == new AddressWithComplexType()
                 {   //Using this style, variables set inline of a member access may or may not make it to the generated pattern, or even throw an exception.
                     //This is because this MemberInit may be taken as an object value, since it was accessed, and then used directly.
                     //This was done mainly for testing. 
@@ -204,7 +204,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                     { "NewAddressName_Location_Longitude", "ellenPompeo.NewAddressName_Location_Longitude" },
                 },
                 (Expression<Func<object>>)(() => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, Address = TestUtilities.Actor.Address as AddressWithComplexType }
-                .Set(a => a.Address == new AddressWithComplexType()
+                ._Set(a => a.Address == new AddressWithComplexType()
                 {   //Use this style only if you're sure all the properties here are assigned, 
                     //because this address object would replace the instance address property entirely.
                     //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
@@ -232,7 +232,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                     { "NewAddressName_Location_Longitude", "-118.2437" },
                 },
                 (Expression<Func<object>>)(() => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, TestUtilities.Actor.Address }
-                .Set(a => (a.Address as AddressWithComplexType).AddressLine == Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes"))
+                ._Set(a => (a.Address as AddressWithComplexType).AddressLine == Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes"))
             },
             new object[] {
                 new Dictionary<string, dynamic>()
@@ -247,7 +247,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                     { "NewAddressName_Location_Longitude", "-118.2437" },
                 },
                 (Expression<Func<object>>)(() => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, TestUtilities.Actor.Address }
-                .Set(a => a.Address.AddressLine == Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes"))
+                ._Set(a => a.Address.AddressLine == Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes"))
             },
             new object[] {
                 new Dictionary<string, dynamic>()
@@ -265,7 +265,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                     { "TestMarkedFK", "0" },
                     { "TestGenericForeignKeyId", "null" },
                 },
-                (Expression<Func<object>>)(() => TestUtilities.Actor.Set(a => a.Born == Vars.Get<ActorNode>("ellenPompeo").Born && a.Name == "Shonda Rhimes"))
+                (Expression<Func<object>>)(() => TestUtilities.Actor._Set(a => a.Born == Vars.Get<ActorNode>("ellenPompeo").Born && a.Name == "Shonda Rhimes"))
             },
             new object[] {
                 new Dictionary<string, dynamic>()

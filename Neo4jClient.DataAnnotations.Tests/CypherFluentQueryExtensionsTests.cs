@@ -16,23 +16,68 @@ namespace Neo4jClient.DataAnnotations.Tests
 {
     public class CypherFluentQueryExtensionsTests
     {
+        //[Theory]
+        //[MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        //public void PatternNoParamsStrategy_GetPattern(string serializerName, EntityResolver resolver, EntityConverter converter)
+        //{
+        //    TestUtilities.RegisterEntityTypes(resolver, converter);
+
+        //    var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+
+        //    Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
+        //        .Extend(RelationshipDirection.Outgoing);
+
+        //    query.WithPattern(out var actual, pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic));
+
+        //    var expected = "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
+        //        "<-[:STARRED_IN|ACTED_IN*1]-" +
+        //        "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
+        //        "-->(), (a)--(b)";
+
+        //    Assert.Equal(expected, actual);
+        //}
+
         [Theory]
         [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
-        public void PatternNoParamsStrategy_GetPattern(string serializerName, EntityResolver resolver, EntityConverter converter)
+        public void WithProperty(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
 
             var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
 
-            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
-                .Extend(RelationshipDirection.Outgoing);
+            query = query.WithProperty((ActorNode actor) => actor.Address.City, out var actual);
 
-            var actual = query.GetPattern(pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic));
+            var expected = "NewAddressName_City";
 
-            var expected = "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
-                "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
-                "-->(), (a)--(b)";
+            Assert.Equal(expected, actual[0]);
+        }
+
+        [Theory]
+        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        public void WithProperty_MemberAccess(string serializerName, EntityResolver resolver, EntityConverter converter)
+        {
+            TestUtilities.RegisterEntityTypes(resolver, converter);
+
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+
+            query = query.WithProperty((ActorNode actor) => actor.Address.City, out var actual, makeMemberAccess: true);
+
+            var expected = "actor.NewAddressName_City";
+
+            Assert.Equal(expected, actual[0]);
+        }
+
+        [Theory]
+        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        public void WithProperty_Multiple(string serializerName, EntityResolver resolver, EntityConverter converter)
+        {
+            TestUtilities.RegisterEntityTypes(resolver, converter);
+
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+
+            query = query.WithProperty((ActorNode actor) => new { actor.Name, actor.Born, actor.Address.City }, out var actual);
+
+            var expected = new string[] { "Name", "Born", "NewAddressName_City" };
 
             Assert.Equal(expected, actual);
         }
@@ -437,6 +482,90 @@ namespace Neo4jClient.DataAnnotations.Tests
             //test DROP too
             actual = query.DropKeyConstraint((ActorNode actor) => new { (actor.Address as AddressWithComplexType).Location, actor.Name }).Query.QueryText;
             expected = "DROP CONSTRAINT ON (actor:Actor) ASSERT (actor.NewAddressName_Location_Latitude, actor.NewAddressName_Location_Longitude, actor.Name) IS NODE KEY";
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        public void OrderBy_ThenByDesc(string serializerName, EntityResolver resolver, EntityConverter converter)
+        {
+            TestUtilities.RegisterEntityTypes(resolver, converter);
+
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+
+            var cypherQuery = query
+                .OrderBy<MovieNode>(movie => movie.Year)
+                .ThenByDescending<MovieNode>(movie => movie.Title)
+                .Query;
+
+            var actual = cypherQuery.QueryText;
+
+            var expected = "ORDER BY movie.Year, movie.Title DESC";
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        public void OrderByDesc_ThenBy(string serializerName, EntityResolver resolver, EntityConverter converter)
+        {
+            TestUtilities.RegisterEntityTypes(resolver, converter);
+
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+
+            var cypherQuery = query
+                .OrderByDescending<MovieNode>(movie => movie.Year)
+                .ThenBy<MovieNode>(movie => movie.Title)
+                .Query;
+
+            var actual = cypherQuery.QueryText;
+
+            var expected = "ORDER BY movie.Year DESC, movie.Title";
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        public void OrderBy_AnnotatedThenByDesc(string serializerName, EntityResolver resolver, EntityConverter converter)
+        {
+            TestUtilities.RegisterEntityTypes(resolver, converter);
+
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+
+            var cypherQuery = query
+                .OrderBy((MovieNode movie) => movie.Year)
+                .AsOrderedAnnotatedQuery()
+                .ThenByDescending(movie => movie.Id())
+                .AsCypherQuery()
+                .Query;
+
+            var actual = cypherQuery.QueryText;
+
+            var expected = "ORDER BY movie.Year, id(movie) DESC";
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        public void OrderByDesc_AnnotatedThenBy(string serializerName, EntityResolver resolver, EntityConverter converter)
+        {
+            TestUtilities.RegisterEntityTypes(resolver, converter);
+
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+
+            var cypherQuery = query
+                .OrderByDescending((MovieNode movie) => movie.Year)
+                .AsOrderedAnnotatedQuery()
+                .ThenBy(movie => movie.Id())
+                .AsCypherQuery()
+                .Query;
+
+            var actual = cypherQuery.QueryText;
+
+            var expected = "ORDER BY movie.Year DESC, id(movie)";
 
             Assert.Equal(expected, actual);
         }

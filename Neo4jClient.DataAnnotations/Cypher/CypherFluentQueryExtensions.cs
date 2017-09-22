@@ -14,6 +14,33 @@ namespace Neo4jClient.DataAnnotations.Cypher
         static MethodInfo mutateMethodInfo = null;
         static MethodInfo mutateGenericMethodInfo = null;
 
+        #region AnnotatedQuery
+        /// <summary>
+        /// <see cref="IAnnotatedQuery"/> abstracts methods that re-implement Neo4jClient methods using the same signatures in order to take advantage of annotations features like ComplexTypes.
+        /// Separating these methods this way ensures that we avoid collisions.
+        /// E.g. client.Cypher.AsAnnotatedQuery().Where((MovieNode movie) =&gt; movie.Year == 2017)
+        /// See Tests for examples. Call <see cref="AnnotatedQueryExtensions.AsCypherQuery(IAnnotatedQuery)"/> to return to normal Cypher methods.
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        public static IAnnotatedQuery AsAnnotatedQuery(this ICypherFluentQuery query)
+        {
+            return new AnnotatedQuery(query);
+        }
+        /// <summary>
+        /// <see cref="IOrderedAnnotatedQuery"/> abstracts methods that re-implement Neo4jClient methods using the same signatures in order to take advantage of annotations features like ComplexTypes.
+        /// Separating these methods this way ensures that we avoid collisions.
+        /// E.g. client.Cypher.AsAnnotatedQuery().Where((MovieNode movie) =&gt; movie.Year == 2017)
+        /// See Tests for examples. Call <see cref="AnnotatedQueryExtensions.AsOrderedCypherQuery(IOrderedAnnotatedQuery)"/> to return to normal Cypher methods.
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        public static IOrderedAnnotatedQuery AsOrderedAnnotatedQuery(this IOrderedCypherFluentQuery query)
+        {
+            return new AnnotatedQuery(query);
+        }
+        #endregion
+
         #region Clause
         /// <summary>
         /// Adds a cypher clause to the query. 
@@ -79,6 +106,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         #endregion
 
         #region GetPattern
+        [Obsolete("Use WithPattern instead.")]
         /// <summary>
         /// Builds Neo4j pattern using the <see cref="PropertiesBuildStrategy.NoParams"/> strategy. If multiple patterns are described, they are concatenated with a comma.
         /// E.g Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: path=(a), (b)--&gt;(c).
@@ -113,7 +141,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         #region WithPattern
         /// <summary>
         /// Builds Neo4j pattern using the <see cref="PropertiesBuildStrategy.WithParamsForValues"/> strategy. If multiple patterns are described, they are concatenated with a comma.
-        /// E.g Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: path=(a), (b)--&gt;(c).
+        /// E.g., Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: path=(a), (b)--&gt;(c).
         /// This method allows you to safely chain calls on an existing <see cref="ICypherFluentQuery"/> object.
         /// </summary>
         /// <param name="query"></param>
@@ -127,7 +155,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         /// <summary>
         /// Builds Neo4j pattern using the specified <see cref="PropertiesBuildStrategy"/>. If multiple patterns are described, they are concatenated with a comma.
-        /// E.g Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: path=(a), (b)--&gt;(c).
+        /// E.g., Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: path=(a), (b)--&gt;(c).
         /// This method allows you to safely chain calls on an existing <see cref="ICypherFluentQuery"/> object.
         /// </summary>
         /// <param name="query"></param>
@@ -142,6 +170,50 @@ namespace Neo4jClient.DataAnnotations.Cypher
             pattern = Utilities.BuildPaths(ref query,
                 patternDescriptions ?? throw new ArgumentNullException(nameof(patternDescriptions)),
                 buildStrategy);
+
+            return query;
+        }
+        #endregion
+
+        #region WithProperty
+        /// <summary>
+        /// Gets the specified property name as they would be stored/used in Neo4j.
+        /// E.g., query.WithProperty((Person person) =&gt; person.Address.City, out var names), should get you a name like: address_city.
+        /// You can also specify multiple properties.
+        /// E.g., query.WithProperty((Person person) =&gt; new { person.Name, person.Address.City }, out var names).
+        /// Camel casing is assumed for the examples.
+        /// This method allows you to safely chain calls on an existing <see cref="ICypherFluentQuery"/> object.
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="names"></param>
+        /// <returns></returns>
+        public static ICypherFluentQuery WithProperty<T>(this ICypherFluentQuery query, 
+            Expression<Func<T, object>> properties, out string[] names)
+        {
+            return WithProperty(query, properties, out names, makeMemberAccess: false);
+        }
+
+        /// <summary>
+        /// Gets the specified property name as they would be stored/used in Neo4j.
+        /// E.g., query.WithProperty((Person person) =&gt; person.Address.City, out var names), should get you a name like: address_city.
+        /// You can also specify multiple properties.
+        /// E.g., query.WithProperty((Person person) =&gt; new { person.Name, person.Address.City }, out var names).
+        /// Camel casing is assumed for the examples.
+        /// This method allows you to safely chain calls on an existing <see cref="ICypherFluentQuery"/> object.
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="names"></param>
+        /// <param name="makeMemberAccess">If true, the parameter name is included to make a member access.
+        /// E.g. person.name, person.address_city.</param>
+        /// <returns></returns>
+        public static ICypherFluentQuery WithProperty<T>(this ICypherFluentQuery query,
+            Expression<Func<T, object>> properties, out string[] names, bool makeMemberAccess)
+        {
+            Utilities.GetQueryUtilities(query, out var client, out var serializer,
+                    out var resolver, out var converter, out var serializerFunc, out var queryWriter);
+
+            names = Utilities.GetFinalPropertyNames(properties, resolver, converter,
+                serializerFunc, makeNamesMemberAccess: makeMemberAccess);
 
             return query;
         }
@@ -687,6 +759,74 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
         #endregion
 
+        #region OrderBy
+        /// <summary>
+        /// Orders the query by a property in ascending order.
+        /// E.g., query.OrderBy((Actor actor) => actor.Name) generates the cypher: ORDER BY actor.name.
+        /// Example assumes camel casing.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="property"></param>
+        /// <returns></returns>
+        public static IOrderedCypherFluentQuery OrderBy<T>(this ICypherFluentQuery query, Expression<Func<T, object>> property)
+        {
+            return SharedOrderBy(query, (q, p) => q.OrderBy(p), property);
+        }
+
+        /// <summary>
+        /// Orders the query by a property in descending order.
+        /// E.g., query.OrderByDescending((Actor actor) => actor.Name) generates the cypher: ORDER BY actor.name DESC.
+        /// Example assumes camel casing.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="property"></param>
+        /// <returns></returns>
+        public static IOrderedCypherFluentQuery OrderByDescending<T>(this ICypherFluentQuery query, Expression<Func<T, object>> property)
+        {
+            return SharedOrderBy(query, (q, p) => q.OrderByDescending(p), property);
+        }
+
+        /// <summary>
+        /// Orders the query by an additional property in ascending order.
+        /// E.g., query.OrderByDescending((Actor actor) => actor.Name).ThenBy((Actor actor) => actor.Age) generates the cypher: ORDER BY actor.name DESC, actor.age.
+        /// Example assumes camel casing.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="property"></param>
+        /// <returns></returns>
+        public static IOrderedCypherFluentQuery ThenBy<T>(this IOrderedCypherFluentQuery query, Expression<Func<T, object>> property)
+        {
+            return SharedOrderBy(query, (q, p) => ((IOrderedCypherFluentQuery)q).ThenBy(p), property);
+        }
+
+        /// <summary>
+        /// Orders the query by an additional property in descending order.
+        /// E.g., query.OrderBy((Actor actor) => actor.Name).ThenByDescending((Actor actor) => actor.Age) generates the cypher: ORDER BY actor.name, actor.age DESC.
+        /// Example assumes camel casing.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="property"></param>
+        /// <returns></returns>
+        public static IOrderedCypherFluentQuery ThenByDescending<T>(this IOrderedCypherFluentQuery query,
+            Expression<Func<T, object>> property)
+        {
+            return SharedOrderBy(query, (q, p) => ((IOrderedCypherFluentQuery)q).ThenByDescending(p), property);
+        }
+
+
+        internal static IOrderedCypherFluentQuery SharedOrderBy<T>
+            (this ICypherFluentQuery query, Func<ICypherFluentQuery, string[], IOrderedCypherFluentQuery> clause, Expression<Func<T, object>> properties)
+        {
+            query = query.WithProperty(properties, out var propNames, makeMemberAccess: true);
+
+            return clause(query, propNames);
+        }
+        #endregion
+
         #region Index
         /// <summary>
         /// Creates a single-property or composite index on properties of a label.
@@ -722,10 +862,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         internal static ICypherFluentQuery SharedIndex<T>(this ICypherFluentQuery query, string clause, Expression<Func<T, object>> properties)
         {
-            Utilities.GetQueryUtilities(query, out var client, out var serializer,
-                    out var resolver, out var converter, out var serializerFunc, out var queryWriter);
+            query = query.WithProperty(properties, out var propNames, makeMemberAccess: false);
 
-            var propNames = Utilities.GetFinalPropertyNames(properties, resolver, converter, serializerFunc, makeNamesMemberAccess: false);
             var aggregatePropNames = propNames.Aggregate((first, second) => $"{first}, {second}");
 
             var label = Neo4jAnnotations.GetEntityTypeInfo(typeof(T)).LabelsWithTypeNameCatch.First(); //you only set constraints on a label so the type has to be specific.
@@ -854,10 +992,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
         internal static ICypherFluentQuery SharedConstraint<T>(this ICypherFluentQuery query, string clause, 
             string assertFormat, Expression<Func<T, object>> properties, bool isRelationship)
         {
-            Utilities.GetQueryUtilities(query, out var client, out var serializer,
-                    out var resolver, out var converter, out var serializerFunc, out var queryWriter);
+            query = query.WithProperty(properties, out var propNames, makeMemberAccess: true);
 
-            var propNames = Utilities.GetFinalPropertyNames(properties, resolver, converter, serializerFunc, makeNamesMemberAccess: true);
             var aggregatePropNames = propNames.Aggregate((first, second) => $"{first}, {second}");
 
             var label = Neo4jAnnotations.GetEntityTypeInfo(typeof(T)).LabelsWithTypeNameCatch.First(); //you only set constraints on a label so the type has to be specific.

@@ -9,14 +9,15 @@
     <PackageProjectUrl>https://github.com/francnuec/Neo4jClient.DataAnnotations</PackageProjectUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageTags>nosql cypher neo4j entity orm poco</PackageTags>
-    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageReleaseNotes>Visit project site for usage and instructions.
 
-*Fixed a bug not allowing enums be serialized.
-*Fixed other bugs.</PackageReleaseNotes>
-    <Version>1.0.7</Version>
-    <FileVersion>1.0.7.0</FileVersion>
-    <AssemblyVersion>1.0.7.0</AssemblyVersion>
+*Added OrderBy, ThenBy, With, Where, Return, ReturnDistinct
+*Added method to get property names
+*Fixed bugs.</PackageReleaseNotes>
+    <Version>1.1.0</Version>
+    <FileVersion>1.1.0.0</FileVersion>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

@@ -154,7 +154,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             TestUtilities.RegisterEntityTypes(resolver, resolver == null? TestUtilities.Converter : null);
 
-            Expression<Func<object>> expression = () => TestUtilities.Actor.Set(a => a.Born == Vars.Get<ActorNode>("ellenPompeo").Born && a.Name == "Shonda Rhimes");
+            Expression<Func<object>> expression = () => TestUtilities.Actor._Set(a => a.Born == Vars.Get<ActorNode>("ellenPompeo").Born && a.Name == "Shonda Rhimes");
 
             var entityVisitor = new EntityExpressionVisitor(resolver, serializer);
             var newExpression = entityVisitor.Visit(expression.Body);
@@ -182,7 +182,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             TestUtilities.RegisterEntityTypes(resolver, resolver == null? TestUtilities.Converter : null);
 
             Expression<Func<object>> expression = () => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, TestUtilities.Actor.Address }
-                .Set(a => a.Address.AddressLine == Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes");
+                ._Set(a => a.Address.AddressLine == Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes");
 
             var entityVisitor = new EntityExpressionVisitor(resolver, serializer);
             var newExpression = entityVisitor.Visit(expression.Body);
@@ -224,7 +224,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             TestUtilities.RegisterEntityTypes(resolver, resolver == null? TestUtilities.Converter : null);
 
             Expression<Func<object>> expression = () => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, Address = TestUtilities.Actor.Address as AddressWithComplexType }
-            .Set(a => a.Address == new AddressWithComplexType()
+            ._Set(a => a.Address == new AddressWithComplexType()
             {   //Use this style only if you're sure all the properties here are assigned, 
                 //because this address object would replace the instance address property entirely.
                 //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
@@ -277,7 +277,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             TestUtilities.RegisterEntityTypes(resolver, resolver == null? TestUtilities.Converter : null);
 
             Expression<Func<object>> expression = () => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, Address = TestUtilities.Actor.Address as AddressWithComplexType }
-            .Set(a => a.Address.Location.Longitude == new AddressWithComplexType()
+            ._Set(a => a.Address.Location.Longitude == new AddressWithComplexType()
             {   //Using this style, parameters set inline of a member access may or may not make it to the generated pattern, or even throw an exception.
                 //This is because this MemberInit may be taken as an object value, since it was accessed, and then used directly.
                 //This was done mainly for testing. 
@@ -329,7 +329,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             TestUtilities.RegisterEntityTypes(resolver, resolver == null? TestUtilities.Converter : null);
 
             Expression<Func<object>> expression = () => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, TestUtilities.Actor.Address }
-                .Set(a => (a.Address as AddressWithComplexType).AddressLine == Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes");
+                ._Set(a => (a.Address as AddressWithComplexType).AddressLine == Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes");
 
             var entityVisitor = new EntityExpressionVisitor(resolver, serializer);
             var newExpression = entityVisitor.Visit(expression.Body);
@@ -373,7 +373,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             TestUtilities.RegisterEntityTypes(resolver, resolver == null? TestUtilities.Converter : null);
 
             Expression<Func<object>> expression = () => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, TestUtilities.Actor.Address }
-            .Set(a => a.Address == new AddressWithComplexType()
+            ._Set(a => a.Address == new AddressWithComplexType()
             {   //Use this style only if you're sure all the properties here are assigned, 
                 //because this address object would replace the instance address property entirely.
                 //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
@@ -430,7 +430,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 { "Name", TestUtilities.Actor.Name },
                 { "Born", TestUtilities.Actor.Born },
                 { "Address", TestUtilities.Actor.Address }
-            }.Set(a => a["Address"] == Vars.Get<ActorNode>("ellenPompeo").Address && (int)a["Born"] == 1671 && a["Name"] == "Shonda Rhimes");
+            }._Set(a => a["Address"] == Vars.Get<ActorNode>("ellenPompeo").Address && (int)a["Born"] == 1671 && a["Name"] == "Shonda Rhimes");
 
             var entityVisitor = new EntityExpressionVisitor(resolver, serializer);
             var newExpression = entityVisitor.Visit(expression.Body);

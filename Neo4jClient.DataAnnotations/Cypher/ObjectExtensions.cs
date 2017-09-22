@@ -27,7 +27,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static TReturn As<TReturn>(this object obj)
+        public static TReturn _As<TReturn>(this object obj)
         {
             //do something, just in case this method was executed
             TReturn ret = default(TReturn);
@@ -47,20 +47,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// Allows you to expressively assign new values (especially <see cref="Vars"/>) to select properties of an existing instance without cloning or modifying the original instance.
         /// These new values would be used in place of the old ones on the instance.
-        /// E.g. () =&gt; ellenPompeo.Set(actor =&gt; actor.Born == Vars.Get&lt;Actor&gt;("shondaRhimes").Born);
-        /// NOTE: The member selection must always be on the left, and new values on the right of a logical equal-to ('==') operation. Use '&amp;&amp;' for more properties.
+        /// E.g. () =&gt; ellenPompeo._Set(actor =&gt; actor.Born == Vars.Get&lt;Actor&gt;("shondaRhimes").Born);
+        /// NOTE: THIS IS NOT CYPHER SET CLAUSE. EXPECTED USE IS WITHIN A PATTERN EXPRESSION. The member selection must always be on the left, and new values on the right of a logical equal-to ('==') operation. Use '&amp;&amp;' for more properties.
         /// Also note that this method does not modify this instance, but overrides its final properties written to cypher.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="instance"></param>
         /// <param name="predicate"></param>
         /// <returns></returns>
-        public static T Set<T>(this T instance, Expression<Func<T, bool>> predicate)
+        public static T _Set<T>(this T instance, Expression<Func<T, bool>> predicate)
         {
-            return Set(instance, predicate, usePredicateOnly: false);
+            return _Set(instance, predicate, usePredicateOnly: false);
         }
 
-        internal static T Set<T>(this T instance, Expression<Func<T, bool>> predicate, bool usePredicateOnly)
+        internal static T _Set<T>(this T instance, Expression<Func<T, bool>> predicate, bool usePredicateOnly)
         {
             return instance;
         }
