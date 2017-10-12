@@ -7,16 +7,16 @@ namespace Neo4jClient.DataAnnotations.Expressions
 {
     public class ReplacerExpressionVisitor : ExpressionVisitor
     {
-        Dictionary<Expression, Expression> exprToReplacement;
+        public Dictionary<Expression, Expression> ExpressionReplacements { get; }
 
         public ReplacerExpressionVisitor(Dictionary<Expression, Expression> exprToReplacement)
         {
-            this.exprToReplacement = exprToReplacement;
+            this.ExpressionReplacements = exprToReplacement;
         }
 
         public override Expression Visit(Expression node)
         {
-            if (exprToReplacement.TryGetValue(node, out var newNode))
+            if (node != null && ExpressionReplacements.TryGetValue(node, out var newNode))
             {
                 return newNode;
             }

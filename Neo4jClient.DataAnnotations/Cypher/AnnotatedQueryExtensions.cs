@@ -14,10 +14,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
             return annotatedQuery.CypherQuery;
         }
 
-        public static IOrderedCypherFluentQuery AsOrderedCypherQuery(this IOrderedAnnotatedQuery annotatedQuery)
+        public static ICypherFluentQuery<TResult> AsCypherQuery<TResult>(this IAnnotatedQuery<TResult> annotatedQuery)
+        {
+            return (ICypherFluentQuery<TResult>)annotatedQuery.CypherQuery;
+        }
+
+        public static IOrderedCypherFluentQuery AsCypherQuery(this IOrderedAnnotatedQuery annotatedQuery)
         {
             return (IOrderedCypherFluentQuery)annotatedQuery.CypherQuery;
         }
+
+        //public static IOrderedCypherFluentQuery AsOrderedCypherQuery(this IOrderedAnnotatedQuery annotatedQuery)
+        //{
+        //    return (IOrderedCypherFluentQuery)annotatedQuery.CypherQuery;
+        //}
         #endregion
 
         #region Where

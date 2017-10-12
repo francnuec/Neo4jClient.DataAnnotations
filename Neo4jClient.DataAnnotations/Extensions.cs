@@ -195,6 +195,7 @@ namespace Neo4jClient.DataAnnotations
         public static Expression Uncast(this Expression expression, out Type castRemoved, Type castToRemove = null)
         {
             castRemoved = null;
+            MethodCallExpression callExpr = null;
 
             switch (expression.NodeType)
             {
@@ -202,12 +203,15 @@ namespace Neo4jClient.DataAnnotations
                 case ExpressionType.ConvertChecked:
                 case ExpressionType.TypeAs:
                 case ExpressionType.Unbox:
+                case ExpressionType.Call when ((callExpr = expression as MethodCallExpression) != null
+                    && (callExpr.Method.Name.StartsWith("_As")
+                    && callExpr.Method.DeclaringType == Defaults.ObjectExtensionsType)):
                     {
                         var unary = (expression as UnaryExpression);
-                        if (castToRemove == null || castToRemove == unary.Type)
+                        if (castToRemove == null || castToRemove == expression.Type)
                         {
-                            castRemoved = unary.Type;
-                            return unary.Operand;
+                            castRemoved = expression.Type;
+                            return unary?.Operand ?? callExpr?.Arguments[0];
                         }
 
                         break;
@@ -336,6 +340,11 @@ namespace Neo4jClient.DataAnnotations
         public static Type GetMemberType(this MemberInfo member)
         {
             return (member as PropertyInfo)?.PropertyType ?? (member as FieldInfo)?.FieldType ?? (member as MethodInfo)?.ReturnType;
+        }
+
+        public static bool IsConstant(this Expression node)
+        {
+            return node is ConstantExpression;
         }
     }
 }

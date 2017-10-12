@@ -14,10 +14,10 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         public Annotated(ICypherFluentQuery query)
         {
-            this.internalCypherQuery = query ?? throw new ArgumentNullException(nameof(query));
+            internalCypherQuery = query ?? throw new ArgumentNullException(nameof(query));
         }
 
-        public ref ICypherFluentQuery CypherQuery
+        public virtual ref ICypherFluentQuery CypherQuery
         {
             get
             {

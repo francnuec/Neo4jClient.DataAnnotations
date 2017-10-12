@@ -41,41 +41,55 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
             if (previous == null)
             {
-                Utilities.GetQueryUtilities(query, out var client, out var serializer,
-                    out var resolver, out var converter, out var actualSerializer, out var queryWriterGetter);
+                QueryUtilities = Utilities.GetQueryUtilities(query);
 
-                Client = client;
-                QueryWriterGetter = queryWriterGetter;
-                Serializer = actualSerializer;
-                Converter = converter;
-                Resolver = resolver;
                 CamelCaseProperties = (bool)query.GetType().GetField("CamelCaseProperties", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).GetValue(query);
+                FunctionVisitor = new FunctionExpressionVisitor(QueryUtilities);
             }
             else
             {
-                Client = previous.Client;
-                QueryWriterGetter = previous.QueryWriterGetter;
-                Serializer = previous.Serializer;
-                Converter = previous.Converter;
-                Resolver = previous.Resolver;
+                QueryUtilities = previous.QueryUtilities;
+                QueryUtilities.CurrentQueryWriter = QueryWriterGetter(query);
+                QueryUtilities.CurrentBuildStrategy = QueryUtilities.BuildStrategyGetter(query);
+
                 CamelCaseProperties = previous.CamelCaseProperties;
+                var funcsVisitor = previous.FunctionVisitor;
+                funcsVisitor.QueryUtilities = QueryUtilities;
+                FunctionVisitor = funcsVisitor;
             }
         }
 
+        public QueryUtilities QueryUtilities { get; }
 
-        public IGraphClient Client { get; }
+        public IGraphClient Client => QueryUtilities?.Client;
 
         public bool CamelCaseProperties { get; }
 
-        protected Func<ICypherFluentQuery, QueryWriter> QueryWriterGetter { get; }
+        protected Func<ICypherFluentQuery, QueryWriter> QueryWriterGetter => QueryUtilities.QueryWriterGetter;
 
         protected QueryWriter QueryWriter { get { return QueryWriterGetter.Invoke(CypherQuery); } }
 
-        protected EntityConverter Converter { get; }
+        protected EntityConverter Converter => QueryUtilities?.Converter;
 
-        protected EntityResolver Resolver { get; }
+        protected EntityResolver Resolver => QueryUtilities?.Resolver;
 
-        protected Func<object, string> Serializer { get; }
+        protected Func<object, string> Serializer => QueryUtilities?.SerializeCallback;
+
+        private FunctionExpressionVisitor _funcVisitor;
+        protected FunctionExpressionVisitor FunctionVisitor
+        {
+            get
+            {
+                if (_funcVisitor != null)
+                {
+                    _funcVisitor.QueryUtilities.CurrentQueryWriter = QueryWriter;
+                    _funcVisitor.QueryUtilities.CurrentBuildStrategy = QueryUtilities.BuildStrategyGetter(CypherQuery);
+                }
+
+                return _funcVisitor;
+            }
+            private set { _funcVisitor = value; }
+        }
 
 
         protected override string InternalBuild()
@@ -109,17 +123,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
             var paramAccessStretchVisitor = new ParameterAccessStretchVisitor();
             paramAccessStretchVisitor.Visit(expression);
 
-            Dictionary<Expression, Tuple<string, Expression>> exprToMemberAccess
-                = new Dictionary<Expression, Tuple<string, Expression>>();
+            var replacements = new Dictionary<Expression, Expression>();
 
-            //convert the param accesses to a string json access
+            //remove all param.As calls. change them to vars.get calls
             foreach (var paramAccess in paramAccessStretchVisitor.ParameterAccesses)
             {
-                //we need the expression after "As", which should be index 2 (third element)
                 //"As" expression itself should be index 1.
                 var paramAccessExprs = Utilities.GetSimpleMemberAccessStretch(paramAccess.Key, out var entityExpr);
-
-                if (paramAccessExprs.Count >= 3)
+                if (paramAccessExprs.Count >= 2)
                 {
                     var returnAsMethodCallExpr = paramAccessExprs[1] as MethodCallExpression;
 
@@ -129,99 +140,58 @@ namespace Neo4jClient.DataAnnotations.Cypher
                         continue;
 
                     var sourceType = returnAsMethodCallExpr.Method.GetGenericArguments().Single();
-                    var paramExpr = Expression.Parameter(sourceType, paramAccess.Value.Name);
+
+                    if (replacements.FirstOrDefault(r => r.Value.Type == sourceType
+                        && ((r.Value as MethodCallExpression)?.Arguments[0] as ConstantExpression)
+                        .Value as string == paramAccess.Value.Name).Value is var varsGetExpr
+                        && varsGetExpr == null) //try get existing vars.get call
+                    {
+                        varsGetExpr = Utilities.GetVarsGetExpressionFor(paramAccess.Value.Name, sourceType);
+                    }
 
                     //replace the "As" call expression with our new parameter
-                    var newParamAccess = new ReplacerExpressionVisitor
-                    (new Dictionary<Expression, Expression>() { { returnAsMethodCallExpr, paramExpr } })
-                    .Visit(paramAccess.Key);
-
-                    var propertyName =
-                    Utilities.GetFinalPropertyNames(sourceType, Expression.Lambda(newParamAccess, paramExpr),
-                    Resolver, Converter, Serializer, makeNamesMemberAccess: true)[0];
-
-                    //we are going to replace the expression with a new one like this:
-                    //Return.As<int>("person.age")  where "person" is the parameter, and int is the "age" field type.
-                    //from the source code, the expression visitor simply outputs whatever we put as argument to the "As" method of "Return" class.
-                    var returnAsMethod = Utilities.GetMethodInfo(() => Return.As<object>(null), paramAccess.Key.Type);
-                    var returnAsExprCall = Expression.Call(returnAsMethod, Expression.Constant(propertyName, typeof(string)));
-
-                    exprToMemberAccess[paramAccess.Key] = new Tuple<string, Expression>(propertyName, returnAsExprCall);
+                    replacements.Add(returnAsMethodCallExpr, varsGetExpr);
                 }
             }
 
-            if (exprToMemberAccess.Count > 0)
+            if (replacements.Count > 0)
             {
-                expression = new ReplacerExpressionVisitor
-                    (exprToMemberAccess.ToDictionary(pair => pair.Key, pair => pair.Value.Item2))
-                    .Visit(expression) as LambdaExpression;
-
+                //make replacements
+                expression = new ReplacerExpressionVisitor(replacements).Visit(expression) as LambdaExpression;
             }
 
             return expression;
+        }
+
+        protected string BuildICypherResultItemExpression(LambdaExpression expression,
+            out CypherResultMode resultMode, out CypherResultFormat resultFormat)
+        {
+            //expecting:
+            //u => u //parameter
+            //u => u.Id() //methodcall
+            //u => u.As<User>().Name //memberaccess
+            //(u,v) => new { u, v } //new anonymous expression
+            //(u, v) => new User(){ Name = u.Id() } //member init
+
+            expression = VisitForICypherResultItem(expression);
+            QueryUtilities.CurrentBuildStrategy = QueryUtilities.CurrentBuildStrategy ?? PropertiesBuildStrategy.WithParams;
+            var result = Utilities.BuildProjectionQueryExpression(expression, QueryUtilities, FunctionVisitor,
+                out resultMode, out resultFormat);
+
+            return result;
         }
 
         #region Where
         protected string BuildWhereText(LambdaExpression expression)
         {
             var vbCompareReplacerVisitor = Utilities.CreateInstance(VbCompareReplacerType, nonPublic: true) as ExpressionVisitor;
-            var expr = vbCompareReplacerVisitor.Visit(expression);
+            var expr = vbCompareReplacerVisitor.Visit(expression) as LambdaExpression;
 
-            //fish out all the parameterexpression accesses
-            var paramAccessStretchVisitor = new ParameterAccessStretchVisitor();
-            paramAccessStretchVisitor.Visit(expr);
-
-            Dictionary<Expression, Tuple<string, Expression>> exprToMemberAccess
-                = new Dictionary<Expression, Tuple<string, Expression>>();
-
-            //convert the param accesses to a string json access
-            foreach (var paramAccess in paramAccessStretchVisitor.ParameterAccesses)
-            {
-                var propertyName =
-                    Utilities.GetFinalPropertyNames(paramAccess.Value.Type,
-                    Expression.Lambda(paramAccess.Key, paramAccess.Value),
-                    Resolver, Converter, Serializer, makeNamesMemberAccess: true)[0];
-
-                //we are going to replace the expression with a new one like this:
-                //"person.age"._As<int>()  where "person" is the parameter, and int is the "age" field type.
-                //from the source code, the where expression visitor will simply ignore the "As" method call.
-                //we simply send the property name directly to output then
-                var asMethod = Utilities.GetMethodInfo(() => ObjectExtensions._As<object>(null), paramAccess.Key.Type);
-                var asExprCall = Expression.Call(asMethod, Expression.Constant(propertyName));
-
-                exprToMemberAccess[paramAccess.Key] = new Tuple<string, Expression>(propertyName, asExprCall);
-            }
-
-            Func<object, string> createParameterCallback = QueryWriter.CreateParameter;
-
-            if (exprToMemberAccess.Count > 0)
-            {
-                expr = new ReplacerExpressionVisitor(exprToMemberAccess.ToDictionary(pair => pair.Key, pair => pair.Value.Item2))
-                .Visit(expr);
-
-                //replace the createParameterCallback such that whenever there's a request for parameter,
-                //and the value matches one we have in our memberAccess, return the value instead, and not a parameter.
-                var actualCallback = createParameterCallback;
-                createParameterCallback = val =>
-                {
-                    if (val is string valStr)
-                    {
-                        //we only check strings
-                        if (exprToMemberAccess.Values.Any(v => v.Item1 == valStr))
-                        {
-                            //bingo
-                            //found it
-                            //our work is done.
-                            return valStr;
-                        }
-                    }
-
-                    return actualCallback(val);
-                };
-            }
-
-            return CypherWhereExpressionBuilder.BuildText
-                (expr as LambdaExpression, createParameterCallback, Client.CypherCapabilities, CamelCaseProperties);
+            //visit the expression
+            var visitor = FunctionVisitor;
+            visitor.Clear();
+            var newBodyExpr = visitor.Visit(expr.Body);
+            return "(" + visitor.Builder.ToString() + ")";
         }
 
         protected internal AnnotatedQuery SharedWhere(LambdaExpression expression)
@@ -246,15 +216,13 @@ namespace Neo4jClient.DataAnnotations.Cypher
         #region With
         private ICypherFluentQuery<TResult> SharedWithQuery<TResult>(LambdaExpression expression)
         {
-            expression = VisitForICypherResultItem(expression);
+            var text = "WITH " + BuildICypherResultItemExpression(expression, out var mode, out var format);
 
-            //call private with
-            var newQuery = PrivateGenericWithInfo
-                .MakeGenericMethod(typeof(TResult))
-                .Invoke(CypherQuery, new object[] { expression })
-                as ICypherFluentQuery<TResult>;
-
-            return newQuery;
+            return CypherQuery.Mutate<TResult>(w =>
+            {
+                w.ResultMode = mode;
+                w.AppendClause(text);
+            });
         }
 
         protected internal AnnotatedQuery<TResult> SharedWith<TResult>(LambdaExpression expression, string addedWithText)
@@ -277,26 +245,28 @@ namespace Neo4jClient.DataAnnotations.Cypher
         #region Return
         protected internal AnnotatedQuery<TResult> SharedReturn<TResult>(LambdaExpression expression)
         {
-            expression = VisitForICypherResultItem(expression);
+            var text = "RETURN " + BuildICypherResultItemExpression(expression, out var mode, out var format);
 
-            //call private return
-            var newQuery = PrivateGenericReturnInfo
-                .MakeGenericMethod(typeof(TResult))
-                .Invoke(CypherQuery, new object[] { expression })
-                as ICypherFluentQuery<TResult>;
+            var newQuery = CypherQuery.Mutate<TResult>(w =>
+            {
+                w.ResultMode = mode;
+                w.ResultFormat = format;
+                w.AppendClause(text);
+            });
 
             return Mutate(newQuery);
         }
 
         protected internal AnnotatedQuery<TResult> SharedReturnDistinct<TResult>(LambdaExpression expression)
         {
-            expression = VisitForICypherResultItem(expression);
+            var text = "RETURN DISTINCT " + BuildICypherResultItemExpression(expression, out var mode, out var format);
 
-            //call private return distinct
-            var newQuery = PrivateGenericReturnDistinctInfo
-                .MakeGenericMethod(typeof(TResult))
-                .Invoke(CypherQuery, new object[] { expression })
-                as ICypherFluentQuery<TResult>;
+            var newQuery = CypherQuery.Mutate<TResult>(w =>
+            {
+                w.ResultMode = mode;
+                w.ResultFormat = format;
+                w.AppendClause(text);
+            });
 
             return Mutate(newQuery);
         }

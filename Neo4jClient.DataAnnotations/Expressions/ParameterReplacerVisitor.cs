@@ -5,11 +5,11 @@ using System.Text;
 
 namespace Neo4jClient.DataAnnotations.Expressions
 {
-    public class ParameterExpressionVisitor : ExpressionVisitor
+    public class ParameterReplacerVisitor : ExpressionVisitor
     {
         Dictionary<string, Expression> parameterReplacements;
 
-        public ParameterExpressionVisitor(Dictionary<string, Expression> parameterReplacements)
+        public ParameterReplacerVisitor(Dictionary<string, Expression> parameterReplacements)
         {
             this.parameterReplacements = parameterReplacements;
         }

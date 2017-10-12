@@ -7,6 +7,7 @@ using System.Linq;
 using Neo4jClient.Serialization;
 using Newtonsoft.Json.Linq;
 using Neo4jClient.DataAnnotations.Serialization;
+using Neo4jClient.DataAnnotations.Cypher;
 
 namespace Neo4jClient.DataAnnotations.Expressions
 {
@@ -27,13 +28,15 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         public List<SpecialNode> SpecialNodes { get; } = new List<SpecialNode>();
 
-        public Func<object, string> Serializer { get; private set; }
+        public Func<object, string> Serializer => QueryUtilities?.SerializeCallback;
 
-        public EntityResolver Resolver { get; private set; }
+        public EntityResolver Resolver => QueryUtilities?.Resolver;
 
         public Expression RootNode { get; private set; }
 
         public Expression Source { get; private set; }
+
+        public QueryUtilities QueryUtilities { get; internal set; }
 
 
         public MethodCallExpression SetNode { get; private set; }
@@ -56,11 +59,31 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         private bool isVisitingPredicate = false;
 
-
-        public EntityExpressionVisitor(EntityResolver resolver, Func<object, string> serializer)
+        private FunctionExpressionVisitor _funcsVisitor = null;
+        protected FunctionExpressionVisitor FuncsVisitor
         {
-            Resolver = resolver;
-            Serializer = serializer;
+            get
+            {
+                if (_funcsVisitor == null)
+                {
+                    _funcsVisitor = new FunctionExpressionVisitor(QueryUtilities, new FunctionVisitorContext()
+                    {
+                        //we most likely aint needing these
+                        WriteConstants = false,
+                        RewriteNullEqualityComparisons = false,
+                        WriteOperators = false,
+                        WriteParameters = false
+                    });
+                }
+
+                return _funcsVisitor;
+            }
+        }
+
+
+        public EntityExpressionVisitor(QueryUtilities queryUtilities)
+        {
+            QueryUtilities = queryUtilities;
         }
 
 
@@ -77,24 +100,59 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 assignRootNode = true;
             }
 
-            List<Expression> filtered = Utilities.GetSimpleMemberAccessStretch(node, out var filteredVal);
+            bool isSpecialFunctionsNode = false;
+
+            List<Expression> filtered = Utilities.GetSimpleMemberAccessStretch(node, out var filteredVal, out var isContinuous);
             bool isVars = Utilities.HasVars(filtered);
 
             if (isVars)
             {
                 //found a special node.
-                SpecialNode specialNode = AddSpecialNode(node, SpecialNodeType.Variable, out var isNew,
+                isSpecialFunctionsNode = true;
+            }
+            else if (node?.Type == Defaults.JRawType) //never directly delegate jraw to the serializer. use the functions visitor for it instead
+            {
+                isSpecialFunctionsNode = true;
+            }
+            else if (isContinuous && filtered.Count > 0 && node?.NodeType == ExpressionType.Call)
+            {
+                //first see if we can successfully execute the expression
+                object value = null;
+                try
+                {
+                    value = node.ExecuteExpression<object>();
+                }
+                catch
+                {
+
+                }
+
+                if (value == null)
+                {
+                    //maybe one of our functions
+                    //check if it can be handled
+                    if (FuncsVisitor.CanHandle(node, out var handler))
+                    {
+                        //found a special node
+                        isSpecialFunctionsNode = true;
+                    }
+                }
+            }
+
+            if (isSpecialFunctionsNode)
+            {
+                SpecialNode specialNode = AddSpecialNode(node, SpecialNodeType.Function, out var isNew,
                     filtered, filteredVal, generatePlaceholder: true, nodePlaceholder: node);
 
                 node = specialNode.Placeholder;
             }
 
-            node = base.Visit(node);
+            var newNode = base.Visit(node);
 
             if (assignRootNode)
-                RootNode = node;
+                RootNode = newNode;
 
-            return node;
+            return newNode;
         }
 
         protected override Expression VisitNew(NewExpression node)
@@ -383,7 +441,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
                 if (generatePlaceholder)
                 {
-                    if (type == SpecialNodeType.Variable)
+                    if (type == SpecialNodeType.Function)
                     {
                         nodePlaceholder = Expression.Call(Defaults.UtilitiesType, "GetValue", new[] { node.Type }, Expression.Constant(index));
                     }

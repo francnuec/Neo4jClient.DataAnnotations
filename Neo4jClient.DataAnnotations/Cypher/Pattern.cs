@@ -22,12 +22,13 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Path = path;
         }
 
-        private EntityResolver entityResolver;
-        private EntityConverter entityConverter;
-        private ISerializer serializer;
-        private Func<object, string> serializerFunc;
-        private IGraphClient client;
-        private Func<ICypherFluentQuery, QueryWriter> queryWriter;
+        protected EntityResolver Resolver => QueryUtilities?.Resolver;
+        protected EntityConverter Converter => QueryUtilities?.Converter;
+        protected ISerializer Serializer => QueryUtilities?.ISerializer;
+        protected Func<object, string> SerializerFunc => QueryUtilities?.SerializeCallback;
+        protected IGraphClient Client => QueryUtilities?.Client;
+        protected Func<ICypherFluentQuery, QueryWriter> QueryWriterGetter => QueryUtilities.QueryWriterGetter;
+        protected QueryUtilities QueryUtilities { get; set; }
 
         public IPathExtent Path { get; protected internal set; }
 
@@ -583,7 +584,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 if (!aFinalPropsSet)
                 {
                     aFinalPropsSet = true;
-                    aFinalProps = GetFinalProperties(this, AProperties, AConstraints, AType, out aHasVars);
+                    aFinalProps = GetFinalProperties(this, AProperties, AConstraints, AType, out aHasFuncs);
                 }
 
                 return aFinalProps;
@@ -597,7 +598,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 if (!rFinalPropsSet)
                 {
                     rFinalPropsSet = true;
-                    rFinalProps = GetFinalProperties(this, RProperties, RConstraints, RType, out rHasVars);
+                    rFinalProps = GetFinalProperties(this, RProperties, RConstraints, RType, out rHasFuncs);
                 }
 
                 return rFinalProps;
@@ -611,7 +612,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 if (!bFinalPropsSet)
                 {
                     bFinalPropsSet = true;
-                    bFinalProps = GetFinalProperties(this, BProperties, BConstraints, BType, out bHasVars);
+                    bFinalProps = GetFinalProperties(this, BProperties, BConstraints, BType, out bHasFuncs);
                 }
 
                 return bFinalProps;
@@ -619,12 +620,12 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
 
-        private bool aHasVars, rHasVars, bHasVars;
-        public bool AFinalPropertiesHasVariables => aHasVars;
+        private bool aHasFuncs, rHasFuncs, bHasFuncs;
+        public bool AFinalPropertiesHasFunctions => aHasFuncs;
 
-        public bool RFinalPropertiesHasVariables => rHasVars;
+        public bool RFinalPropertiesHasFunctions => rHasFuncs;
 
-        public bool BFinalPropertiesHasVariables => bHasVars;
+        public bool BFinalPropertiesHasFunctions => bHasFuncs;
 
 
         private EntityTypeInfo aInfo, rInfo, bInfo;
@@ -663,7 +664,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                     {
                         //still null
                         //maybe the selectors were set manually, so find nav here from selected property.
-                        aNavProp = Utilities.GetPropertyInfo(sel.Body, AType, null);
+                        aNavProp = Utilities.GetPropertyInfoFrom(sel.Body, AType, null);
                     }
                 }
 
@@ -694,7 +695,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
                         var otherType = sel.Parameters[0].Type;
                         var otherTypeInfo = Neo4jAnnotations.GetEntityTypeInfo(otherType);
-                        var selectedProp = Utilities.GetPropertyInfo(sel.Body, otherType, BType);
+                        var selectedProp = Utilities.GetPropertyInfoFrom(sel.Body, otherType, BType);
 
                         var navigationProp =
                             GetNavigationPropertyBetweenTypes(otherTypeInfo, BTypeInfo,
@@ -738,18 +739,18 @@ namespace Neo4jClient.DataAnnotations.Cypher
             if (!IsExtension)
             {
                 //Build A
-                A = BuildNode(this, aVar, aVarIsAuto, AVariable, ALabels, AFinalProperties, AFinalPropertiesHasVariables);
+                A = BuildNode(this, aVar, aVarIsAuto, AVariable, ALabels, AFinalProperties, AFinalPropertiesHasFunctions);
 
                 builder.Append(A);
             }
 
             //Build R
-            R = BuildRelationship(this, rVar, rVarIsAuto, RVariable, RTypes, RHops, RFinalProperties, RFinalPropertiesHasVariables);
+            R = BuildRelationship(this, rVar, rVarIsAuto, RVariable, RTypes, RHops, RFinalProperties, RFinalPropertiesHasFunctions);
             if (R == "[]")
                 R = null; //just omit the empty ones
 
             //Build B
-            B = BuildNode(this, bVar, bVarIsAuto, BVariable, BLabels, BFinalProperties, BFinalPropertiesHasVariables);
+            B = BuildNode(this, bVar, bVarIsAuto, BVariable, BLabels, BFinalProperties, BFinalPropertiesHasFunctions);
 
             if (IsExtension || R != null || HasBType || (B != null && B != "()"))
             {
@@ -900,7 +901,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         internal static string BuildNode(Pattern pattern,
             string variable, bool variableIsAuto, string Variable, //NOTE: this call order is important, and method signature should not be reshuffled.
-            IEnumerable<string> labels, JObject finalProperties, bool finalPropsHasVars)
+            IEnumerable<string> labels, JObject finalProperties, bool finalPropsHasFuncs)
         {
             //e.g. (param:labels {finalProperties})
 
@@ -927,8 +928,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
                     ResolveInternalUtilities(pattern);
 
                     string properties = BuildProperties(finalProperties, ref pattern.CypherQuery, Variable,
-                        finalPropsHasVars && pattern.BuildStrategy == PropertiesBuildStrategy.WithParams? 
-                        PropertiesBuildStrategy.WithParamsForValues : pattern.BuildStrategy, pattern.serializerFunc);
+                        finalPropsHasFuncs && pattern.BuildStrategy == PropertiesBuildStrategy.WithParams? 
+                        PropertiesBuildStrategy.WithParamsForValues : pattern.BuildStrategy, pattern.SerializerFunc);
 
                     if (properties != null && properties != "{  }")
                         builder.Append($" {properties}");
@@ -941,8 +942,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
         internal static bool IsAlreadyBound(Pattern pattern, string variable)
         {
             //this is a crude test.
-            bool alreadyBound = pattern.queryWriter != null 
-                && pattern.queryWriter(pattern.CypherQuery)?.ContainsParameterWithKey(variable) == true;
+            bool alreadyBound = pattern.QueryWriterGetter != null 
+                && pattern.QueryWriterGetter(pattern.CypherQuery)?.ContainsParameterWithKey(variable) == true;
 
             if (!alreadyBound)
             {
@@ -954,7 +955,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         internal static string BuildRelationship(Pattern pattern,
             string variable, bool variableIsAuto, string Variable, //NOTE: this call order is important, and method signature should not be reshuffled.
-            IEnumerable<string> types, Tuple<int?, int?> hops, JObject finalProperties, bool finalPropsHasVars)
+            IEnumerable<string> types, Tuple<int?, int?> hops, JObject finalProperties, bool finalPropsHasFuncs)
         {
             //e.g. (param:types*hops {finalProperties})
 
@@ -1023,8 +1024,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
             if ((hasHops || !alreadyBound) && finalProperties?.Count > 0) //add the properties even with hops.
             {
                 string properties = BuildProperties(finalProperties, ref pattern.CypherQuery, Variable,
-                    finalPropsHasVars && pattern.BuildStrategy == PropertiesBuildStrategy.WithParams? 
-                        PropertiesBuildStrategy.WithParamsForValues : pattern.BuildStrategy, pattern.serializerFunc);
+                    finalPropsHasFuncs && pattern.BuildStrategy == PropertiesBuildStrategy.WithParams? 
+                        PropertiesBuildStrategy.WithParamsForValues : pattern.BuildStrategy, pattern.SerializerFunc);
 
                 if (properties != null && properties != "{  }")
                     builder.Append($" {properties}");
@@ -1710,29 +1711,22 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         internal static void ResolveInternalUtilities(Pattern pattern)
         {
-            if (pattern.client == null || pattern.serializer == null || (pattern.entityResolver == null && pattern.entityConverter == null))
+            if (pattern.Client == null || pattern.Serializer == null || (pattern.Resolver == null && pattern.Converter == null))
             {
-                Utilities.GetQueryUtilities(pattern.CypherQuery, out var client, out var serializer,
-                    out var resolver, out var converter, out var serializerFunc, out var queryWriter);
-
-                pattern.client = client;
-                pattern.serializer = serializer;
-                pattern.entityResolver = resolver;
-                pattern.entityConverter = converter;
-                pattern.serializerFunc = serializerFunc;
-                pattern.queryWriter = queryWriter;
+                var queryUtilities = Utilities.GetQueryUtilities(pattern.CypherQuery);
+                queryUtilities.CurrentBuildStrategy = pattern.BuildStrategy;
+                pattern.QueryUtilities = queryUtilities;
             }
         }
 
         internal static JObject GetFinalProperties(Pattern pattern, 
-            LambdaExpression properties, LambdaExpression constraints, Type type, out bool hasVariables)
+            LambdaExpression properties, LambdaExpression constraints, Type type, out bool hasFunctions)
         {
             ResolveInternalUtilities(pattern);
 
             var lambdaExpr = properties ?? (constraints != null ? Utilities.GetConstraintsAsPropertiesLambda(constraints, type) : null);
 
-            return Utilities.GetFinalProperties(lambdaExpr, pattern.entityResolver, 
-                pattern.entityConverter, pattern.serializerFunc, out hasVariables);
+            return Utilities.GetFinalProperties(lambdaExpr, pattern.QueryUtilities, out hasFunctions);
         }
     }
 }

@@ -7,7 +7,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 {
     public class PredicateExpressionVisitor : ExpressionVisitor
     {
-        public Dictionary<Expression, Expression> Assignments 
+        public Dictionary<Expression, Expression> Assignments { get; }
             = new Dictionary<Expression, Expression>();
 
         protected override Expression VisitBinary(BinaryExpression node)

@@ -30,7 +30,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         };
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(EntitySerializationTests))]
+        [MemberData(nameof(SerializerData), MemberType = typeof(EntitySerializationTests))]
         public void NullComplexTypePropertyWrite_InvalidOperationException(string serializerName, Func<object, string> serializer)
         {
             if (serializerName.StartsWith("Resolver"))
@@ -46,7 +46,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(EntitySerializationTests))]
+        [MemberData(nameof(SerializerData), MemberType = typeof(EntitySerializationTests))]
         public void EntityWrite(string serializerName, Func<object, string> serializer)
         {
             if (serializerName.StartsWith("Resolver"))
@@ -113,7 +113,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
                 try
                 {
-                    Assert.Equal(tokenExpected.Item2, property.Value.ToObject<dynamic>());
+                    Assert.Equal(tokenExpected.Item2, property.Value.ToObject(tokenExpected.Item2?.GetType() ?? typeof(object)));
                 }
                 catch
                 {
@@ -124,7 +124,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("DeserializerData", MemberType = typeof(EntitySerializationTests))]
+        [MemberData(nameof(DeserializerData), MemberType = typeof(EntitySerializationTests))]
         public void EntityRead(string settingsName, JsonSerializerSettings deserializerSettings)
         {
             Dictionary<string, dynamic> actorTokens = new Dictionary<string, dynamic>()

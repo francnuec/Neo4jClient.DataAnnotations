@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text;
 using System.Linq;
 using Neo4jClient.Cypher;
-using Newtonsoft.Json.Linq;
 using System.Reflection;
 
 namespace Neo4jClient.DataAnnotations.Cypher
 {
-    public static class CypherFluentQueryExtensions
+    public static partial class CypherFluentQueryExtensions
     {
         static MethodInfo mutateMethodInfo = null;
         static MethodInfo mutateGenericMethodInfo = null;
@@ -31,7 +28,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <see cref="IOrderedAnnotatedQuery"/> abstracts methods that re-implement Neo4jClient methods using the same signatures in order to take advantage of annotations features like ComplexTypes.
         /// Separating these methods this way ensures that we avoid collisions.
         /// E.g. client.Cypher.AsAnnotatedQuery().Where((MovieNode movie) =&gt; movie.Year == 2017)
-        /// See Tests for examples. Call <see cref="AnnotatedQueryExtensions.AsOrderedCypherQuery(IOrderedAnnotatedQuery)"/> to return to normal Cypher methods.
+        /// See Tests for examples. Call <see cref="AnnotatedQueryExtensions.AsCypherQuery(IOrderedAnnotatedQuery)"/> to return to normal Cypher methods.
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
@@ -51,14 +48,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <returns></returns>
         public static ICypherFluentQuery Clause(this ICypherFluentQuery query, string clauseText)
         {
-            var mutateMethod = mutateMethodInfo ?? (mutateMethodInfo = typeof(CypherFluentQuery)
-                .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(m => m.Name == "Mutate" && !m.IsGenericMethod)
-                .First());
-
-            Action<QueryWriter> callback = (w) => w.AppendClause(clauseText);
-
-            return mutateMethod.Invoke(query, new object[] { callback }) as ICypherFluentQuery;
+            return Mutate(query, w => w.AppendClause(clauseText));
         }
 
         /// <summary>
@@ -70,14 +60,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <returns></returns>
         public static ICypherFluentQuery<TResult> Clause<TResult>(this ICypherFluentQuery query, string clauseText)
         {
-            var mutateMethod = mutateGenericMethodInfo ?? (mutateGenericMethodInfo = typeof(CypherFluentQuery)
-                .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(m => m.Name == "Mutate" && m.IsGenericMethod)
-                .First());
-
-            Action<QueryWriter> callback = (w) => w.AppendClause(clauseText);
-
-            return mutateMethod.MakeGenericMethod(typeof(TResult)).Invoke(query, new object[] { callback }) as ICypherFluentQuery<TResult>;
+            return Mutate<TResult>(query, w => w.AppendClause(clauseText));
         }
 
         /// <summary>
@@ -103,48 +86,77 @@ namespace Neo4jClient.DataAnnotations.Cypher
         {
             return Clause<TResult>(query, orderedClauseText) as IOrderedCypherFluentQuery<TResult>;
         }
-        #endregion
 
-        #region GetPattern
-        [Obsolete("Use WithPattern instead.")]
+
+
         /// <summary>
-        /// Builds Neo4j pattern using the <see cref="PropertiesBuildStrategy.NoParams"/> strategy. If multiple patterns are described, they are concatenated with a comma.
-        /// E.g Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: path=(a), (b)--&gt;(c).
+        /// Mutates the <see cref="ICypherFluentQuery"/> after modifying some <see cref="QueryWriter"/> parameters.
+        /// NOTE: ENSURE YOU HAVE A UNIQUE USE CASE BEFORE USING HERE.
         /// </summary>
         /// <param name="query"></param>
-        /// <param name="patternDescriptions"></param>
+        /// <param name="callback"></param>
         /// <returns></returns>
-        public static string GetPattern(this ICypherFluentQuery query,
-            params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
+        internal static ICypherFluentQuery Mutate(this ICypherFluentQuery query, Action<QueryWriter> callback)
         {
-            WithPattern(query, out var pattern, PropertiesBuildStrategy.NoParams, patternDescriptions);
-            return pattern;
+            var mutateMethod = mutateMethodInfo ?? (mutateMethodInfo = typeof(CypherFluentQuery)
+                .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
+                .Where(m => m.Name == "Mutate" && !m.IsGenericMethod)
+                .First());
+
+            return mutateMethod.Invoke(query, new object[] { callback }) as ICypherFluentQuery;
         }
 
-        [Obsolete("Use WithPattern instead.")]
         /// <summary>
-        /// Builds Neo4j pattern using the specified <see cref="PropertiesBuildStrategy"/>. If multiple patterns are described, they are concatenated with a comma.
-        /// E.g Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: path=(a), (b)--&gt;(c).
+        /// Mutates the <see cref="ICypherFluentQuery"/> after modifying some <see cref="QueryWriter"/> parameters.
+        /// NOTE: ENSURE YOU HAVE A UNIQUE USE CASE BEFORE USING HERE.
         /// </summary>
         /// <param name="query"></param>
-        /// <param name="patternDescriptions"></param>
+        /// <param name="callback"></param>
         /// <returns></returns>
-        public static string GetPattern(this ICypherFluentQuery query,
-            PropertiesBuildStrategy buildStrategy,
-            params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
+        internal static ICypherFluentQuery<TResult> Mutate<TResult>(this ICypherFluentQuery query, Action<QueryWriter> callback)
         {
-            WithPattern(query, out var pattern, buildStrategy, patternDescriptions);
-            return pattern;
+            var mutateMethod = mutateGenericMethodInfo ?? (mutateGenericMethodInfo = typeof(CypherFluentQuery)
+                .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
+                .Where(m => m.Name == "Mutate" && m.IsGenericMethod)
+                .First());
+
+            return mutateMethod.MakeGenericMethod(typeof(TResult)).Invoke(query, new object[] { callback }) as ICypherFluentQuery<TResult>;
+        }
+
+        /// <summary>
+        /// Mutates the <see cref="ICypherFluentQuery"/> into an <see cref="IOrderedCypherFluentQuery"/> after modifying some <see cref="QueryWriter"/> parameters.
+        /// NOTE: ENSURE YOU HAVE A UNIQUE USE CASE BEFORE USING HERE.
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="callback"></param>
+        /// <returns></returns>
+        public static IOrderedCypherFluentQuery MutateOrdered(this ICypherFluentQuery query, Action<QueryWriter> callback)
+        {
+            return Mutate(query, callback) as IOrderedCypherFluentQuery;
+        }
+
+        /// <summary>
+        /// Mutates the <see cref="ICypherFluentQuery"/> into an <see cref="IOrderedCypherFluentQuery"/> after modifying some <see cref="QueryWriter"/> parameters.
+        /// NOTE: ENSURE YOU HAVE A UNIQUE USE CASE BEFORE USING HERE.
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="callback"></param>
+        /// <returns></returns>
+        public static IOrderedCypherFluentQuery<TResult> MutateOrdered<TResult>(this ICypherFluentQuery query, Action<QueryWriter> callback)
+        {
+            return MutateOrdered<TResult>(query, callback) as IOrderedCypherFluentQuery<TResult>;
         }
         #endregion
 
         #region WithPattern
         /// <summary>
-        /// Builds Neo4j pattern using the <see cref="PropertiesBuildStrategy.WithParamsForValues"/> strategy. If multiple patterns are described, they are concatenated with a comma.
+        /// Builds Neo4j pattern with <see cref="PropertiesBuildStrategy.WithParamsForValues"/> as default strategy. 
+        /// If multiple patterns are described, they are concatenated with a comma.
         /// E.g., Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: path=(a), (b)--&gt;(c).
         /// This method allows you to safely chain calls on an existing <see cref="ICypherFluentQuery"/> object.
         /// </summary>
         /// <param name="query"></param>
+        /// <param name="pattern">Pattern generated using the specified strategy and existing query object.</param>
         /// <param name="patternDescriptions"></param>
         /// <returns></returns>
         public static ICypherFluentQuery WithPattern(this ICypherFluentQuery query, out string pattern,
@@ -160,62 +172,158 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// </summary>
         /// <param name="query"></param>
         /// <param name="pattern">Pattern generated using the specified strategy and existing query object.</param>
-        /// <param name="buildStrategy"><see cref="PropertiesBuildStrategy"/> option to use.</param>
+        /// <param name="defaultBuildStrategy"><see cref="PropertiesBuildStrategy"/> option to use.</param>
         /// <param name="patternDescriptions"></param>
         /// <returns></returns>
-        public static ICypherFluentQuery WithPattern(this ICypherFluentQuery query, out string pattern,
-            PropertiesBuildStrategy buildStrategy,
+        internal static ICypherFluentQuery WithPattern(this ICypherFluentQuery query, out string pattern,
+            PropertiesBuildStrategy defaultBuildStrategy,
             params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
             pattern = Utilities.BuildPaths(ref query,
                 patternDescriptions ?? throw new ArgumentNullException(nameof(patternDescriptions)),
-                buildStrategy);
+                query.GetBuildStrategy(defaultBuildStrategy));
 
             return query;
         }
         #endregion
 
-        #region WithProperty
+        #region WithExpression
         /// <summary>
-        /// Gets the specified property name as they would be stored/used in Neo4j.
-        /// E.g., query.WithProperty((Person person) =&gt; person.Address.City, out var names), should get you a name like: address_city.
-        /// You can also specify multiple properties.
-        /// E.g., query.WithProperty((Person person) =&gt; new { person.Name, person.Address.City }, out var names).
-        /// Camel casing is assumed for the examples.
+        /// Gets the specified variable expression as they would be used in Neo4j.
+        /// E.g., query.WithExpression((Person person) =&gt; person.Address.City, out var values), should get you an expression like: person.address_city.
+        /// A complex expression like query.WithExpression((Person person) =&gt; person.Address.City.ToString().Length, out var values), gets you: size(toString(person.addres_city)).
+        /// For multiple expressions of same type, query.WithExpression((Person person) =&gt; new { person.Name.ToLower(), person.Address.City }, out var values).
+        /// Camel casing is assumed for the examples. The complex expressions are mostly limited to Neo4j string functions for now.
         /// This method allows you to safely chain calls on an existing <see cref="ICypherFluentQuery"/> object.
         /// </summary>
         /// <param name="query"></param>
-        /// <param name="names"></param>
+        /// <param name="expressions"></param>
+        /// <param name="values"></param>
         /// <returns></returns>
-        public static ICypherFluentQuery WithProperty<T>(this ICypherFluentQuery query, 
-            Expression<Func<T, object>> properties, out string[] names)
+        public static ICypherFluentQuery WithExpression<T>(this ICypherFluentQuery query, 
+            Expression<Func<T, object>> expressions, out string[] values)
         {
-            return WithProperty(query, properties, out names, makeMemberAccess: false);
+            return WithExpression(query, expressions, out values, null);
         }
 
         /// <summary>
-        /// Gets the specified property name as they would be stored/used in Neo4j.
-        /// E.g., query.WithProperty((Person person) =&gt; person.Address.City, out var names), should get you a name like: address_city.
-        /// You can also specify multiple properties.
-        /// E.g., query.WithProperty((Person person) =&gt; new { person.Name, person.Address.City }, out var names).
-        /// Camel casing is assumed for the examples.
+        /// Gets the specified variable expression as they would be used in Neo4j.
+        /// E.g., query.WithExpression((Person person) =&gt; person.Address.City, out var values), should get you an expression like: person.address_city.
+        /// A complex expression like query.WithExpression((Person person) =&gt; person.Address.City.ToString().Length, out var values), gets you: size(toString(person.addres_city)).
+        /// For multiple expressions of same type, query.WithExpression((Person person) =&gt; new { person.Name.ToLower(), person.Address.City }, out var values).
+        /// Camel casing is assumed for the examples. The complex expressions are mostly limited to Neo4j string functions for now.
         /// This method allows you to safely chain calls on an existing <see cref="ICypherFluentQuery"/> object.
         /// </summary>
         /// <param name="query"></param>
-        /// <param name="names"></param>
-        /// <param name="makeMemberAccess">If true, the parameter name is included to make a member access.
-        /// E.g. person.name, person.address_city.</param>
+        /// <param name="expressions"></param>
+        /// <param name="values"></param>
+        /// <param name="variable">Overrides the parameter used in the lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
         /// <returns></returns>
-        public static ICypherFluentQuery WithProperty<T>(this ICypherFluentQuery query,
-            Expression<Func<T, object>> properties, out string[] names, bool makeMemberAccess)
+        public static ICypherFluentQuery WithExpression<T>(this ICypherFluentQuery query,
+            Expression<Func<T, object>> expressions, out string[] values, string variable)
         {
-            Utilities.GetQueryUtilities(query, out var client, out var serializer,
-                    out var resolver, out var converter, out var serializerFunc, out var queryWriter);
+            return WithExpression(query, expressions, out values, isMemberAccess: true, variable: variable);
+        }
 
-            names = Utilities.GetFinalPropertyNames(properties, resolver, converter,
-                serializerFunc, makeNamesMemberAccess: makeMemberAccess);
+        /// <summary>
+        /// Gets the specified variable expression as they would be used in Neo4j.
+        /// E.g., query.WithExpression((Person person) =&gt; person.Address.City, out var values), should get you an expression like: person.address_city.
+        /// A complex expression like query.WithExpression((Person person) =&gt; person.Address.City.ToString().Length, out var values), gets you: size(toString(person.addres_city)).
+        /// For multiple expressions of same type, query.WithExpression((Person person) =&gt; new { person.Name.ToLower(), person.Address.City }, out var values).
+        /// Camel casing is assumed for the examples. The complex expressions are mostly limited to Neo4j string functions for now.
+        /// This method allows you to safely chain calls on an existing <see cref="ICypherFluentQuery"/> object.
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="expressions"></param>
+        /// <param name="values"></param>
+        /// <param name="isMemberAccess">If false, the variable is omitted in the returned names.
+        /// E.g., name, address_city. Default is true.</param>
+        /// <returns></returns>
+        public static ICypherFluentQuery WithExpression<T>(this ICypherFluentQuery query,
+            Expression<Func<T, object>> expressions, out string[] values, bool isMemberAccess)
+        {
+            return WithExpression(query, expressions, out values, isMemberAccess, null);
+        }
+
+        /// <summary>
+        /// Gets the specified variable expression as they would be used in Neo4j.
+        /// E.g., query.WithExpression((Person person) =&gt; person.Address.City, out var values), should get you an expression like: person.address_city.
+        /// A complex expression like query.WithExpression((Person person) =&gt; person.Address.City.ToString().Length, out var values), gets you: size(toString(person.addres_city)).
+        /// For multiple expressions of same type, query.WithExpression((Person person) =&gt; new { person.Name.ToLower(), person.Address.City }, out var values).
+        /// Camel casing is assumed for the examples. The complex expressions are mostly limited to Neo4j string functions for now.
+        /// This method allows you to safely chain calls on an existing <see cref="ICypherFluentQuery"/> object.
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="expressions"></param>
+        /// <param name="values"></param>
+        /// <param name="isMemberAccess">If false, the parameter is omitted in the returned expressions.
+        /// That is, instead of "person.name", you get just "name". Default is true.</param>
+        /// <param name="variable">Overrides the parameter used in the lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
+        /// <returns></returns>
+        public static ICypherFluentQuery WithExpression<T>(this ICypherFluentQuery query,
+            Expression<Func<T, object>> expressions, out string[] values, bool isMemberAccess, string variable)
+        {
+            return WithExpression(query, expressions, out values, isMemberAccess, variable, PropertiesBuildStrategy.WithParams);
+        }
+
+        /// <summary>
+        /// Gets the specified variable expression as they would be used in Neo4j.
+        /// E.g., query.WithExpression((Person person) =&gt; person.Address.City, out var values), should get you an expression like: person.address_city.
+        /// A complex expression like query.WithExpression((Person person) =&gt; person.Address.City.ToString().Length, out var values), gets you: size(toString(person.addres_city)).
+        /// For multiple expressions of same type, query.WithExpression((Person person) =&gt; new { person.Name.ToLower(), person.Address.City }, out var values).
+        /// Camel casing is assumed for the examples. The complex expressions are mostly limited to Neo4j string functions for now.
+        /// This method allows you to safely chain calls on an existing <see cref="ICypherFluentQuery"/> object.
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="expressions"></param>
+        /// <param name="values"></param>
+        /// <param name="isMemberAccess">If false, the parameter is omitted in the returned expressions.
+        /// That is, instead of "person.name", you get just "name". Default is true.</param>
+        /// <param name="variable">Overrides the parameter used in the lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
+        /// <param name="defaultBuildStrategy">Set a build strategy in the event that it unexpectedly encounters a constant expression.</param>
+        /// <returns></returns>
+        internal static ICypherFluentQuery WithExpression<T>(this ICypherFluentQuery query,
+            Expression<Func<T, object>> expressions, out string[] values, bool isMemberAccess, 
+            string variable, PropertiesBuildStrategy defaultBuildStrategy)
+        {
+            var queryUtilities = Utilities.GetQueryUtilities(query);
+
+            queryUtilities.CurrentBuildStrategy = 
+                queryUtilities.CurrentBuildStrategy ?? defaultBuildStrategy;
+
+            values = Utilities.GetVariableExpressions(expressions, queryUtilities, 
+                isMemberAccess: isMemberAccess, variable: variable);
 
             return query;
+        }
+        #endregion
+
+        #region UsingBuildStrategy
+        /// <summary>
+        /// Assigns a specific <see cref="PropertiesBuildStrategy"/> value to be used with all clause/statement calls.
+        /// This value is set until you change it again. 
+        /// Pass null to this method to reset it and use the default build strategy for each clause.
+        /// E.g., query.UsingBuildStrategy(PropertiesBuildStrategy.WithParams).Match(...).
+        /// The build strategy used after this call is now <see cref="PropertiesBuildStrategy.WithParams"/>.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="buildStrategy"></param>
+        /// <returns></returns>
+        public static ICypherFluentQuery UsingBuildStrategy(this ICypherFluentQuery query, PropertiesBuildStrategy? buildStrategy)
+        {
+            return query.WithParam(Defaults.QueryBuildStrategyKey, buildStrategy);
+        }
+        
+        internal static PropertiesBuildStrategy? GetBuildStrategy(this ICypherFluentQuery query)
+        {
+            query.Query.QueryParameters.TryGetValue(Defaults.QueryBuildStrategyKey, out var strategy);
+            return strategy as PropertiesBuildStrategy?;
+        }
+
+        internal static PropertiesBuildStrategy GetBuildStrategy(this ICypherFluentQuery query, PropertiesBuildStrategy defaultBuildStrategy)
+        {
+            return GetBuildStrategy(query) ?? defaultBuildStrategy;
         }
         #endregion
 
@@ -226,17 +334,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// </summary>
         public static ICypherFluentQuery Match(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
-            return Match(query, PropertiesBuildStrategy.WithParamsForValues, patternDescriptions);
-        }
-
-        /// <summary>
-        /// Generates a cypher MATCH statement from the pattern descriptions.
-        /// E.g Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: MATCH path=(a), (b)--&gt;(c).
-        /// </summary>
-        public static ICypherFluentQuery Match(this ICypherFluentQuery query, PropertiesBuildStrategy buildStrategy,
-            params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
-        {
-            return WithPattern(query, out var pattern, buildStrategy, patternDescriptions).Match(pattern);
+            return WithPattern(query, out var pattern, PropertiesBuildStrategy.WithParamsForValues, patternDescriptions).Match(pattern);
         }
         #endregion
 
@@ -247,17 +345,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// </summary>
         public static ICypherFluentQuery OptionalMatch(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
-            return OptionalMatch(query, PropertiesBuildStrategy.WithParamsForValues, patternDescriptions);
-        }
-
-        /// <summary>
-        /// Generates a cypher OPTIONAL MATCH statement from the pattern descriptions.
-        /// E.g Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: OPTIONAL MATCH path=(a), (b)--&gt;(c).
-        /// </summary>
-        public static ICypherFluentQuery OptionalMatch(this ICypherFluentQuery query, PropertiesBuildStrategy buildStrategy,
-            params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
-        {
-            return WithPattern(query, out var pattern, buildStrategy, patternDescriptions).OptionalMatch(pattern);
+            return WithPattern(query, out var pattern, PropertiesBuildStrategy.WithParamsForValues, patternDescriptions).OptionalMatch(pattern);
         }
         #endregion
 
@@ -268,17 +356,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// </summary>
         public static ICypherFluentQuery Merge(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
-            return Merge(query, PropertiesBuildStrategy.WithParamsForValues, patternDescriptions);
-        }
-
-        /// <summary>
-        /// Generates a cypher MERGE statement from the pattern descriptions.
-        /// E.g Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: MERGE path=(a), (b)--&gt;(c).
-        /// </summary>
-        public static ICypherFluentQuery Merge(this ICypherFluentQuery query, PropertiesBuildStrategy buildStrategy,
-            params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
-        {
-            return WithPattern(query, out var pattern, buildStrategy, patternDescriptions).Merge(pattern);
+            return WithPattern(query, out var pattern, PropertiesBuildStrategy.WithParamsForValues, patternDescriptions).Merge(pattern);
         }
         #endregion
 
@@ -289,17 +367,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// </summary>
         public static ICypherFluentQuery Create(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
-            return Create(query, PropertiesBuildStrategy.WithParams, patternDescriptions);
-        }
-
-        /// <summary>
-        /// Generates a cypher CREATE statement from the pattern descriptions.
-        /// E.g Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: CREATE path=(a), (b)--&gt;(c).
-        /// </summary>
-        public static ICypherFluentQuery Create(this ICypherFluentQuery query, PropertiesBuildStrategy buildStrategy,
-            params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
-        {
-            return WithPattern(query, out var pattern, buildStrategy, patternDescriptions).Create(pattern);
+            return WithPattern(query, out var pattern, PropertiesBuildStrategy.WithParams, patternDescriptions).Create(pattern);
         }
         #endregion
 
@@ -310,17 +378,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// </summary>
         public static ICypherFluentQuery CreateUnique(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
-            return CreateUnique(query, PropertiesBuildStrategy.WithParams, patternDescriptions);
-        }
-
-        /// <summary>
-        /// Generates a cypher CREATE UNIQUE statement from the pattern descriptions.
-        /// E.g Given: (path) =&gt; path.Pattern("a").Assign(), (path2) =&gt; path2.Pattern("b", "c"), you should get the Neo4j pattern: CREATE UNIQUE path=(a), (b)--&gt;(c).
-        /// </summary>
-        public static ICypherFluentQuery CreateUnique(this ICypherFluentQuery query, PropertiesBuildStrategy buildStrategy,
-            params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
-        {
-            return WithPattern(query, out var pattern, buildStrategy, patternDescriptions).CreateUnique(pattern);
+            return WithPattern(query, out var pattern, PropertiesBuildStrategy.WithParams, patternDescriptions).CreateUnique(pattern);
         }
         #endregion
 
@@ -345,32 +403,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <returns></returns>
         public static ICypherFluentQuery Set(this ICypherFluentQuery query, string variable, Expression<Func<object>> properties, out string setParameter)
         {
-            return Set(query, variable, properties, PropertiesBuildStrategy.WithParams, out setParameter);
-        }
-
-        /// <summary>
-        /// Generates a cypher SET statement from the properties.
-        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
-        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
-        /// </summary>
-        /// <returns></returns>
-        public static ICypherFluentQuery Set(this ICypherFluentQuery query, string variable, 
-            Expression<Func<object>> properties, PropertiesBuildStrategy buildStrategy)
-        {
-            return Set(query, variable, properties, buildStrategy, out var setParam);
-        }
-
-        /// <summary>
-        /// Generates a cypher SET statement from the properties.
-        /// E.g. () =&gt; new Movie { title = "Grey's Anatomy", year = 2017 }, should generate: SET movie = { title: "Grey's Anatomy", year = 2017 }, where movie is the variable.
-        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
-        /// </summary>
-        /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
-        /// <returns></returns>
-        public static ICypherFluentQuery Set(this ICypherFluentQuery query, string variable,
-            Expression<Func<object>> properties, PropertiesBuildStrategy buildStrategy, out string setParameter)
-        {
-            return SharedSet(query, variable, properties, buildStrategy, out setParameter, add: false);
+            return SharedSet(query, variable, properties, PropertiesBuildStrategy.WithParams, out setParameter, add: false);
         }
 
 
@@ -434,71 +467,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query,
             Expression<Func<T, bool>> predicate, out string setParameter, string variable)
         {
-            return Set(query, predicate, PropertiesBuildStrategy.WithParamsForValues, out setParameter, variable);
-        }
-
-        /// <summary>
-        /// Generates a cypher SET statement from the predicate.
-        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie.title = "Grey's Anatomy", movie.year = 2017.
-        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="query"></param>
-        /// <param name="predicate"></param>
-        /// <returns></returns>
-        public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query,
-            Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy)
-        {
-            return Set(query, predicate, buildStrategy, null);
-        }
-
-        /// <summary>
-        /// Generates a cypher SET statement from the predicate.
-        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie.title = "Grey's Anatomy", movie.year = 2017.
-        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="query"></param>
-        /// <param name="predicate"></param>
-        /// <param name="variable">Overrides the parameter used in the predicate lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
-        /// <returns></returns>
-        public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query,
-            Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy, string variable)
-        {
-            return Set(query, predicate, buildStrategy, out var setParam, variable);
-        }
-
-        /// <summary>
-        /// Generates a cypher SET statement from the predicate.
-        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie.title = "Grey's Anatomy", movie.year = 2017.
-        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="query"></param>
-        /// <param name="predicate"></param>
-        /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
-        /// <returns></returns>
-        public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query,
-            Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy, out string setParameter)
-        {
-            return Set(query, predicate, buildStrategy, out setParameter, null);
-        }
-
-        /// <summary>
-        /// Generates a cypher SET statement from the predicate.
-        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie.title = "Grey's Anatomy", movie.year = 2017.
-        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="query"></param>
-        /// <param name="predicate"></param>
-        /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
-        /// <param name="variable">Overrides the parameter used in the predicate lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
-        /// <returns></returns>
-        public static ICypherFluentQuery Set<T>(this ICypherFluentQuery query,
-            Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy, out string setParameter, string variable)
-        {
-            return SharedSet(query, predicate, buildStrategy, out setParameter, variable);
+            return SharedSet(query, predicate, PropertiesBuildStrategy.WithParamsForValues, out setParameter, variable);
         }
 
 
@@ -562,78 +531,13 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static ICypherFluentQuery SetAdd<T>(this ICypherFluentQuery query,
             Expression<Func<T, bool>> predicate, out string setParameter, string variable)
         {
-            return SetAdd(query, predicate, PropertiesBuildStrategy.WithParams, out setParameter, variable);
-        }
-
-        /// <summary>
-        /// Generates a cypher SET statement from the predicate using the "+=" operator.
-        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie += { title: "Grey's Anatomy", year = 2017 }.
-        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="query"></param>
-        /// <param name="predicate"></param>
-        /// <returns></returns>
-        public static ICypherFluentQuery SetAdd<T>(this ICypherFluentQuery query,
-            Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy)
-        {
-            return SetAdd(query, predicate, buildStrategy, null);
-        }
-
-        /// <summary>
-        /// Generates a cypher SET statement from the predicate using the "+=" operator.
-        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie += { title: "Grey's Anatomy", year = 2017 }.
-        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="query"></param>
-        /// <param name="predicate"></param>
-        /// <param name="variable">Overrides the parameter used in the predicate lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
-        /// <returns></returns>
-        public static ICypherFluentQuery SetAdd<T>(this ICypherFluentQuery query,
-            Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy, string variable)
-        {
-            return SetAdd(query, predicate, buildStrategy, out var setParam, variable);
-        }
-
-        /// <summary>
-        /// Generates a cypher SET statement from the predicate using the "+=" operator.
-        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie += { title: "Grey's Anatomy", year = 2017 }.
-        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="query"></param>
-        /// <param name="predicate"></param>
-        /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
-        /// <returns></returns>
-        public static ICypherFluentQuery SetAdd<T>(this ICypherFluentQuery query,
-            Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy, out string setParameter)
-        {
-            return SetAdd(query, predicate, buildStrategy, out setParameter, null);
-        }
-
-        /// <summary>
-        /// Generates a cypher SET statement from the predicate using the "+=" operator.
-        /// E.g. movie =&gt; movie.title = "Grey's Anatomy" &amp;&amp; movie.year = 2017, should generate: SET movie += { title: "Grey's Anatomy", year = 2017 }.
-        /// The <see cref="PropertiesBuildStrategy"/> used could slightly modify the statement generated.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="query"></param>
-        /// <param name="predicate"></param>
-        /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
-        /// <param name="variable">Overrides the parameter used in the predicate lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
-        /// <returns></returns>
-        public static ICypherFluentQuery SetAdd<T>(this ICypherFluentQuery query,
-            Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy, out string setParameter, string variable)
-        {
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
             var propertiesExpression = Utilities.GetConstraintsAsPropertiesLambda(predicate, typeof(T));
 
-            return SharedSet(query, variable ?? predicate.Parameters[0].Name, propertiesExpression, buildStrategy, out setParameter, add: true);
+            return SharedSet(query, variable ?? predicate.Parameters[0].Name, propertiesExpression, PropertiesBuildStrategy.WithParams, out setParameter, add: true);
         }
-
 
 
 
@@ -646,18 +550,18 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="setParameter">The parameter used in the <see cref="ICypherFluentQuery.WithParam(string, object)"/> call.</param>
         /// <returns></returns>
         internal static ICypherFluentQuery SharedSet(this ICypherFluentQuery query, string variable,
-            LambdaExpression properties, PropertiesBuildStrategy buildStrategy, out string setParameter, bool add)
+            LambdaExpression properties, PropertiesBuildStrategy defaultBuildStrategy, out string setParameter, bool add)
         {
-            Utilities.GetQueryUtilities(query, out var client, out var serializer,
-                    out var resolver, out var converter, out var serializerFunc, out var queryWriter);
+            var queryUtilities = Utilities.GetQueryUtilities(query);
 
-            var finalProperties = Utilities.GetFinalProperties(properties, resolver,
-                converter, serializerFunc, out var hasVariables);
+            var buildStrategy = queryUtilities.CurrentBuildStrategy ?? defaultBuildStrategy;
+
+            var finalProperties = Utilities.GetFinalProperties(properties, queryUtilities, out var hasFunctions);
 
             string setParam = Utilities.GetRandomVariableFor($"{variable}_set");
             setParameter = setParam;
 
-            buildStrategy = hasVariables && buildStrategy == PropertiesBuildStrategy.WithParams ? 
+            buildStrategy = hasFunctions && buildStrategy == PropertiesBuildStrategy.WithParams ? 
                 PropertiesBuildStrategy.WithParamsForValues : buildStrategy;
 
             string value = null;
@@ -673,7 +577,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
                         if (buildStrategy == PropertiesBuildStrategy.WithParamsForValues)
                         {
-                            value = Utilities.BuildWithParamsForValues(finalProperties, serializerFunc,
+                            value = Utilities.BuildWithParamsForValues(finalProperties, queryUtilities.SerializeCallback,
                                 getKey: (propertyName) => propertyName, separator: ": ", 
                                 getValue: (propertyName) => $"${setParam}.{propertyName}",
                                 hasRaw: out var hasRaw, newFinalProperties: out var newFinalProperties);
@@ -687,7 +591,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 case PropertiesBuildStrategy.NoParams:
                     {
                         value = finalProperties.Properties()
-                                .Select(jp => $"{jp.Name}: {serializerFunc(jp.Value)}")
+                                .Select(jp => $"{jp.Name}: {queryUtilities.SerializeCallback(jp.Value)}")
                                 .Aggregate((first, second) => $"{first}, {second}");
                         break;
                     }
@@ -710,22 +614,37 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="variable">Overrides the parameter used in the predicate lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
         /// <returns></returns>
         internal static ICypherFluentQuery SharedSet<T>(this ICypherFluentQuery query,
-            Expression<Func<T, bool>> predicate, PropertiesBuildStrategy buildStrategy, out string setParameter, string variable)
+            Expression<Func<T, bool>> predicate, PropertiesBuildStrategy defaultBuildStrategy, out string setParameter, string variable)
         {
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            Utilities.GetQueryUtilities(query, out var client, out var serializer,
-                    out var resolver, out var converter, out var serializerFunc, out var queryWriter);
+            var queryUtilities = Utilities.GetQueryUtilities(query);
 
-            var finalProperties = Utilities.GetFinalProperties(Utilities.GetConstraintsAsPropertiesLambda(predicate, typeof(T)), resolver,
-                converter, serializerFunc, out var hasVariables);
+            var buildStrategy = queryUtilities.CurrentBuildStrategy ?? defaultBuildStrategy;
 
-            variable = variable ?? predicate.Parameters[0].Name;
+            if (!string.IsNullOrWhiteSpace(variable))
+            {
+                //replace the variable
+                var replacer = new Expressions.ReplacerExpressionVisitor(new System.Collections.Generic.Dictionary<Expression, Expression>()
+                {
+                    { predicate.Parameters.First(), Expression.Parameter(typeof(T), variable) }
+                });
+
+                predicate = replacer.Visit(predicate) as Expression<Func<T, bool>>;
+            }
+            else
+            {
+                variable = predicate.Parameters[0].Name;
+            }
+
+            var finalProperties = Utilities.GetFinalProperties(Utilities.GetConstraintsAsPropertiesLambda(predicate, typeof(T)),
+                queryUtilities, out var hasFunctions);
+
             var setParam = Utilities.GetRandomVariableFor($"{variable}_set");
             setParameter = setParam;
 
-            buildStrategy = hasVariables && buildStrategy == PropertiesBuildStrategy.WithParams ? 
+            buildStrategy = hasFunctions && buildStrategy == PropertiesBuildStrategy.WithParams ? 
                 PropertiesBuildStrategy.WithParamsForValues : buildStrategy;
 
             string value = null;
@@ -736,7 +655,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 case PropertiesBuildStrategy.WithParamsForValues:
                     {
                         //in this type of SET statement, both WithParams, and WithParamsForValues are the same
-                        value = Utilities.BuildWithParamsForValues(finalProperties, serializerFunc,
+                        value = Utilities.BuildWithParamsForValues(finalProperties, queryUtilities.SerializeCallback,
                                 getKey: (propertyName) => $"{variable}.{propertyName}", separator: " = ",
                                 getValue: (propertyName) => $"${setParam}.{propertyName}",
                                 hasRaw: out var hasRaw, newFinalProperties: out var newFinalProperties);
@@ -749,7 +668,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 case PropertiesBuildStrategy.NoParams:
                     {
                         value = finalProperties.Properties()
-                                .Select(jp => $"{variable}.{jp.Name} = {serializerFunc(jp.Value)}")
+                                .Select(jp => $"{variable}.{jp.Name} = {queryUtilities.SerializeCallback(jp.Value)}")
                                 .Aggregate((first, second) => $"{first}, {second}");
                         break;
                     }
@@ -821,7 +740,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         internal static IOrderedCypherFluentQuery SharedOrderBy<T>
             (this ICypherFluentQuery query, Func<ICypherFluentQuery, string[], IOrderedCypherFluentQuery> clause, Expression<Func<T, object>> properties)
         {
-            query = query.WithProperty(properties, out var propNames, makeMemberAccess: true);
+            query = query.WithExpression(properties, out var propNames, isMemberAccess: true);
 
             return clause(query, propNames);
         }
@@ -862,7 +781,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         internal static ICypherFluentQuery SharedIndex<T>(this ICypherFluentQuery query, string clause, Expression<Func<T, object>> properties)
         {
-            query = query.WithProperty(properties, out var propNames, makeMemberAccess: false);
+            query = query.WithExpression(properties, out var propNames, isMemberAccess: false);
 
             var aggregatePropNames = propNames.Aggregate((first, second) => $"{first}, {second}");
 
@@ -992,7 +911,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         internal static ICypherFluentQuery SharedConstraint<T>(this ICypherFluentQuery query, string clause, 
             string assertFormat, Expression<Func<T, object>> properties, bool isRelationship)
         {
-            query = query.WithProperty(properties, out var propNames, makeMemberAccess: true);
+            query = query.WithExpression(properties, out var propNames, isMemberAccess: true);
 
             var aggregatePropNames = propNames.Aggregate((first, second) => $"{first}, {second}");
 
@@ -1001,6 +920,104 @@ namespace Neo4jClient.DataAnnotations.Cypher
             var pattern = !isRelationship ? $"({properties.Parameters[0].Name}:{label})" : $"()-[{properties.Parameters[0].Name}:{label}]-()";
 
             return Clause(query, $"{clause} CONSTRAINT ON {pattern} ASSERT {string.Format(assertFormat, aggregatePropNames)}");
+        }
+        #endregion
+
+        #region Remove
+        /// <summary>
+        /// Removes a property/properties from a node.
+        /// E.g., query.RemoveProperty((Actor actor) => actor.Name) generates the cypher: REMOVE actor.name.
+        /// Example assumes camel casing.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="property">The property to remove from node.</param>
+        /// <returns></returns>
+        public static ICypherFluentQuery RemoveProperty<T>(this ICypherFluentQuery query, Expression<Func<T, object>> property)
+        {
+            return RemoveProperty(query, property, null);
+        }
+
+        /// <summary>
+        /// Removes a property/properties from a node.
+        /// E.g., query.RemoveProperty((Actor actor) => actor.Name, "a") generates the cypher: REMOVE a.name.
+        /// Example assumes camel casing.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="property">The property to remove from node.</param>
+        /// <param name="variable">>Overrides the parameter used in the predicate lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
+        /// <returns></returns>
+        public static ICypherFluentQuery RemoveProperty<T>(this ICypherFluentQuery query, Expression<Func<T, object>> property, string variable)
+        {
+            return query.WithExpression(property, out var expressions, isMemberAccess: true, variable: variable,
+                defaultBuildStrategy: PropertiesBuildStrategy.WithParamsForValues).Remove(expressions.Aggregate((first, second) => $"{first}, {second}"));
+        }
+
+
+        /// <summary>
+        /// Removes the label defined on <typeparamref name="T"/> from the node.
+        /// E.g., query.RemoveLabel&lt;Actor&gt;("actor") generates the cypher: REMOVE actor:Actor.
+        /// Example assumes camel casing.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="variable"></param>
+        /// <returns></returns>
+        public static ICypherFluentQuery RemoveLabel<T>(this ICypherFluentQuery query, string variable)
+        {
+            var labels = Neo4jAnnotations.GetEntityTypeInfo(typeof(T)).LabelsWithTypeNameCatch; //the type has to be there one way or another.
+            return RemoveMultipleLabels(query, variable, labels.First());
+        }
+
+        /// <summary>
+        /// Removes all the labels defined on the <typeparamref name="T"/> type heirarchy from the node.
+        /// E.g., query.RemoveAllLabels&lt;Actor&gt;("actor") generates the cypher: REMOVE actor:Actor:User.
+        /// Example assumes camel casing.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="variable"></param>
+        /// <returns></returns>
+        public static ICypherFluentQuery RemoveAllLabels<T>(this ICypherFluentQuery query, string variable)
+        {
+            var labels = Neo4jAnnotations.GetEntityTypeInfo(typeof(T)).LabelsWithTypeNameCatch; //the type has to be there one way or another.
+            return RemoveMultipleLabels(query, variable, labels.ToArray());
+        }
+
+        /// <summary>
+        /// Removes the label defined on each specified type in <paramref name="labelTypes"/> from the node.
+        /// E.g., query.RemoveMultipleLabels("actor", typeof(Actor), typeof(MovieExtra)) generates the cypher: REMOVE actor:Actor:MovieExtra.
+        /// Example assumes camel casing.
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="variable"></param>
+        /// <param name="labelTypes">All label types to be removed.</param>
+        /// <returns></returns>
+        public static ICypherFluentQuery RemoveMultipleLabels(this ICypherFluentQuery query, string variable, params Type[] labelTypes)
+        {
+            var labels = labelTypes?.Select(lt => Utilities.GetLabel(lt, useTypeNameIfEmpty: true)).ToArray();
+
+            return RemoveMultipleLabels(query, variable, labels);
+        }
+
+        /// <summary>
+        /// Removes each label specified in <paramref name="labels"/> from the node.
+        /// E.g., query.RemoveMultipleLabels("actor", "Actor", "MovieExtra") generates the cypher: REMOVE actor:Actor:MovieExtra.
+        /// Example assumes camel casing.
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="variable"></param>
+        /// <param name="labels">All labels to be removed.</param>
+        /// <returns></returns>
+        public static ICypherFluentQuery RemoveMultipleLabels(this ICypherFluentQuery query, string variable, params string[] labels)
+        {
+            string labelText = labels?.Aggregate((first, second) => $"{first}:{second}");
+
+            if (string.IsNullOrWhiteSpace(labelText))
+                throw new ArgumentNullException(nameof(labels));
+
+            return query.Remove($"{variable}:{labelText}");
         }
         #endregion
     }

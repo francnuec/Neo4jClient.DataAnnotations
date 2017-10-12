@@ -273,7 +273,7 @@ namespace Neo4jClient.DataAnnotations
         /// <param name="entityType"></param>
         public static void AddEntityType(Type entityType)
         {
-            if (!EntityTypes.Contains(entityType))
+            if (!EntityTypes.Contains(entityType ?? throw new ArgumentNullException(nameof(entityType))))
             {
                 entityTypes[entityType] = null;
 
@@ -290,12 +290,18 @@ namespace Neo4jClient.DataAnnotations
                         AddEntityType(complexType);
                     }
                 }
+
+                //auto add base class too
+                if (entityType.GetTypeInfo().BaseType is Type baseType 
+                    && baseType != Defaults.ObjectType
+                    && baseType != typeof(ValueType))
+                    AddEntityType(baseType);
             }
         }
 
         public static void RemoveEntityType(Type entityType)
         {
-            if (EntityTypes.Contains(entityType))
+            if (EntityTypes.Contains(entityType ?? throw new ArgumentNullException(nameof(entityType))))
             {
                 entityTypes.TryRemove(entityType, out var val);
             }
@@ -303,7 +309,7 @@ namespace Neo4jClient.DataAnnotations
 
         public static bool ContainsEntityType(Type entityType, bool includeBaseClasses = true)
         {
-            var ret = EntityTypes.Contains(entityType)
+            var ret = EntityTypes.Contains(entityType ?? throw new ArgumentNullException(nameof(entityType)))
                 || entityType.GetTypeInfo().IsGenericType && EntityTypes.Contains(entityType.GetGenericTypeDefinition()) //search generics too
                 || (includeBaseClasses && EntityTypes.Any(baseType => baseType.IsAssignableFrom(entityType)
                 || baseType.IsGenericAssignableFrom(entityType))) //optional
@@ -314,6 +320,9 @@ namespace Neo4jClient.DataAnnotations
 
         public static List<Type> GetDerivedEntityTypes(Type baseType)
         {
+            if (baseType == null)
+                throw new ArgumentNullException(nameof(baseType));
+
             var existing = EntityTypes.Where(type => baseType.IsAssignableFrom(type)
             || baseType.IsGenericAssignableFrom(type));
 
@@ -330,7 +339,7 @@ namespace Neo4jClient.DataAnnotations
         public static EntityTypeInfo GetEntityTypeInfo(Type type)
         {
             EntityTypeInfo info;
-            if (!entityTypeInfo.TryGetValue(type, out info))
+            if (!entityTypeInfo.TryGetValue(type ?? throw new ArgumentNullException(nameof(type)), out info))
             {
                 info = new EntityTypeInfo(type);
                 entityTypeInfo[type] = info;
@@ -341,6 +350,9 @@ namespace Neo4jClient.DataAnnotations
 
         public static List<EntityTypeInfo> GetDerivedEntityTypeInfos(Type baseType, bool getFromEntityTypesToo = false)
         {
+            if (baseType == null)
+                throw new ArgumentNullException(nameof(baseType));
+
             var existing = entityTypeInfo.Where(pair => baseType.IsAssignableFrom(pair.Key)
             || baseType.IsGenericAssignableFrom(pair.Key)).ToDictionary(pair => pair.Key, pair => pair.Value);
 

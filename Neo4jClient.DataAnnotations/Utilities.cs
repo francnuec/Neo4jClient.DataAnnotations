@@ -19,39 +19,60 @@ namespace Neo4jClient.DataAnnotations
     public class Utilities
     {
         /// <summary>
-        /// Get all the <see cref="TableAttribute"/> names on the class inheritance as labels.
+        /// Gets all the <see cref="TableAttribute"/> names on the class inheritance as labels.
         /// Should none be gotten, the type name is used instead by default.
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
         public static List<string> GetLabels(Type type, bool useTypeNameIfEmpty = true)
         {
+            var labels = new List<string>();
             var typeInfo = type.GetTypeInfo();
-            var attributes = typeInfo.GetCustomAttributes<TableAttribute>(true)?.ToList();
 
-            if (attributes != null && attributes.Count > 0)
+            while (typeInfo != null)
             {
-                var ret = attributes.Where(a => !string.IsNullOrWhiteSpace(a.Name)).Select(a => a.Name).Distinct().ToList();
+                labels.Add(GetLabel(typeInfo.AsType(), useTypeNameIfEmpty: false));
+                typeInfo = typeInfo.BaseType?.GetTypeInfo();
+            }
 
-                if (ret.Count > 0)
+            labels = labels.Distinct().Where(l => !string.IsNullOrWhiteSpace(l)).ToList();
+
+            if (labels.Count > 0 || !useTypeNameIfEmpty)
+            {
+                return labels;
+            }
+
+            return new List<string>() { type.Name };
+        }
+
+        /// <summary>
+        /// Gets the <see cref="TableAttribute"/> name on the specified class as a label.
+        /// Should none be gotten, the type name is used instead by default.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static string GetLabel(Type type, bool useTypeNameIfEmpty = true)
+        {
+            var typeInfo = type.GetTypeInfo();
+            var attribute = typeInfo.GetCustomAttributes<TableAttribute>()?.FirstOrDefault();
+
+            if (attribute != null)
+            {
+                var ret = attribute.Name;
+
+                if (ret != null)
                     return ret;
             }
 
-            return useTypeNameIfEmpty ? new List<string> { type.Name } : new List<string>();
+            return useTypeNameIfEmpty ? type.Name : "";
         }
 
-        public static PropertyInfo GetPropertyInfo<TSource, TProperty>(Expression<Func<TSource, TProperty>> propertyLambda)
+        public static PropertyInfo GetPropertyInfoFrom<TSource, TProperty>(Expression<Func<TSource, TProperty>> propertyLambda)
         {
-            return GetPropertyInfo(propertyLambda.Body, typeof(TSource), typeof(TProperty));
+            return GetPropertyInfoFrom(propertyLambda.Body, typeof(TSource), typeof(TProperty));
         }
 
-        //public static PropertyInfo GetPropertyInfo(LambdaExpression propertyLambda, Type sourceType, Type propertyType,
-        //     bool includeIEnumerableArg = true, bool acceptObjectTypeCast = false)
-        //{
-        //    return GetPropertyInfo(propertyLambda.Body, sourceType, propertyType, includeIEnumerableArg, acceptObjectTypeCast);
-        //}
-
-        public static PropertyInfo GetPropertyInfo(Expression expr, Type sourceType, Type propertyType,
+        public static PropertyInfo GetPropertyInfoFrom(Expression expr, Type sourceType, Type propertyType,
              bool includeIEnumerableArg = true, bool acceptObjectTypeCast = false)
         {
             MemberExpression memberExpr = (!acceptObjectTypeCast ? expr :
@@ -124,51 +145,6 @@ namespace Neo4jClient.DataAnnotations
                 type.GetGenericArguments().FirstOrDefault() : null);
         }
 
-        //public static bool IsTypeScalar(Type type)
-        //{
-        //    if (Neo4jAnnotations.KnownScalarTypes.Contains(type))
-        //        return true;
-
-        //    Type originalType = type;
-
-        //    repeat:
-        //    var typeInfo = type?.GetTypeInfo();
-        //    if (typeInfo != null && !(
-        //        (originalType != type && Neo4jAnnotations.KnownScalarTypes.Contains(type))
-        //        || typeInfo.IsPrimitive
-        //        || typeInfo.IsEnum
-        //        || typeInfo.IsDefined(Defaults.NeoScalarType)))
-        //    {
-        //        //check if it's an array/iEnumerable before concluding
-        //        Type genericType = null;
-
-        //        if ((genericType = GetEnumerableGenericType(type)) != null
-        //            || (genericType = GetNullableUnderlyingType(type)) != null)
-        //        {
-        //            type = genericType;
-        //            goto repeat;
-        //        }
-
-        //        return false;
-        //    }
-
-        //    if (type != null)
-        //    {
-        //        try
-        //        {
-        //            Neo4jAnnotations.KnownScalarTypes.Add(originalType);
-        //        }
-        //        catch
-        //        {
-
-        //        }
-
-        //        return true;
-        //    }
-
-        //    return false;
-        //}
-
         public static bool IsScalarType(Type type)
         {
             if (Neo4jAnnotations.processedScalarTypes.TryGetValue(type, out var isScalar))
@@ -224,21 +200,46 @@ namespace Neo4jClient.DataAnnotations
             return false;
         }
 
-        public static MethodInfo GetMethodInfo(Expression<Action> expression, params Type[] typeArguments)
+        public static MethodInfo GetMethodInfo(Expression<Action> expression)
         {
             var member = expression.Body as MethodCallExpression;
             
             if (member != null)
             {
                 var methodInfo = member.Method;
-
-                if (typeArguments?.Length > 0 && methodInfo.IsGenericMethod)
-                    methodInfo = methodInfo.GetGenericMethodDefinition().MakeGenericMethod(typeArguments);
-
                 return methodInfo;
             }
 
             throw new ArgumentException("Expression is not a method", "expression");
+        }
+
+        public static MethodInfo GetGenericMethodInfo(MethodInfo genericMethodInfo, params Type[] typeArguments)
+        {
+            if (genericMethodInfo != null && genericMethodInfo.IsGenericMethod)
+            {
+                if (typeArguments?.Length > 0)
+                    genericMethodInfo = genericMethodInfo.GetGenericMethodDefinition().MakeGenericMethod(typeArguments);
+
+                return genericMethodInfo;
+            }
+
+            throw new ArgumentException("Expression is not a generic method", "expression");
+        }
+
+        public static PropertyInfo GetPropertyInfo(Expression<Func<object>> expression)
+        {
+            var memberExpr = expression.Body.Uncast(out var castRemoved) as MemberExpression;
+            var member = memberExpr?.Member as PropertyInfo;
+
+            return member ?? throw new ArgumentException("Expression is not a property", "expression");
+        }
+
+        public static FieldInfo GetFieldInfo(Expression<Func<object>> expression)
+        {
+            var memberExpr = expression.Body.Uncast(out var castRemoved) as MemberExpression;
+            var member = memberExpr?.Member as FieldInfo;
+
+            return member ?? throw new ArgumentException("Expression is not a field", "expression");
         }
 
         internal static void InitializeComplexTypedProperties(object entity)
@@ -320,6 +321,13 @@ namespace Neo4jClient.DataAnnotations
                             lastType = (expr as UnaryExpression).Type ?? lastType;
                             break;
                         }
+                    //case ExpressionType.Call when (expr is MethodCallExpression callExpr
+                    //&& (callExpr.Method.Name.StartsWith("_As")
+                    //&& callExpr.Method.DeclaringType == Defaults.ObjectExtensionsType)):
+                    //    {
+                    //        lastType = callExpr.Type;
+                    //        break;
+                    //    }
                     default:
                         {
                             breakLoop = true;
@@ -507,6 +515,11 @@ namespace Neo4jClient.DataAnnotations
                             buildPath = true;
                             gotoRepeatBuild = true;
                         }
+                        else if (string.IsNullOrWhiteSpace(name))
+                        {
+                            //fallback for when name couldn't be resolved in all attempts
+                            name = m.Key.Name;
+                        }
                     }
                     else
                     {
@@ -621,10 +634,9 @@ namespace Neo4jClient.DataAnnotations
                 && methodExpr.Method.IsEquivalentTo("Get", Defaults.VarsType);
         }
 
-        public static string BuildVars(List<Expression> expressions, EntityResolver resolver,
-            Func<object, string> serializer, out Type typeReturned, bool? useResolvedJsonName = null)
+        public static string BuildSimpleVars(List<Expression> expressions, QueryUtilities queryUtilities, bool? useResolvedJsonName = null)
         {
-            typeReturned = null;
+            //typeReturned = null;
             if (!HasVars(expressions, out var methodExpr))
                 return null;
 
@@ -636,7 +648,7 @@ namespace Neo4jClient.DataAnnotations
 
             var getMethod = methodExpr.Method;
 
-            var entityType = typeReturned = getMethod.ReturnType;
+            var entityType = /*typeReturned =*/ getMethod.ReturnType;
 
             var builder = new StringBuilder();
 
@@ -644,7 +656,21 @@ namespace Neo4jClient.DataAnnotations
 
             //append the variable name first
             var argumentExpr = methodExpr.Arguments[++currentIndex];
-            var argument = argumentExpr.ExecuteExpression<string>();
+
+            string argument = null;
+
+            try
+            {
+                argument = argumentExpr.ExecuteExpression<string>();
+            }
+            catch
+            {
+                //maybe lamdaexpression
+                var visitor = new FunctionExpressionVisitor(queryUtilities);
+                visitor.Context.UseResolvedJsonName = useResolvedJsonName;
+                visitor.Visit(argumentExpr);
+                argument = visitor.Builder.ToString();
+            }
 
             builder.Append(argument);
 
@@ -661,13 +687,14 @@ namespace Neo4jClient.DataAnnotations
                     //build the entity through its members accessed
                     object entity = null; //Utilities.CreateInstance(entityType);
 
-                    var memberNames = GetEntityPathNames(ref entity, ref entityType, expressions, ref currentIndex, resolver, serializer,
+                    var memberNames = GetEntityPathNames(ref entity, ref entityType, expressions, ref currentIndex, 
+                        queryUtilities.Resolver, queryUtilities.SerializeCallback,
                         out var members, out var lastType, useResolvedJsonName: useResolvedJsonName.Value);
 
                     if (memberNames.Length > 0)
                     {
                         memberJsonName = memberNames.Aggregate((first, second) => $"{first}.{second}").Trim('.');
-                        typeReturned = lastType ?? typeReturned;
+                        //typeReturned = lastType ?? typeReturned;
                     }
                 }
                 else
@@ -681,7 +708,7 @@ namespace Neo4jClient.DataAnnotations
                         var memberArgExpr = expr.Arguments[0];
                         memberJsonName = memberArgExpr.ExecuteExpression<string>();
 
-                        typeReturned = expr.Method.ReturnType;
+                        //typeReturned = expr.Method.ReturnType;
                     }
                 }
 
@@ -696,124 +723,25 @@ namespace Neo4jClient.DataAnnotations
                 }
             }
 
-            //append indexers
-            if (expressions.Count > ++currentIndex)
-            {
-                int tmpIdx = currentIndex;
-
-                Expression arrayIndexExpr = null;
-
-                //expecting either "ElementAt" methodCall, or ArrayIndex expression
-                for (int i = currentIndex, l = expressions.Count; i < l; i++)
-                {
-                    var expr = expressions[i];
-
-                    switch (expr.NodeType)
-                    {
-                        case ExpressionType.ArrayIndex:
-                            {
-                                var binExpr = expr as BinaryExpression;
-                                arrayIndexExpr = binExpr.Right;
-
-                                typeReturned = binExpr.Type;
-                                break;
-                            }
-                        case ExpressionType.Call:
-                            {
-                                var callExpr = expr as MethodCallExpression;
-                                if (callExpr.Method.Name == "ElementAt"
-                                    && callExpr.Method.DeclaringType == typeof(Enumerable))
-                                {
-                                    //found our extension method.
-                                    arrayIndexExpr = callExpr.Arguments[1]; //because it is extension method, the first argument would be the instance (this) argument. so we take the second one.
-
-                                    typeReturned = callExpr.Type;
-                                }
-
-                                break;
-                            }
-                            //case ExpressionType.TypeAs:
-                            //case ExpressionType.Convert:
-                            //case ExpressionType.ConvertChecked:
-                            //case ExpressionType.Unbox:
-                            //    {
-                            //        typeReturned = (expr as UnaryExpression).Type ?? typeReturned;
-                            //        break;
-                            //    }
-                    }
-
-                    currentIndex = i; //update the current index always
-
-                    if (arrayIndexExpr != null)
-                        break;
-                }
-
-                string arrayIndexStr = null;
-
-                if (arrayIndexExpr != null)
-                {
-                    //try executing it first
-                    //if it fails, maybe we have a nested Vars call
-                    try
-                    {
-                        var arrayIndex = arrayIndexExpr.ExecuteExpression<int?>();
-                        arrayIndexStr = arrayIndex?.ToString();
-                    }
-                    catch (NotImplementedException e) when (e.Message == Messages.VarsGetError)
-                    {
-                        //check if vars
-                        var retrievedExprs = GetSimpleMemberAccessStretch(arrayIndexExpr, out var val);
-                        if (HasVars(retrievedExprs))
-                        {
-                            //get the vars string
-                            arrayIndexStr = BuildVars(retrievedExprs, resolver, serializer, out var childTypeReturned, useResolvedJsonName: null);
-                        }
-                    }
-                }
-
-                if (!string.IsNullOrWhiteSpace(arrayIndexStr))
-                {
-                    builder.Append($"[{arrayIndexStr}]");
-                }
-                else
-                {
-                    //restore last index less 1.
-                    currentIndex = tmpIdx - 1;
-                }
-            }
-
-            //go through the rest to see if the typereturned changes
-            if (expressions.Count > ++currentIndex)
-            {
-                for (int i = currentIndex, l = expressions.Count; i < l; i++)
-                {
-                    var expr = expressions[i];
-
-                    switch (expr.NodeType)
-                    {
-                        case ExpressionType.TypeAs:
-                        case ExpressionType.Convert:
-                        case ExpressionType.ConvertChecked:
-                        case ExpressionType.Unbox:
-                            {
-                                typeReturned = (expr as UnaryExpression).Type ?? typeReturned;
-                                break;
-                            }
-                    }
-                }
-            }
-
             return builder.ToString().Trim();
         }
 
         public static List<Expression> GetSimpleMemberAccessStretch(Expression expression, out Expression entityBestGuess)
         {
+            return GetSimpleMemberAccessStretch(expression, out entityBestGuess, out var isContinuous);
+        }
+
+        public static List<Expression> GetSimpleMemberAccessStretch
+            (Expression expression, out Expression entityBestGuess, out bool isContinuous)
+        {
+            isContinuous = true;
+
             var filtered = new List<Expression>();
 
             var currentExpression = expression;
 
             Expression localExpr = null, entityDisjointExpr = null, nfpExpr = null,
-                methodExpr = null, parentEntityExpr = null, paramExpr = null;
+                methodExpr = null, parentEntityExpr = null, paramExpr = null, constExpr = null;
 
             while (currentExpression != null)
             {
@@ -892,14 +820,26 @@ namespace Neo4jClient.DataAnnotations
                             currentExpression = (currentExpression as BinaryExpression).Left;
                             break;
                         }
+                    case ExpressionType.ArrayLength:
+                        {
+                            currentExpression = (currentExpression as UnaryExpression).Operand;
+                            break;
+                        }
                     case ExpressionType.Parameter:
                         {
                             paramExpr = currentExpression;
                             currentExpression = null;
                             break;
                         }
+                    case ExpressionType.Constant:
+                        {
+                            constExpr = currentExpression;
+                            currentExpression = null;
+                            break;
+                        }
                     default:
                         {
+                            isContinuous = false;
                             currentExpression = null;
                             break;
                         }
@@ -909,7 +849,7 @@ namespace Neo4jClient.DataAnnotations
             filtered.Reverse();
 
             //determine where our value is by some heuristics
-            entityBestGuess = nfpExpr ?? paramExpr ?? entityDisjointExpr ?? localExpr ?? methodExpr ?? parentEntityExpr ?? filtered.FirstOrDefault();
+            entityBestGuess = nfpExpr ?? constExpr ?? paramExpr ?? entityDisjointExpr ?? localExpr ?? methodExpr ?? parentEntityExpr ?? filtered.FirstOrDefault();
 
             return filtered;
         }
@@ -1002,17 +942,19 @@ namespace Neo4jClient.DataAnnotations
         }
 
         public static JObject GetFinalProperties(
-            LambdaExpression lambdaExpr, EntityResolver resolver,
-            EntityConverter converter, Func<object, string> serializer,
-            out bool hasVariablesInProperties)
+            LambdaExpression lambdaExpr, QueryUtilities queryUtilities,
+            out bool hasFunctionsInProperties)
         {
-            hasVariablesInProperties = false;
+            hasFunctionsInProperties = false;
 
             //get the properties expression
-            if (lambdaExpr != null && (resolver != null || converter != null) && serializer != null)
+            if (lambdaExpr != null && queryUtilities.SerializeCallback != null)
             {
+                var resolver = queryUtilities.Resolver;
+                var serializer = queryUtilities.SerializeCallback;
+
                 //visit the expressions
-                var entityVisitor = new EntityExpressionVisitor(resolver, serializer);
+                var entityVisitor = new EntityExpressionVisitor(queryUtilities);
 
                 var instanceExpr = entityVisitor.Visit(lambdaExpr.Body);
                 var predicateExpr = entityVisitor.SetPredicateNode;
@@ -1038,6 +980,9 @@ namespace Neo4jClient.DataAnnotations
 
                 if (!instanceIsDictionary)
                 {
+                    if (!instanceType.IsAnonymousType())
+                        Neo4jAnnotations.AddEntityType(instanceType); //just in case it was omitted
+
                     if (resolver != null)
                     {
                         instanceInfo.WithJsonResolver(resolver);
@@ -1215,10 +1160,10 @@ namespace Neo4jClient.DataAnnotations
                     }
                 }
 
-                //now replace values with neo variables where appropriate
-                var variableNodes = entityVisitor.SpecialNodePaths.Where(pair => pair.Item2.Type == SpecialNodeType.Variable).ToArray();
+                //now replace values with neo functions where appropriate
+                var functionNodes = entityVisitor.SpecialNodePaths.Where(pair => pair.Item2.Type == SpecialNodeType.Function).ToArray();
 
-                if (variableNodes.Length > 0)
+                if (functionNodes.Length > 0)
                 {
                     //for vars:
                     //a member is identified by the last MemberAssignment, or the first argument of an ElementInit of the first Dictionary<string, object>
@@ -1227,11 +1172,11 @@ namespace Neo4jClient.DataAnnotations
                     //roles: [a.roles[b.index]] (This scenario is same as previous, except with recursive vars)
                     //in other words, direct assignment, and arrays are supported
 
-                    var propertyKeyToVarNodes = new List<Tuple<string, IEnumerable<object>, SpecialNode, string>>();
+                    var propertyKeyToVarNodes = new List<Tuple<string, IEnumerable<object>, SpecialNode, object>>();
 
-                    foreach (var varNode in variableNodes)
+                    foreach (var varNode in functionNodes)
                     {
-                        string varBuiltValue = varNode.Item2.ConcreteValue as string;
+                        object varBuiltValue = varNode.Item2.ConcreteValue; //as string;
                         object referenceItem = null;
                         string propertyKey = null;
 
@@ -1311,7 +1256,7 @@ namespace Neo4jClient.DataAnnotations
                             throw new InvalidOperationException(string.Format(Messages.AmbiguousVarsPathError, varBuiltValue));
                         }
 
-                        propertyKeyToVarNodes.Add(new Tuple<string, IEnumerable<object>, SpecialNode, string>
+                        propertyKeyToVarNodes.Add(new Tuple<string, IEnumerable<object>, SpecialNode, object>
                                 (propertyKey,
                                 paths.Take(paths.IndexOf(referenceItem) + 1),
                                 varNode.Item2,
@@ -1320,7 +1265,7 @@ namespace Neo4jClient.DataAnnotations
 
                     foreach (var item in propertyKeyToVarNodes)
                     {
-                        //find the value and replace with variable where appropriate
+                        //find the value and replace with function where appropriate
                         var key = item.Item1;
                         var pathsLeft = item.Item2.ToArray();
                         var specialNode = item.Item3;
@@ -1371,13 +1316,13 @@ namespace Neo4jClient.DataAnnotations
 
                             //replace the value
                             jArray[index] = finalValue;
-                            hasVariablesInProperties = true;
+                            hasFunctionsInProperties = true;
                             continue;
                         }
 
                         //assign
                         instanceJObject[key] = finalValue;
-                        hasVariablesInProperties = true;
+                        hasFunctionsInProperties = true;
                     }
                 }
 
@@ -1531,12 +1476,11 @@ namespace Neo4jClient.DataAnnotations
             return stringBuilder.ToString();
         }
 
-        internal static void GetQueryUtilities(ICypherFluentQuery query,
-            out IGraphClient client, out ISerializer serializer,
-            out EntityResolver resolver, out EntityConverter converter,
-            out Func<object, string> actualSerializer, out Func<ICypherFluentQuery, QueryWriter> queryWriter)
+        internal static QueryUtilities GetQueryUtilities(ICypherFluentQuery query)
         {
-            client = (query as IAttachedReference)?.Client;
+            var queryUtilities = new QueryUtilities();
+
+            var client =  (query as IAttachedReference)?.Client;
 
             var _serializer = client?.Serializer ?? new CustomJsonSerializer()
             {
@@ -1546,15 +1490,17 @@ namespace Neo4jClient.DataAnnotations
 
             var customJsonSerializer = _serializer as CustomJsonSerializer;
 
-            serializer = _serializer;
+            var serializer = _serializer;
 
-            resolver = client?.JsonContractResolver as EntityResolver ??
+            var resolver = client?.JsonContractResolver as EntityResolver ??
                 (serializer as CustomJsonSerializer)?.JsonContractResolver as EntityResolver;
 
             var converters = new List<JsonConverter>((IEnumerable<JsonConverter>)client?.JsonConverters ?? new JsonConverter[0]);
             converters.AddRange((serializer as CustomJsonSerializer)?.JsonConverters ?? new JsonConverter[0]);
 
-            converter = converters.FirstOrDefault(c => c is EntityConverter) as EntityConverter;
+            var converter = converters.FirstOrDefault(c => c is EntityConverter) as EntityConverter;
+
+            Func<object, string> actualSerializer = null;
 
             if (_serializer != null)
             {
@@ -1580,19 +1526,21 @@ namespace Neo4jClient.DataAnnotations
                 actualSerializer = null;
             }
 
-            var queryWriterInfo = query.GetType()
-                    .GetField("QueryWriter", BindingFlags.NonPublic | BindingFlags.Instance);
-
-            queryWriter = (q) =>
+            return new QueryUtilities()
             {
-                QueryWriter qw = queryWriterInfo?.GetValue(q) as QueryWriter;
-                return qw;
+                Client = client,
+                Converter = converter,
+                ISerializer = serializer,
+                Resolver = resolver,
+                SerializeCallback = actualSerializer,
+                CurrentQueryWriter = QueryUtilities.QueryWriterGetter(query),
+                CurrentBuildStrategy = QueryUtilities.BuildStrategyGetter(query)
             };
         }
 
         internal static LambdaExpression GetConstraintsAsPropertiesLambda(LambdaExpression constraints, Type type)
         {
-            var setMethod = GetMethodInfo(() => ObjectExtensions._Set<object>(null, null, true), type);
+            var setMethod = GetGenericMethodInfo(GetMethodInfo(() => ObjectExtensions._Set<object>(null, null, true)), type);
 
             return Expression.Lambda(Expression.Call(setMethod, Expression.Constant(type.GetDefaultValue(), type),
                 constraints, Expression.Constant(true) //i.e, usePredicateOnly: true
@@ -1806,113 +1754,288 @@ namespace Neo4jClient.DataAnnotations
         }
 
         /// <summary>
-        /// For constraints and indexes, expecting:
-        /// a =&gt; a.Property
-        /// a =&gt; new { a.Property1, a.Property2 }
+        /// Expecting:
+        /// a =&gt; a.Property //member access = "a.property"//
+        /// a =&gt; new { a.Property1, a.Property2 } //multiple member accesses = "a.property1", "a.property2"//
+        /// a =&gt; a.Property.ToString() //complex expression (i.e., member access with function calls) = "toString(a.property)"//
+        /// a =&gt; new { a.Property1, Property2 = a.Property2.Length } //multiple complex expressions = "a.property1", "size(a.property2)"//
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="properties"></param>
+        /// <param name="expressions"></param>
         /// <param name="resolver"></param>
         /// <param name="converter"></param>
         /// <param name="serializer"></param>
-        /// <param name="makeNamesMemberAccess"></param>
-        /// <returns></returns>
-        internal static string[] GetFinalPropertyNames<T>(Expression<Func<T, object>> properties,
-            EntityResolver resolver,
-            EntityConverter converter, Func<object, string> serializer,
-            bool makeNamesMemberAccess = false)
+        /// <param name="isMemberAccess">If false, the variable is not included</param>
+        internal static string[] GetVariableExpressions<T>(Expression<Func<T, object>> expressions, 
+            QueryUtilities queryUtilities,
+            bool isMemberAccess = true, string variable = null, 
+            FunctionVisitorContext visitorContext = null)
         {
-            return GetFinalPropertyNames(typeof(T), properties, resolver, converter, serializer, makeNamesMemberAccess);
+            return GetVariableExpressions(typeof(T), expressions, queryUtilities, isMemberAccess, variable, visitorContext);
         }
 
         /// <summary>
-        /// For constraints and indexes, expecting:
-        /// a =&gt; a.Property
-        /// a =&gt; new { a.Property1, a.Property2 }
+        /// Expecting:
+        /// a =&gt; a.Property //member access = "a.property"//
+        /// a =&gt; new { a.Property1, a.Property2 } //multiple member accesses = "a.property1", "a.property2"//
+        /// a =&gt; a.Property.ToString() //complex expression (i.e., member access with function calls) = "toString(a.property)"//
+        /// a =&gt; new { a.Property1, Property2 = a.Property2.Length } //multiple complex expressions = "a.property1", "size(a.property2)"//
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="properties"></param>
+        /// <param name="expressions"></param>
         /// <param name="resolver"></param>
         /// <param name="converter"></param>
         /// <param name="serializer"></param>
-        /// <param name="makeNamesMemberAccess"></param>
-        internal static string[] GetFinalPropertyNames(Type sourceType,
-            LambdaExpression properties,
-            EntityResolver resolver,
-            EntityConverter converter, Func<object, string> serializer,
-            bool makeNamesMemberAccess = false)
+        /// <param name="isMemberAccess">If false, the variable is not included</param>
+        internal static string[] GetVariableExpressions(Type sourceType,
+            LambdaExpression expressions, QueryUtilities queryUtilities, 
+            bool isMemberAccess = true, string variable = null,
+            FunctionVisitorContext visitorContext = null)
         {
-            if (properties == null)
-                throw new ArgumentNullException(nameof(properties));
+            if (expressions == null)
+                throw new ArgumentNullException(nameof(expressions));
 
-            //for constraints and indexes, expecting:
             //a => a.Property
             //a => new { a.Property1, a.Property2 }
 
-            var parameterExpr = properties.Parameters.First();
+            var parameterExpr = expressions.Parameters?.FirstOrDefault();
+            variable = variable ?? parameterExpr.Name;
+            var randomVar = $"_ve_{GetRandomVariableFor(variable)}_rdm_";
 
-            LambdaExpression lambdaToParse = null;
+            //create a Vars.Get call for this variable
+            var varsGetCallExpr = GetVarsGetExpressionFor(randomVar, sourceType);
 
             //get the body without an object cast if present
-            var bodyExpr = properties.Body.Uncast(out var cast, castToRemove: typeof(object));
+            var bodyExpr = expressions.Body.Uncast(out var cast, castToRemove: typeof(object));
 
-            if (bodyExpr.NodeType == ExpressionType.MemberAccess)
-            {
-                PropertyInfo propertyInfo = null;
-                MemberExpression memExpr = bodyExpr as MemberExpression;
-                Type parentType = null;
-
-                //recurvesively find the last memberexpression member
-                while (memExpr != null)
-                {
-                    parentType = memExpr.Expression.Type;
-
-                    try
-                    {
-                        //do this for tests sakes
-                        propertyInfo = GetPropertyInfo(memExpr, parentType, null, includeIEnumerableArg: false, acceptObjectTypeCast: true);
-                    }
-                    catch
-                    {
-                        break; //something went wrong
-                    }
-
-                    memExpr = memExpr.Expression?.Uncast(out var memCast) as MemberExpression;
-                }
-
-
-                if (propertyInfo != null && parentType == sourceType)
-                {
-                    //passed test
-                    //create a predicate lambda so we can parse this
-                    //i.e., a => a.Property == default(a.Property.GetType())
-                    var predicateExpr = Expression.Lambda(Expression.Equal(bodyExpr, Expression.Constant(bodyExpr.Type.GetDefaultValue())), parameterExpr);
-                    lambdaToParse = GetConstraintsAsPropertiesLambda(predicateExpr, sourceType);
-                }
-            }
-
-            if (lambdaToParse == null)
-            {
-                //replace the parameter with an instance of the source type
-                var sourceInstance = CreateInstance(sourceType);
-                InitializeComplexTypedProperties(sourceInstance);
-
-                var sourceInstanceExpr = Expression.Constant(sourceInstance);
-
-                var newBodyExpr = new ParameterExpressionVisitor(
-                    new Dictionary<string, Expression>() { { parameterExpr.Name, sourceInstanceExpr } }
+            //replace the parameter with the a Vars.Get call
+            var newBodyExpr = new ParameterReplacerVisitor(
+                    new Dictionary<string, Expression>() { { parameterExpr.Name, varsGetCallExpr } }
                     ).Visit(bodyExpr);
 
-                //further build all paths presented, just to dot our I's
-                newBodyExpr = new PathBuildExpressionVisitor(new List<object> { sourceInstance }).Visit(newBodyExpr);
+            var variableExpressions = new List<Expression>() { newBodyExpr };
 
-                lambdaToParse = Expression.Lambda(newBodyExpr);
+            if (newBodyExpr.Type.IsAnonymousType())
+            {
+                //that is, new { a.Property1, a.Property2 }
+                variableExpressions.Clear();
+                variableExpressions.AddRange((newBodyExpr as NewExpression).Arguments);
             }
 
-            var finalProperties = GetFinalProperties(lambdaToParse, resolver, converter, serializer, out var hasVariablesInProperties);
-            var param = parameterExpr.Name;
+            List<string> values = new List<string>();
+            var funcsVisitor = new FunctionExpressionVisitor(queryUtilities, visitorContext);
 
-            return finalProperties.Properties().Select(p => !makeNamesMemberAccess ? p.Name : $"{param}.{p.Name}").ToArray();
+            Action<Expression> visit = (expr) =>
+            {
+                funcsVisitor.Clear();
+                var newExpr = funcsVisitor.Visit(expr);
+                values.Add(funcsVisitor.Builder.ToString());
+            };
+
+            foreach (var expr in variableExpressions)
+            {
+                if (expr.Type.IsComplex())
+                {
+                    //explode
+                    var accesses = ExplodeComplexTypeMemberAccess (expr, out var inversePaths);
+                    if (accesses?.Count > 0)
+                    {
+                        foreach (var item in accesses)
+                        {
+                            visit(item);
+                        }
+
+                        continue;
+                    }
+                }
+
+                visit(expr);
+            }
+
+            //replace the random variable with the actual one.
+            var varReplacement = isMemberAccess ? variable + "." : "";
+
+            return values.Select(v => v.Replace(randomVar + ".", varReplacement)
+            .Replace(randomVar, varReplacement.TrimEnd('.'))).ToArray();
+        }
+
+        public static MethodCallExpression GetVarsGetExpressionFor(string variable, Type type)
+        {
+            //create a Vars.Get call for this variable
+            var varsGetMethodInfo = GetGenericMethodInfo(GetMethodInfo(() => Vars.Get<object>(null)), type);
+            //now Vars.Get<type>(variable)
+            var varsGetCallExpr = Expression.Call(varsGetMethodInfo, Expression.Constant(variable, Defaults.StringType));
+
+            return varsGetCallExpr;
+        }
+
+        public static MethodCallExpression GetVarsGetExpressionFor<TSource, TResult>(Expression<Func<TSource, TResult>> selector)
+        {
+            return GetVarsGetExpressionFor(selector, typeof(TSource), typeof(TResult));
+        }
+
+        public static MethodCallExpression GetVarsGetExpressionFor(LambdaExpression selector, Type source, Type result)
+        {
+            //create a Vars.Get call for this selector
+            var varsGetMethodInfo = GetGenericMethodInfo(GetMethodInfo(() => Vars.Get<object, object>(null)), source, result);
+            //now Vars.Get<source, result>(selector)
+            var varsGetCallExpr = Expression.Call(varsGetMethodInfo, selector);
+
+            return varsGetCallExpr;
+        }
+
+        internal static string BuildProjectionQueryExpression(LambdaExpression expression,
+            QueryUtilities queryUtilities, FunctionExpressionVisitor functionVisitor,
+            out CypherResultMode resultMode, out CypherResultFormat resultFormat)
+        {
+            //expecting:
+            //u => u //parameter
+            //u => u.Name //memberaccess
+            //(u,v) => new { u, v } //new anonymous expression
+            //(u, v) => new User(){ Name = u.Id() } //member init
+
+            resultFormat = CypherResultFormat.DependsOnEnvironment;
+
+            var bodyExpr = expression.Body.Uncast(out var bodyCast, castToRemove: Defaults.ObjectType);
+
+            string result = null;
+
+            if (bodyExpr.NodeType == ExpressionType.MemberInit
+                || bodyExpr.NodeType == ExpressionType.New)
+            {
+                //use final properties method in this case
+
+                //but first replace all parameters with vars.get call
+                var replacements = new Dictionary<Expression, Expression>();
+                var replacerVisitor = new ReplacerExpressionVisitor(replacements);
+                if (expression.Parameters?.Count > 0)
+                {
+                    foreach(var p in expression.Parameters)
+                    {
+                        replacements.Add(p, GetVarsGetExpressionFor(p.Name, p.Type));
+                    }
+                    //make parameter replacements now
+                    bodyExpr = replacerVisitor.Visit(bodyExpr);
+                    replacements.Clear();
+                }
+
+                //then we need to seal all assignments with the nfp method ("_") so that they don't affect the final properties key names.
+                //the original key/member names set are important to the deserialization method (and to the rest of the user code)
+                //hence why a change here won't be appropriate and we need to block such changes
+                //as a result, all complex property member accesses must ne made to the last property in projection queries.
+                var nfpInfo = GetMethodInfo(() => ObjectExtensions._<object>(null));
+                if (bodyExpr is NewExpression newExpr)
+                {
+                    foreach(var arg in newExpr.Arguments)
+                    {
+                        //i.e., arg._()
+                        replacements.Add(arg, Expression.Call(GetGenericMethodInfo(nfpInfo, arg.Type), arg));
+                    }
+                }
+                else if (bodyExpr is MemberInitExpression memberInitExpr)
+                {
+                    Action<MemberBinding> addBinding = null;
+                    addBinding = (binding) =>
+                    {
+                        switch (binding)
+                        {
+                            case MemberAssignment assignment:
+                                {
+                                    //i.e., a = b._()
+                                    replacements.Add(assignment.Expression, 
+                                        Expression.Call(GetGenericMethodInfo(nfpInfo, assignment.Expression.Type), assignment.Expression));
+                                    break;
+                                }
+                            case MemberMemberBinding memberMemberBinding:
+                                {
+                                    foreach(var childBinding in memberMemberBinding.Bindings)
+                                    {
+                                        addBinding(childBinding);
+                                    }
+                                    break;
+                                }
+                        }
+                    };
+
+                    foreach(var binding in memberInitExpr.Bindings)
+                    {
+                        addBinding(binding);
+                    }
+                }
+
+                //make the remaining replacements
+                bodyExpr = replacerVisitor.Visit(bodyExpr);
+                //create new lambda as we don't even need the parameters anymore.
+                //i.e., () => bodyExpr
+                expression = Expression.Lambda(bodyExpr);
+
+                var finalProperties = GetFinalProperties(expression, queryUtilities, out bool hasFunctions);
+                if (finalProperties == null)
+                    //trouble
+                    throw new InvalidOperationException(Messages.InvalidICypherResultItemExpressionError);
+
+                string asterisk = "*";
+                var serializer = queryUtilities.SerializeCallback;
+
+                var buildStrategy = queryUtilities.CurrentBuildStrategy ?? PropertiesBuildStrategy.WithParams;
+                var hasQueryWriter = queryUtilities.CurrentQueryWriter != null;
+
+                result = finalProperties.Properties().Select(jp =>
+                {
+                    var value = serializer(jp.Value);
+
+                    //the asterisk wild-card cannot have a name associated with it, and should ideally be the first parameter
+                    if (value == asterisk)
+                        return asterisk;
+
+                    if (hasQueryWriter && jp.Value.Type != JTokenType.Raw)
+                    {
+                        //i.e. a constant/literal
+                        //we don't just write constants directly to the stream
+                        //so consider the build strategy here
+                        switch (buildStrategy)
+                        {
+                            case PropertiesBuildStrategy.WithParams:
+                            case PropertiesBuildStrategy.WithParamsForValues:
+                                {
+                                    //use a parameter to reference the value
+                                    value = queryUtilities.CurrentQueryWriter.CreateParameter(value);
+                                    value = GetNewNeo4jParameterSyntax(value);
+                                    break;
+                                }
+                        }
+                    }
+
+                    return $"{value} AS {jp.Name}";
+
+                }).Aggregate((first, second) => $"{first}, {second}");
+
+                resultMode = CypherResultMode.Projection;
+            }
+            else
+            {
+                //visit the expression directly
+                var visitor = functionVisitor;
+                visitor.Clear();
+                var newBodyExpr = visitor.Visit(bodyExpr);
+                result = visitor.Builder.ToString();
+
+                resultMode = CypherResultMode.Set;
+            }
+
+            return result;
+        }
+
+        public static string GetNewNeo4jParameterSyntax(string parameter)
+        {
+            if (parameter.StartsWith("{") && parameter.EndsWith("}"))
+            {
+                //this is the old parameter style
+                //use the new one that uses $ sign
+                parameter = $"${parameter.Substring(0, parameter.Length - 1).Remove(0, 1)}";
+            }
+
+            return parameter;
         }
     }
 }

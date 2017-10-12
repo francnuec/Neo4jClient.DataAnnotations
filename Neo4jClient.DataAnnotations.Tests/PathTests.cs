@@ -18,7 +18,7 @@ namespace Neo4jClient.DataAnnotations.Tests
     public class PathTests
     {
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void PatternNoParamsStrategy_Build(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -33,7 +33,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var expected = "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
+                "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->()";
 
             var actual = path.Build(ref query);
@@ -42,7 +42,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void PatternWithParamsStrategy_Build(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -59,7 +59,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var expected = "(greysAnatomy:Series $greysAnatomy)" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
+                "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
                 "-->()";
 
             var actual = path.Build(ref query);
@@ -68,7 +68,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void PatternWithParamsForValuesStrategy_Build(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -85,7 +85,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var expected = "(greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
+                "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
                 "-->()";
 
             var actual = path.Build(ref query);
@@ -94,7 +94,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void AssignPathParameter_Build(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -110,7 +110,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var expected = "P=" + 
                 "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
+                "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 "-->()";
 
             var actual = pathBuilder.Build(ref query);
@@ -119,7 +119,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void FindShortestPath_Build(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -134,7 +134,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var expected = "P=shortestPath(" + 
                 "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
+                "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
                 ")";
 
             var actual = pathBuilder.Build(ref query);

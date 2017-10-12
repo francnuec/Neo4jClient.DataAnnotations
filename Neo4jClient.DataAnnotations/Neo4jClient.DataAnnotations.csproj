@@ -12,12 +12,14 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageReleaseNotes>Visit project site for usage and instructions.
 
-*Added OrderBy, ThenBy, With, Where, Return, ReturnDistinct
-*Added method to get property names
-*Fixed bugs.</PackageReleaseNotes>
-    <Version>1.1.0</Version>
-    <FileVersion>1.1.0.0</FileVersion>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+*Added Neo4j Functions; nearly all of them.
+*Translated methods from popular classes (like the Math and Enumerable classes) to their equivalent Neo4j functions.
+*Added Remove clause.
+*Fixed quite a number of bugs.
+*Changed the inner workings of many methods (hence please recheck your own methods).</PackageReleaseNotes>
+    <Version>1.2.0</Version>
+    <FileVersion>1.2.0.0</FileVersion>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

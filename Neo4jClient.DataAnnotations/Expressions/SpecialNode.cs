@@ -1,4 +1,5 @@
-﻿using Neo4jClient.DataAnnotations.Serialization;
+﻿using Neo4jClient.DataAnnotations.Cypher;
+using Neo4jClient.DataAnnotations.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -68,7 +69,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
             {
                 if (concreteValue == null)
                 {
-                    concreteValue = ResolveConcreteValue(this, Visitor.Resolver, Visitor.Serializer, useResolvedJsonName: null);
+                    concreteValue = ResolveConcreteValue(this, Visitor.QueryUtilities, useResolvedJsonName: null);
                 }
 
                 return concreteValue;
@@ -81,18 +82,38 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         public bool FoundWhileVisitingPredicate { get; protected internal set; }
 
-        public static object ResolveConcreteValue(SpecialNode specialNode, EntityResolver resolver = null, Func<object, string> serializer = null, bool? useResolvedJsonName = null)
+        public static object ResolveConcreteValue(SpecialNode specialNode, QueryUtilities queryUtilities,
+            bool? useResolvedJsonName = null)
         {
             object ret = null;
 
-            if (specialNode.Type == SpecialNodeType.Variable)
-            {
-                ret = Utilities.BuildVars(specialNode.Filtered, resolver, serializer, out var typeReturned, useResolvedJsonName: useResolvedJsonName);
-            }
-            else
+            try
             {
                 ret = specialNode.Node.ExecuteExpression<object>();
             }
+            catch
+            {
+                //maybe has functions/variables that can be handled
+                var varsVisitor = new FunctionExpressionVisitor(queryUtilities, new FunctionVisitorContext()
+                {
+                    UseResolvedJsonName = useResolvedJsonName,
+                });
+                varsVisitor.Visit(specialNode.Node);
+
+                ret = varsVisitor.Builder.ToString();
+            }
+
+            //if (specialNode.Type == SpecialNodeType.Variable)
+            //{
+            //    var varsVisitor = new VarsExpressionVisitor(resolver, serializer);
+            //    varsVisitor.Visit(specialNode.Node);
+
+            //    ret = varsVisitor.Builder.ToString();
+            //}
+            //else
+            //{
+            //    ret = specialNode.Node.ExecuteExpression<object>();
+            //}
 
             return ret;
         }
@@ -101,7 +122,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
     public enum SpecialNodeType
     {
         Other = 0,
-        Variable = 1,
+        Function = 1,
         //PredicateAssignment = 2,
         MemberAccessExpression = 3
     }

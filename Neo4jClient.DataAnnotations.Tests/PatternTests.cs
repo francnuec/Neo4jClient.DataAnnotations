@@ -30,7 +30,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             Assert.NotNull(abSelector);
             Assert.Equal("A", abSelector.Parameters[0].Name);
 
-            var propInfo = Utilities.GetPropertyInfo(abSelector.Body, typeof(MovieNode), typeof(DirectorNode));
+            var propInfo = Utilities.GetPropertyInfoFrom(abSelector.Body, typeof(MovieNode), typeof(DirectorNode));
             Assert.NotNull(propInfo);
             Assert.Equal(typeof(DirectorNode), propInfo.PropertyType);
             Assert.Equal("Director", propInfo.Name);
@@ -48,7 +48,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var rbSelector = pattern.RBSelector;
             Assert.NotNull(rbSelector);
 
-            var propInfo = Utilities.GetPropertyInfo(rbSelector.Body, typeof(MovieActorRelationship), typeof(ActorNode));
+            var propInfo = Utilities.GetPropertyInfoFrom(rbSelector.Body, typeof(MovieActorRelationship), typeof(ActorNode));
             Assert.NotNull(propInfo);
             Assert.Equal(typeof(ActorNode), propInfo.PropertyType);
             Assert.Equal("Actor", propInfo.Name);
@@ -67,7 +67,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             Assert.NotNull(arSelector);
             Assert.Equal("Lagos", arSelector.Parameters[0].Name);
 
-            var rPropInfo = Utilities.GetPropertyInfo(arSelector.Body, typeof(MovieNode), typeof(MovieActorRelationship));
+            var rPropInfo = Utilities.GetPropertyInfoFrom(arSelector.Body, typeof(MovieNode), typeof(MovieActorRelationship));
             Assert.NotNull(rPropInfo);
             Assert.Equal(typeof(ICollection<MovieActorRelationship>), rPropInfo.PropertyType);
             Assert.Equal("Actors", rPropInfo.Name);
@@ -75,7 +75,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var rbSelector = pattern.RBSelector;
             Assert.NotNull(rbSelector);
 
-            var bPropInfo = Utilities.GetPropertyInfo(rbSelector.Body, typeof(MovieActorRelationship), typeof(ActorNode));
+            var bPropInfo = Utilities.GetPropertyInfoFrom(rbSelector.Body, typeof(MovieActorRelationship), typeof(ActorNode));
             Assert.NotNull(bPropInfo);
             Assert.Equal(typeof(ActorNode), bPropInfo.PropertyType);
             Assert.Equal("Actor", bPropInfo.Name);
@@ -104,7 +104,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             Assert.NotNull(arSelector);
             Assert.Equal("Ambode", arSelector.Parameters[0].Name);
 
-            var rPropInfo = Utilities.GetPropertyInfo(arSelector.Body, typeof(ActorNode), typeof(MovieActorRelationship));
+            var rPropInfo = Utilities.GetPropertyInfoFrom(arSelector.Body, typeof(ActorNode), typeof(MovieActorRelationship));
             Assert.NotNull(rPropInfo);
             Assert.Equal(typeof(ICollection<MovieActorRelationship>), rPropInfo.PropertyType);
             Assert.Equal("Movies", rPropInfo.Name);
@@ -112,7 +112,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var rbSelector = pattern.RBSelector;
             Assert.NotNull(rbSelector);
 
-            var bPropInfo = Utilities.GetPropertyInfo(rbSelector.Body, typeof(MovieActorRelationship), typeof(MovieNode));
+            var bPropInfo = Utilities.GetPropertyInfoFrom(rbSelector.Body, typeof(MovieActorRelationship), typeof(MovieNode));
             Assert.NotNull(bPropInfo);
             Assert.Equal(typeof(MovieNode), bPropInfo.PropertyType);
             Assert.Equal("Movie", bPropInfo.Name);
@@ -275,7 +275,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void Properties_FinalProperties(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -313,7 +313,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void Constraints_FinalProperties(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -349,7 +349,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void NoParamsStrategy_Build(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -364,7 +364,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var expectedMain = "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })";
+                "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })";
             var expectedExt = "-->()";
 
             var actualMain = path.Patterns[0].Build(ref query);
@@ -376,7 +376,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void WithParamsStrategy_Build(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -394,7 +394,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var expectedMain = "(greysAnatomy:Series $greysAnatomy)" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
                 //becase of the inner shondaRhimes variable, it would use the WithParamsForValues strategy instead for the ellenPompeo props.
-                "(ellenPompeo:Female:Actor { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })";
+                "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })";
             var expectedExt = "-->()";
 
             var actualMain = path.Patterns[0].Build(ref query);
@@ -406,7 +406,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void WithParamsForValuesStrategy_Build(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -424,7 +424,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var expectedMain = "(greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
                 //becase of the inner shondaRhimes variable, it would use the WithParamsForValues strategy instead for the ellenPompeo props.
-                "(ellenPompeo:Female:Actor { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })";
+                "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })";
             var expectedExt = "-->()";
 
             var actualMain = path.Patterns[0].Build(ref query);

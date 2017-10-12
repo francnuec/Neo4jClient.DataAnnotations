@@ -37,5 +37,9 @@ namespace Neo4jClient.DataAnnotations
         public const string NoResolverOrConverterError = "You must enable either the EntityResolver or EntityConverter for Neo4jClient.DataAnnotations to work.";
 
         public const string BothResolverAndConverterError = "You cannot enable both EntityResolver and EntityConverter.";
+
+        public const string InvalidVariableExpressionError = "Invalid variable expression. Expression: {0}, Result: {1}.";
+
+        public const string InvalidICypherResultItemExpressionError = "The expression must be constructed as either an anonymous type initializer (for example: n => new { Foo = n }), an object initializer (for example: n => new MyResultType { Foo = n.Bar }), or a method call (for example: n => n.Count()), or a member accessor (for example: n => n.As<Foo>().Bar). You cannot supply blocks of code (for example: n => { var a = n + 1; return a; }) or use constructors with arguments (for example: n => new Foo(n)).";
     }
 }

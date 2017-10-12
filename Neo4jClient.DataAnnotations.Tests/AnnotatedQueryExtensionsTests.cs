@@ -12,7 +12,7 @@ namespace Neo4jClient.DataAnnotations.Tests
     public class AnnotatedQueryTests
     {
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void Where(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -26,13 +26,13 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = cypherQuery.QueryText;
 
-            var expected = $"WHERE ((movie.Title = {{{cypherQuery.QueryParameters.First().Key}}}) AND (movie.Year = {{{cypherQuery.QueryParameters.Last().Key}}}))";
+            var expected = $"WHERE ((movie.Title = ${cypherQuery.QueryParameters.First().Key}) AND (movie.Year = ${cypherQuery.QueryParameters.Last().Key}))";
 
             Assert.Equal(expected, actual);
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void WhereMultipleParams(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -48,16 +48,16 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = cypherQuery.QueryText;
 
-            var expected = $"WHERE (((movie.Title = {{{cypherQuery.QueryParameters.ElementAt(0).Key}}})" 
-                + $" AND (movie.Year = {{{cypherQuery.QueryParameters.ElementAt(1).Key}}}))" 
-                + $" OR ((actor.NewAddressName_Location_Longitude = {{{cypherQuery.QueryParameters.ElementAt(2).Key}}})" 
-                + $" AND (actor.NewAddressName_ComplexProperty_Property = {{{cypherQuery.QueryParameters.ElementAt(3).Key}}})))";
+            var expected = $"WHERE (((movie.Title = ${cypherQuery.QueryParameters.ElementAt(0).Key})" 
+                + $" AND (movie.Year = ${cypherQuery.QueryParameters.ElementAt(1).Key}))" 
+                + $" OR ((actor.NewAddressName_Location_Longitude = ${cypherQuery.QueryParameters.ElementAt(2).Key})" 
+                + $" AND (actor.NewAddressName_ComplexProperty_Property = ${cypherQuery.QueryParameters.ElementAt(3).Key})))";
 
             Assert.Equal(expected, actual);
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void AndWhere(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -72,14 +72,14 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = cypherQuery.QueryText;
 
-            var expected = $"WHERE (movie.Title = {{{cypherQuery.QueryParameters.First().Key}}})" + 
-                $"\r\nAND (movie.Year = {{{cypherQuery.QueryParameters.Last().Key}}})";
+            var expected = $"WHERE (movie.Title = ${cypherQuery.QueryParameters.First().Key})" + 
+                $"\r\nAND (movie.Year = ${cypherQuery.QueryParameters.Last().Key})";
 
             Assert.Equal(expected, actual);
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void OrWhere(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -94,14 +94,14 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = cypherQuery.QueryText;
 
-            var expected = $"WHERE (movie.Title = {{{cypherQuery.QueryParameters.First().Key}}})" +
-                $"\r\nOR (movie.Year = {{{cypherQuery.QueryParameters.Last().Key}}})";
+            var expected = $"WHERE (movie.Title = ${cypherQuery.QueryParameters.First().Key})" +
+                $"\r\nOR (movie.Year = ${cypherQuery.QueryParameters.Last().Key})";
 
             Assert.Equal(expected, actual);
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void With(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -111,21 +111,43 @@ namespace Neo4jClient.DataAnnotations.Tests
             var cypherQuery = query.AsAnnotatedQuery()
                 .With(movie => new
                 {
+                    Funcs.Star,
                     title = movie.As<MovieNode>().Title,
-                    movie.As<MovieNode>().Year
+                    movie.As<MovieNode>().Year,
+                    mCollected = movie.CollectAsDistinct<MovieNode>()
                 })
                 .AsCypherQuery()
                 .Query;
 
             var actual = cypherQuery.QueryText;
 
-            var expected = "WITH movie.Title AS title, movie.Year AS Year";
+            var expected = "WITH *, movie.Title AS title, movie.Year AS Year, collect(DISTINCT movie) AS mCollected";
 
             Assert.Equal(expected, actual);
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
+        public void WithMemberAccess(string serializerName, EntityResolver resolver, EntityConverter converter)
+        {
+            TestUtilities.RegisterEntityTypes(resolver, converter);
+
+            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+
+            var cypherQuery = query.AsAnnotatedQuery()
+                .With(movie => movie.As<MovieNode>().Title)
+                .AsCypherQuery()
+                .Query;
+
+            var actual = cypherQuery.QueryText;
+
+            var expected = "WITH movie.Title";
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void WithAddedText(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -149,7 +171,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void WithMultipleParams(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -177,7 +199,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void Return(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -201,7 +223,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void ReturnMultipleParams(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -229,7 +251,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void ReturnDistinct(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -247,13 +269,13 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = cypherQuery.QueryText;
 
-            var expected = "RETURN distinct movie.Title AS title, movie.Year AS Year";
+            var expected = "RETURN DISTINCT movie.Title AS title, movie.Year AS Year";
 
             Assert.Equal(expected, actual);
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void ReturnDistinctMultipleParams(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -274,14 +296,14 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = cypherQuery.QueryText;
 
-            var expected = "RETURN distinct movie.Title AS title, movie.Year AS Year, actor.NewAddressName_Location_Longitude AS lg"
+            var expected = "RETURN DISTINCT movie.Title AS title, movie.Year AS Year, actor.NewAddressName_Location_Longitude AS lg"
                 + ", actor.NewAddressName_ComplexProperty_Property AS Property, count(something) AS something_count";
 
             Assert.Equal(expected, actual);
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void OrderBy_ThenByDesc(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -302,7 +324,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void OrderByDesc_ThenBy(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -323,7 +345,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void OrderBy_CypherThenByDesc(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -332,7 +354,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var cypherQuery = query.AsAnnotatedQuery()
                 .OrderBy(movie => movie.Id())
-                .AsOrderedCypherQuery()
+                .AsCypherQuery()
                 .ThenByDescending((MovieNode movie) => movie.Year)
                 .Query;
 
@@ -344,7 +366,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData("SerializerData", MemberType = typeof(TestUtilities))]
+        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
         public void OrderByDesc_CypherThenBy(string serializerName, EntityResolver resolver, EntityConverter converter)
         {
             TestUtilities.RegisterEntityTypes(resolver, converter);
@@ -353,7 +375,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var cypherQuery = query.AsAnnotatedQuery()
                 .OrderByDescending(movie => movie.Id())
-                .AsOrderedCypherQuery()
+                .AsCypherQuery()
                 .ThenBy((MovieNode movie) => movie.Year)
                 .Query;
 

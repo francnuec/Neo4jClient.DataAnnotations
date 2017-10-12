@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
+using System.Linq;
+using Newtonsoft.Json.Linq;
 
 namespace Neo4jClient.DataAnnotations.Cypher
 {
@@ -25,7 +27,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Use only in expressions, especially with <see cref="Vars"/> method calls (in which case it Pseudo-casts).
         /// NOTE: THIS METHOD IS NOT SAFE TO EXECUTE. If the cast fails, it merely generates a default value for the return type.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TReturn"></typeparam>
         /// <returns></returns>
         public static TReturn _As<TReturn>(this object obj)
         {
@@ -42,6 +44,64 @@ namespace Neo4jClient.DataAnnotations.Cypher
             }
 
             return ret;
+        }
+
+        /// <summary>
+        /// Casts an object to a list of a certain type so as to use IEnumerable extension methods.
+        /// Use only in expressions, especially with <see cref="Vars"/> method calls (in which case it Pseudo-casts).
+        /// Shortcut for <code>._As&lt;List&lt;T&gt;&gt;()</code>
+        /// NOTE: THIS METHOD IS NOT SAFE TO EXECUTE. If the cast fails, it merely returns a null value.
+        /// </summary>
+        /// <typeparam name="TReturn"></typeparam>
+        /// <returns></returns>
+        public static List<TReturn> _AsList<TReturn>(this object obj)
+        {
+            //do something, just in case this method was executed
+            List<TReturn> ret = null;
+
+            try
+            {
+                ret = (List<TReturn>)obj;
+            }
+            catch
+            {
+
+            }
+
+            return ret;
+        }
+
+        /// <summary>
+        /// Casts an object to a list of a certain type so as to use IEnumerable extension methods.
+        /// Use only in expressions, especially with <see cref="Vars"/> method calls (in which case it Pseudo-casts).
+        /// Shortcut for <code>._As&lt;List&lt;T&gt;&gt;()</code>
+        /// NOTE: THIS METHOD IS NOT SAFE TO EXECUTE. If the cast fails, it merely returns a list having <paramref name="obj"/> as only item.
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <returns></returns>
+        public static List<TSource> _AsList<TSource>(this TSource obj)
+        {
+            //do something, just in case this method was executed
+            List<TSource> ret = _AsList<TSource>(obj as object);
+
+            try
+            {
+                ret = new List<TSource>() { obj };
+            }
+            catch
+            {
+            }
+
+            return ret;
+        }
+
+        /// <summary>
+        /// Returns this string as a raw value, and not a string value. So instead of outputing a value with quotation marks, it outputs the value directly.
+        /// </summary>
+        /// <returns></returns>
+        public static JRaw _AsRaw(this string value)
+        {
+            return new JRaw(value);
         }
 
         /// <summary>
@@ -63,6 +123,26 @@ namespace Neo4jClient.DataAnnotations.Cypher
         internal static T _Set<T>(this T instance, Expression<Func<T, bool>> predicate, bool usePredicateOnly)
         {
             return instance;
+        }
+
+        /// <summary>
+        /// The neo4j <code>IS NULL</code> function
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static bool IsNull<T>(this T obj)
+        {
+            return obj == null;
+        }
+
+        /// <summary>
+        /// The neo4j <code>IS NOT NULL</code> function
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static bool IsNotNull<T>(this T obj)
+        {
+            return !IsNull(obj);
         }
     }
 }
