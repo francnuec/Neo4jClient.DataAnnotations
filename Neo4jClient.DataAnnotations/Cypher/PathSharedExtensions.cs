@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Reflection;
 
 namespace Neo4jClient.DataAnnotations.Cypher
 {
@@ -264,6 +265,48 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
         #endregion
 
+        #region Type
+        internal static IPatternedPath SharedType
+            (this IPath source, Type A, Type R, Type B)
+        {
+            var pattern = source.Pattern as Pattern;
+
+            Func<Type, Type, bool> assertTypeAssignment = (oldType, newType) =>
+            {
+                if (oldType != null && newType != null && !oldType.IsAssignableFrom(newType))
+                {
+                    //the old type must be assignable from the new type
+                    throw new InvalidOperationException(string.Format(Messages.UnassignableTypeError, newType, oldType));
+                }
+
+                return true;
+            };
+
+            if (A != null && assertTypeAssignment(pattern.AType, A))
+            {
+                pattern.AType = A;
+            }
+
+            if (R != null && assertTypeAssignment(pattern.RType, R))
+            {
+                pattern.RType = R;
+            }
+
+            if (B != null && assertTypeAssignment(pattern.BType, B))
+            {
+                pattern.BType = B;
+            }
+
+            return (IPatternedPath)source;
+        }
+
+        internal static IPatternedPathExtension SharedType
+            (this IPathExtension source, Type R, Type B)
+        {
+            return (IPatternedPathExtension)SharedType(source as IPath, null, R, B);
+        }
+        #endregion
+
         #region Extend
         internal static IPatternedPathExtension SharedExtend(this IPath source,
             string R, string B, RelationshipDirection? dir)
@@ -426,6 +469,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
             return source;
         }
-        #endregion
+        #endregion      
     }
 }

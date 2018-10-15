@@ -1,5 +1,6 @@
 ﻿using Neo4jClient.Cypher;
 using Neo4jClient.DataAnnotations.Cypher;
+using Neo4jClient.DataAnnotations.Cypher.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;

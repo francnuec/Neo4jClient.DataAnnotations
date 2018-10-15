@@ -13,6 +13,7 @@ using System.Collections;
 using Neo4jClient.Cypher;
 using Neo4jClient.Serialization;
 using Newtonsoft.Json;
+using Neo4jClient.DataAnnotations.Cypher.Extensions;
 
 namespace Neo4jClient.DataAnnotations
 {

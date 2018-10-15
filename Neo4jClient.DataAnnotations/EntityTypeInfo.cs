@@ -72,7 +72,7 @@ namespace Neo4jClient.DataAnnotations
                 var properties = AllProperties;
                 foreach(var property in properties)
                 {
-                    var attrs = property.GetCustomAttributes(attributeType, inherit);
+                    var attrs = property.GetCustomAttributes(attributeType, inherit)?.Cast<Attribute>();
 
                     if(attrs != null && attrs.Count() > 0)
                     {

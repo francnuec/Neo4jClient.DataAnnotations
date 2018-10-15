@@ -1,5 +1,6 @@
 ﻿using Neo4jClient.DataAnnotations.Cypher;
 using Neo4jClient.DataAnnotations.Cypher.Functions;
+using Neo4jClient.DataAnnotations.Cypher.Extensions;
 using Neo4jClient.DataAnnotations.Expressions;
 using Neo4jClient.DataAnnotations.Tests.Models;
 using Newtonsoft.Json.Linq;

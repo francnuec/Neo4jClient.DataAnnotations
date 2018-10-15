@@ -2250,6 +2250,73 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
         #endregion
 
+        #region Type
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode> Type<TANode>
+            (this IPatternedPath<TANode> source, Type A)
+        {
+            return (IPatternedPath<TANode>)SharedType(source, A, null, null);
+        }
+
+
+
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode, TBNode> Type<TANode, TBNode>
+            (this IPatternedPath<TANode, TBNode> source, Type A)
+        {
+            return Type(source, A, null);
+        }
+
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode, TBNode> Type<TANode, TBNode>
+            (this IPatternedPath<TANode, TBNode> source, Type A, Type B)
+        {
+            return (IPatternedPath<TANode, TBNode>)SharedType(source, A, null, B);
+        }
+
+
+
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode, TRel, TBNode> Type<TANode, TRel, TBNode>
+            (this IPatternedPath<TANode, TRel, TBNode> source, Type A)
+        {
+            return Type(source, A, null, null);
+        }
+
+        /// <summary>
+        /// (A:Label1:Label2)-[R:TYPE1|TYPE2]-(B:Label1:Label2).
+        /// Adds labels in addition to those already marked by attributes. For the relationship, you're adding types, not labels.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode, TRel, TBNode> Type<TANode, TRel, TBNode>
+            (this IPatternedPath<TANode, TRel, TBNode> source, Type A, Type B)
+        {
+            return Type(source, A, null, B);
+        }
+
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode, TRel, TBNode> Type<TANode, TRel, TBNode>
+            (this IPatternedPath<TANode, TRel, TBNode> source, Type A, Type R, Type B)
+        {
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedType(source, A, R, B);
+        }
+        #endregion
+
         #region Extend
         /// <summary>
         /// (A)-[R]-(B)-[R2]-(C).
@@ -3767,6 +3834,74 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
         #endregion
 
+        #region ExtensionType
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<TBNode> Type<TBNode>
+            (this IPatternedPathExtension<TBNode> source, Type B)
+        {
+            return (IPatternedPathExtension<TBNode>)SharedType(source, null, B);
+        }
+
+
+        
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<TANode, TBNode> Type<TANode, TBNode>
+            (this IPatternedPathExtension<TANode, TBNode> source, Type B)
+        {
+            return (IPatternedPathExtension<TANode, TBNode>)SharedType(source, null, B);
+        }
+
+
+
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<CypherObject, TRel, TBNode> Type<TRel, TBNode>
+            (this IPatternedPathExtension<CypherObject, TRel, TBNode> source, Type B)
+        {
+            return Type(source, null, B);
+        }
+
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<CypherObject, TRel, TBNode> Type<TRel, TBNode>
+            (this IPatternedPathExtension<CypherObject, TRel, TBNode> source, Type R, Type B)
+        {
+            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)SharedType(source, R, B);
+        }
+
+
+
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<TANode, TRel, TBNode> Type<TANode, TRel, TBNode>
+            (this IPatternedPathExtension<TANode, TRel, TBNode> source, Type B)
+        {
+            return Type(source, null, B);
+        }
+
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<TANode, TRel, TBNode> Type<TANode, TRel, TBNode>
+            (this IPatternedPathExtension<TANode, TRel, TBNode> source, Type R, Type B)
+        {
+            return (IPatternedPathExtension<TANode, TRel, TBNode>)SharedType(source, R, B);
+        }
+        #endregion
+
         #region ThenExtend
         /// <summary>
         /// (A)-[R]-(B)-[R2]-(C)-[R3]-(D).
@@ -4316,5 +4451,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             return SharedAssign(source, pathVariable);
         }
         #endregion
+
+        
     }
 }

@@ -5,7 +5,7 @@ using System.Text;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 
-namespace Neo4jClient.DataAnnotations.Cypher
+namespace Neo4jClient.DataAnnotations.Cypher.Extensions
 {
     public static class ObjectExtensions
     {

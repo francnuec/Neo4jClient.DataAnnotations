@@ -1,4 +1,5 @@
 ﻿using Neo4jClient.DataAnnotations.Cypher;
+using Neo4jClient.DataAnnotations.Cypher.Extensions;
 using Neo4jClient.DataAnnotations.Expressions;
 using Neo4jClient.DataAnnotations.Serialization;
 using Neo4jClient.DataAnnotations.Tests.Models;

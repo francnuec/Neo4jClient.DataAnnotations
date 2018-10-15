@@ -90,5 +90,36 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             Assert.Equal(string.Format(Messages.PropsAndConstraintsClashError, "A"), ex.Message);
         }
+
+        [Fact]
+        public void NewTypeIsNotAssignableToOldType_InvalidOperationException()
+        {
+            var query = Substitute.For<ICypherFluentQuery>();
+
+            var builder = new PathBuilder(query);
+
+            var ex = Assert.Throws<InvalidOperationException>(() => builder.Pattern((ActorNode actor) => actor.Movies, (r) => r.Movie)
+                .Constrain((actor) => actor.Name == "Ellen Pompeo" && actor.Born == 1969)
+                .Type(typeof(MovieNode), null, null));
+
+            Assert.Equal(string.Format(Messages.UnassignableTypeError, typeof(MovieNode), typeof(ActorNode)), ex.Message);
+        }
+
+        [Fact]
+        public void NewTypeIsAssignableToOldType()
+        {
+            var query = Substitute.For<ICypherFluentQuery>();
+
+            var builder = new PathBuilder(query);
+
+            var path = builder.Pattern<PersonNode>("actor")
+                .Constrain((actor) => actor.Name == "Ellen Pompeo" && actor.Born == 1969);
+
+            Assert.Equal(typeof(PersonNode), path.Pattern.AType);
+
+            path = path.Type(typeof(ActorNode));
+
+            Assert.Equal(typeof(ActorNode), path.Pattern.AType);
+        }
     }
 }

@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 
-namespace Neo4jClient.DataAnnotations.Cypher
+namespace Neo4jClient.DataAnnotations.Cypher.Short
 {
-    public static partial class PathExtensions
+    public static class PathShortExtensions
     {
         //P = (A)-[R]-(B), where A = First Node in pattern, R = relationship, B = Last Node in pattern, P = entire path, dir = direction of relationship
         //Names are so chosen to allow ease in naming paramters explicitly.
@@ -28,7 +28,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath P(this IPathBuilder source, string A)
         {
-            return SharedPattern(source, A, null, null, null);
+            return PathExtensions.SharedPattern(source, A, null, null, null);
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath P(this IPathBuilder source, string A, RelationshipDirection dir)
         {
-            return SharedPattern(source, A, null, null, dir);
+            return PathExtensions.SharedPattern(source, A, null, null, dir);
         }
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath P(this IPathBuilder source, string A, string B)
         {
-            return SharedPattern(source, A, null, B, null);
+            return PathExtensions.SharedPattern(source, A, null, B, null);
         }
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath P(this IPathBuilder source, string A, string B, RelationshipDirection dir)
         {
-            return SharedPattern(source, A, null, B, dir);
+            return PathExtensions.SharedPattern(source, A, null, B, dir);
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath P(this IPathBuilder source, string A, string R, string B)
         {
-            return SharedPattern(source, A, R, B, null);
+            return PathExtensions.SharedPattern(source, A, R, B, null);
         }
 
         /// <summary>
@@ -123,7 +123,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath P(this IPathBuilder source, string A, string R, string B, RelationshipDirection dir)
         {
-            return SharedPattern(source, A, R, B, dir);
+            return PathExtensions.SharedPattern(source, A, R, B, dir);
         }
 
 
@@ -145,7 +145,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode> P<TANode>(this IPathBuilder source, string A)
         {
-            return SharedPattern<TANode>(source, A, null, null, null);
+            return PathExtensions.SharedPattern<TANode>(source, A, null, null, null);
         }
 
         /// <summary>
@@ -165,7 +165,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode> P<TANode>(this IPathBuilder source, string A, RelationshipDirection dir)
         {
-            return SharedPattern<TANode>(source, A, null, null, dir);
+            return PathExtensions.SharedPattern<TANode>(source, A, null, null, dir);
         }
 
         /// <summary>
@@ -185,7 +185,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode> P<TANode>(this IPathBuilder source, string A, string B)
         {
-            return SharedPattern<TANode>(source, A, null, B, null);
+            return PathExtensions.SharedPattern<TANode>(source, A, null, B, null);
         }
 
         /// <summary>
@@ -205,7 +205,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode> P<TANode>(this IPathBuilder source, string A, string B, RelationshipDirection dir)
         {
-            return SharedPattern<TANode>(source, A, null, B, dir);
+            return PathExtensions.SharedPattern<TANode>(source, A, null, B, dir);
         }
 
         /// <summary>
@@ -225,7 +225,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode> P<TANode>(this IPathBuilder source, string A, string R, string B)
         {
-            return SharedPattern<TANode>(source, A, R, B, null);
+            return PathExtensions.SharedPattern<TANode>(source, A, R, B, null);
         }
 
         /// <summary>
@@ -245,7 +245,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode> P<TANode>(this IPathBuilder source, string A, string R, string B, RelationshipDirection dir)
         {
-            return SharedPattern<TANode>(source, A, R, B, dir);
+            return PathExtensions.SharedPattern<TANode>(source, A, R, B, dir);
         }
 
 
@@ -269,7 +269,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TBNode> P<TANode, TBNode>
             (this IPathBuilder source, string A)
         {
-            return SharedPattern<TANode, TBNode>(source, A, null, null, null);
+            return PathExtensions.SharedPattern<TANode, TBNode>(source, A, null, null, null);
         }
 
         /// <summary>
@@ -291,7 +291,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TBNode> P<TANode, TBNode>
             (this IPathBuilder source, string A, RelationshipDirection dir)
         {
-            return SharedPattern<TANode, TBNode>(source, A, null, null, dir);
+            return PathExtensions.SharedPattern<TANode, TBNode>(source, A, null, null, dir);
         }
 
         /// <summary>
@@ -313,7 +313,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TBNode> P<TANode, TBNode>
             (this IPathBuilder source, string A, string B)
         {
-            return SharedPattern<TANode, TBNode>(source, A, null, B, null);
+            return PathExtensions.SharedPattern<TANode, TBNode>(source, A, null, B, null);
         }
 
         /// <summary>
@@ -335,7 +335,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TBNode> P<TANode, TBNode>
             (this IPathBuilder source, string A, string B, RelationshipDirection dir)
         {
-            return SharedPattern<TANode, TBNode>(source, A, null, B, dir);
+            return PathExtensions.SharedPattern<TANode, TBNode>(source, A, null, B, dir);
         }
 
         /// <summary>
@@ -357,7 +357,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TBNode> P<TANode, TBNode>
             (this IPathBuilder source, string A, string R, string B)
         {
-            return SharedPattern<TANode, TBNode>(source, A, R, B, null);
+            return PathExtensions.SharedPattern<TANode, TBNode>(source, A, R, B, null);
         }
 
         /// <summary>
@@ -379,7 +379,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TBNode> P<TANode, TBNode>
             (this IPathBuilder source, string A, string R, string B, RelationshipDirection dir)
         {
-            return SharedPattern<TANode, TBNode>(source, A, R, B, dir);
+            return PathExtensions.SharedPattern<TANode, TBNode>(source, A, R, B, dir);
         }
 
 
@@ -403,7 +403,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TBNode> P<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship)
         {
-            return SharedPattern<TANode, TBNode>(source, relationship, null, null, null);
+            return PathExtensions.SharedPattern<TANode, TBNode>(source, relationship, null, null, null);
         }
 
         /// <summary>
@@ -425,7 +425,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TBNode> P<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship, RelationshipDirection dir)
         {
-            return SharedPattern<TANode, TBNode>(source, relationship, null, null, dir);
+            return PathExtensions.SharedPattern<TANode, TBNode>(source, relationship, null, null, dir);
         }
 
         /// <summary>
@@ -447,7 +447,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TBNode> P<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship, string B)
         {
-            return SharedPattern<TANode, TBNode>(source, relationship, null, B, null);
+            return PathExtensions.SharedPattern<TANode, TBNode>(source, relationship, null, B, null);
         }
 
         /// <summary>
@@ -469,7 +469,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TBNode> P<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship, string B, RelationshipDirection dir)
         {
-            return SharedPattern<TANode, TBNode>(source, relationship, null, B, dir);
+            return PathExtensions.SharedPattern<TANode, TBNode>(source, relationship, null, B, dir);
         }
 
         /// <summary>
@@ -491,7 +491,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TBNode> P<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship, string R, string B)
         {
-            return SharedPattern<TANode, TBNode>(source, relationship, R, B, null);
+            return PathExtensions.SharedPattern<TANode, TBNode>(source, relationship, R, B, null);
         }
 
         /// <summary>
@@ -513,7 +513,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TBNode> P<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship, string R, string B, RelationshipDirection dir)
         {
-            return SharedPattern<TANode, TBNode>(source, relationship, R, B, dir);
+            return PathExtensions.SharedPattern<TANode, TBNode>(source, relationship, R, B, dir);
         }
 
 
@@ -537,7 +537,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TBNode> P<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship)
         {
-            return SharedPattern<TANode, TBNode>(source, relationship, null, null, null);
+            return PathExtensions.SharedPattern<TANode, TBNode>(source, relationship, null, null, null);
         }
 
         /// <summary>
@@ -559,7 +559,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TBNode> P<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, RelationshipDirection dir)
         {
-            return SharedPattern<TANode, TBNode>(source, relationship, null, null, dir);
+            return PathExtensions.SharedPattern<TANode, TBNode>(source, relationship, null, null, dir);
         }
 
         /// <summary>
@@ -581,7 +581,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TBNode> P<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string B)
         {
-            return SharedPattern<TANode, TBNode>(source, relationship, null, B, null);
+            return PathExtensions.SharedPattern<TANode, TBNode>(source, relationship, null, B, null);
         }
 
         /// <summary>
@@ -603,7 +603,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TBNode> P<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string B, RelationshipDirection dir)
         {
-            return SharedPattern<TANode, TBNode>(source, relationship, null, B, dir);
+            return PathExtensions.SharedPattern<TANode, TBNode>(source, relationship, null, B, dir);
         }
 
         /// <summary>
@@ -625,7 +625,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TBNode> P<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string R, string B)
         {
-            return SharedPattern<TANode, TBNode>(source, relationship, R, B, null);
+            return PathExtensions.SharedPattern<TANode, TBNode>(source, relationship, R, B, null);
         }
 
         /// <summary>
@@ -647,7 +647,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TBNode> P<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string R, string B, RelationshipDirection dir)
         {
-            return SharedPattern<TANode, TBNode>(source, relationship, R, B, dir);
+            return PathExtensions.SharedPattern<TANode, TBNode>(source, relationship, R, B, dir);
         }
 
 
@@ -672,7 +672,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> P<TANode, TRel, TBNode>
             (this IPathBuilder source, string A)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, A, null, null, null);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, A, null, null, null);
         }
 
         /// <summary>
@@ -695,7 +695,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> P<TANode, TRel, TBNode>
             (this IPathBuilder source, string A, RelationshipDirection dir)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, A, null, null, dir);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, A, null, null, dir);
         }
 
         /// <summary>
@@ -718,7 +718,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> P<TANode, TRel, TBNode>
             (this IPathBuilder source, string A, string B)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, A, null, B, null);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, A, null, B, null);
         }
 
         /// <summary>
@@ -741,7 +741,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> P<TANode, TRel, TBNode>
             (this IPathBuilder source, string A, string B, RelationshipDirection dir)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, A, null, B, dir);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, A, null, B, dir);
         }
 
         /// <summary>
@@ -764,7 +764,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> P<TANode, TRel, TBNode>
             (this IPathBuilder source, string A, string R, string B)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, A, R, B, null);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, A, R, B, null);
         }
 
         /// <summary>
@@ -787,7 +787,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> P<TANode, TRel, TBNode>
             (this IPathBuilder source, string A, string R, string B, RelationshipDirection dir)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, A, R, B, dir);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, A, R, B, dir);
         }
 
 
@@ -813,7 +813,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> P<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, null);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, null);
         }
 
         /// <summary>
@@ -837,7 +837,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> P<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship, RelationshipDirection dir)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, dir);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, dir);
         }
 
         /// <summary>
@@ -861,7 +861,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> P<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship, string R, string B)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, null);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, null);
         }
 
         /// <summary>
@@ -885,7 +885,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> P<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship, string R, string B, RelationshipDirection dir)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, dir);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, dir);
         }
 
 
@@ -911,7 +911,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> P<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, null);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, null);
         }
 
         /// <summary>
@@ -935,7 +935,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> P<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship, RelationshipDirection dir)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, dir);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, dir);
         }
 
         /// <summary>
@@ -959,7 +959,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> P<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship, string R, string B)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, null);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, null);
         }
 
         /// <summary>
@@ -983,7 +983,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> P<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship, string R, string B, RelationshipDirection dir)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, dir);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, dir);
         }
 
 
@@ -1013,7 +1013,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, null);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, null);
         }
 
         /// <summary>
@@ -1041,7 +1041,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship, RelationshipDirection dir)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, dir);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, dir);
         }
 
         /// <summary>
@@ -1069,7 +1069,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship, string B)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, null);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, null);
         }
 
         /// <summary>
@@ -1097,7 +1097,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship, string B, RelationshipDirection dir)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, dir);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, dir);
         }
 
 
@@ -1127,7 +1127,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, null);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, null);
         }
 
         /// <summary>
@@ -1155,7 +1155,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship, RelationshipDirection dir)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, dir);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, dir);
         }
 
         /// <summary>
@@ -1183,7 +1183,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship, string B)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, null);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, null);
         }
 
         /// <summary>
@@ -1211,7 +1211,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship, string B, RelationshipDirection dir)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, dir);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, dir);
         }
         #endregion
 
@@ -1281,7 +1281,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             (this IPatternedPath source, IEnumerable<string> A, IEnumerable<string> R, IEnumerable<string> B,
             bool replaceA, bool replaceR, bool replaceB)
         {
-            return SharedLabel(source, A, R, B, replaceA, replaceR, replaceB);
+            return PathExtensions.SharedLabel(source, A, R, B, replaceA, replaceR, replaceB);
         }
 
 
@@ -1351,7 +1351,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             (this IPatternedPath<TANode> source, IEnumerable<string> A, IEnumerable<string> R, IEnumerable<string> B,
             bool replaceA, bool replaceR, bool replaceB)
         {
-            return (IPatternedPath<TANode>)SharedLabel(source, A, R, B, replaceA, replaceR, replaceB);
+            return (IPatternedPath<TANode>)PathExtensions.SharedLabel(source, A, R, B, replaceA, replaceR, replaceB);
         }
 
 
@@ -1421,7 +1421,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             (this IPatternedPath<TANode, TBNode> source, IEnumerable<string> A, IEnumerable<string> R, IEnumerable<string> B,
             bool replaceA, bool replaceR, bool replaceB)
         {
-            return (IPatternedPath<TANode, TBNode>)SharedLabel(source, A, R, B, replaceA, replaceR, replaceB);
+            return (IPatternedPath<TANode, TBNode>)PathExtensions.SharedLabel(source, A, R, B, replaceA, replaceR, replaceB);
         }
 
 
@@ -1491,7 +1491,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             (this IPatternedPath<TANode, TRel, TBNode> source, IEnumerable<string> A, IEnumerable<string> R, IEnumerable<string> B,
             bool replaceA, bool replaceR, bool replaceB)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedLabel(source, A, R, B, replaceA, replaceR, replaceB);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedLabel(source, A, R, B, replaceA, replaceR, replaceB);
         }
         #endregion
 
@@ -1544,7 +1544,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath H
             (this IPatternedPath source, int? from, int? to)
         {
-            return (IPatternedPath)SharedHop<CypherObject, CypherObject, CypherObject>(source, from, to);
+            return (IPatternedPath)PathExtensions.SharedHop<CypherObject, CypherObject, CypherObject>(source, from, to);
         }
 
 
@@ -1596,7 +1596,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode> H<TANode>
             (this IPatternedPath<TANode> source, int? from, int? to)
         {
-            return (IPatternedPath<TANode>)SharedHop<TANode, CypherObject, CypherObject>(source, from, to);
+            return (IPatternedPath<TANode>)PathExtensions.SharedHop<TANode, CypherObject, CypherObject>(source, from, to);
         }
 
 
@@ -1649,7 +1649,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TBNode> H<TANode, TBNode>
             (this IPatternedPath<TANode, TBNode> source, int? from, int? to)
         {
-            return (IPatternedPath<TANode, TBNode>)SharedHop<TANode, CypherObject, TBNode>(source, from, to);
+            return (IPatternedPath<TANode, TBNode>)PathExtensions.SharedHop<TANode, CypherObject, TBNode>(source, from, to);
         }
 
 
@@ -1702,7 +1702,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> H<TANode, TRel, TBNode>
             (this IPatternedPath<TANode, TRel, TBNode> source, int? from, int? to)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedHop<TANode, TRel, TBNode>(source, from, to);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedHop<TANode, TRel, TBNode>(source, from, to);
         }
         #endregion
 
@@ -1770,7 +1770,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<CypherObject, bool>> R,
             Expression<Func<CypherObject, bool>> B)
         {
-            return SharedConstrain(source, A, R, B);
+            return PathExtensions.SharedConstrain(source, A, R, B);
         }
 
 
@@ -1838,7 +1838,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<CypherObject, bool>> R,
             Expression<Func<CypherObject, bool>> B)
         {
-            return (IPatternedPath<TANode>)SharedConstrain(source, A, R, B);
+            return (IPatternedPath<TANode>)PathExtensions.SharedConstrain(source, A, R, B);
         }
 
 
@@ -1906,7 +1906,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<CypherObject, bool>> R,
             Expression<Func<TBNode, bool>> B)
         {
-            return (IPatternedPath<TANode, TBNode>)SharedConstrain(source, A, R, B);
+            return (IPatternedPath<TANode, TBNode>)PathExtensions.SharedConstrain(source, A, R, B);
         }
 
 
@@ -1974,7 +1974,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<TRel, bool>> R,
             Expression<Func<TBNode, bool>> B)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedConstrain(source, A, R, B);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedConstrain(source, A, R, B);
         }
         #endregion
 
@@ -2042,7 +2042,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<object>> R,
             Expression<Func<object>> B)
         {
-            return SharedProp<CypherObject, CypherObject, CypherObject>(source, A, R, B);
+            return PathExtensions.SharedProp<CypherObject, CypherObject, CypherObject>(source, A, R, B);
         }
 
 
@@ -2110,7 +2110,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<object>> R,
             Expression<Func<object>> B)
         {
-            return (IPatternedPath<TANode>)SharedProp<TANode, CypherObject, CypherObject>(source, A, R, B);
+            return (IPatternedPath<TANode>)PathExtensions.SharedProp<TANode, CypherObject, CypherObject>(source, A, R, B);
         }
 
 
@@ -2178,7 +2178,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<object>> R,
             Expression<Func<object>> B)
         {
-            return (IPatternedPath<TANode, TBNode>)SharedProp<TANode, CypherObject, TBNode>(source, A, R, B);
+            return (IPatternedPath<TANode, TBNode>)PathExtensions.SharedProp<TANode, CypherObject, TBNode>(source, A, R, B);
         }
 
 
@@ -2246,7 +2246,74 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<object>> R,
             Expression<Func<object>> B)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedProp<TANode, TRel, TBNode>(source, A, R, B);
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedProp<TANode, TRel, TBNode>(source, A, R, B);
+        }
+        #endregion
+
+        #region T
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode> T<TANode>
+            (this IPatternedPath<TANode> source, Type A)
+        {
+            return (IPatternedPath<TANode>)PathExtensions.SharedType(source, A, null, null);
+        }
+
+
+
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode, TBNode> T<TANode, TBNode>
+            (this IPatternedPath<TANode, TBNode> source, Type A)
+        {
+            return T(source, A, null);
+        }
+
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode, TBNode> T<TANode, TBNode>
+            (this IPatternedPath<TANode, TBNode> source, Type A, Type B)
+        {
+            return (IPatternedPath<TANode, TBNode>)PathExtensions.SharedType(source, A, null, B);
+        }
+
+
+
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode, TRel, TBNode> T<TANode, TRel, TBNode>
+            (this IPatternedPath<TANode, TRel, TBNode> source, Type A)
+        {
+            return T(source, A, null, null);
+        }
+
+        /// <summary>
+        /// (A:Label1:Label2)-[R:TYPE1|TYPE2]-(B:Label1:Label2).
+        /// Adds labels in addition to those already marked by attributes. For the relationship, you're adding types, not labels.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode, TRel, TBNode> T<TANode, TRel, TBNode>
+            (this IPatternedPath<TANode, TRel, TBNode> source, Type A, Type B)
+        {
+            return T(source, A, null, B);
+        }
+
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode, TRel, TBNode> T<TANode, TRel, TBNode>
+            (this IPatternedPath<TANode, TRel, TBNode> source, Type A, Type R, Type B)
+        {
+            return (IPatternedPath<TANode, TRel, TBNode>)PathExtensions.SharedType(source, A, R, B);
         }
         #endregion
 
@@ -2288,7 +2355,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension E(this IPath source,
             string R, string B, RelationshipDirection dir)
         {
-            return SharedExtend(source, R, B, dir);
+            return PathExtensions.SharedExtend(source, R, B, dir);
         }
 
 
@@ -2332,7 +2399,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TBNode> E<TBNode>
             (this IPath source, string R, string B, RelationshipDirection dir)
         {
-            return SharedExtend<TBNode>(source, R, B, dir);
+            return PathExtensions.SharedExtend<TBNode>(source, R, B, dir);
         }
 
 
@@ -2348,7 +2415,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TBNode> E<TANode, TBNode>
             (this IPath source, Expression<Func<TANode, TBNode>> relationship)
         {
-            return SharedExtend(source, relationship, null, null, null);
+            return PathExtensions.SharedExtend(source, relationship, null, null, null);
         }
 
         /// <summary>
@@ -2362,7 +2429,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TBNode> E<TANode, TBNode>
             (this IPath source, Expression<Func<TANode, TBNode>> relationship, RelationshipDirection dir)
         {
-            return SharedExtend(source, relationship, null, null, dir);
+            return PathExtensions.SharedExtend(source, relationship, null, null, dir);
         }
 
         /// <summary>
@@ -2376,7 +2443,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TBNode> E<TANode, TBNode>
             (this IPath source, Expression<Func<TANode, TBNode>> relationship, string B)
         {
-            return SharedExtend(source, relationship, null, B, null);
+            return PathExtensions.SharedExtend(source, relationship, null, B, null);
         }
 
         /// <summary>
@@ -2390,7 +2457,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TBNode> E<TANode, TBNode>
             (this IPath source, Expression<Func<TANode, TBNode>> relationship, string B, RelationshipDirection dir)
         {
-            return SharedExtend(source, relationship, null, B, dir);
+            return PathExtensions.SharedExtend(source, relationship, null, B, dir);
         }
 
         /// <summary>
@@ -2404,7 +2471,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TBNode> E<TANode, TBNode>
             (this IPath source, Expression<Func<TANode, TBNode>> relationship, string R, string B)
         {
-            return SharedExtend(source, relationship, R, B, null);
+            return PathExtensions.SharedExtend(source, relationship, R, B, null);
         }
 
         /// <summary>
@@ -2418,7 +2485,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TBNode> E<TANode, TBNode>
             (this IPath source, Expression<Func<TANode, TBNode>> relationship, string R, string B, RelationshipDirection dir)
         {
-            return SharedExtend(source, relationship, R, B, dir);
+            return PathExtensions.SharedExtend(source, relationship, R, B, dir);
         }
 
 
@@ -2433,7 +2500,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TBNode> E<TANode, TBNode>
             (this IPath source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship)
         {
-            return SharedExtend(source, relationship, null, null, null);
+            return PathExtensions.SharedExtend(source, relationship, null, null, null);
         }
 
         /// <summary>
@@ -2447,7 +2514,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TBNode> E<TANode, TBNode>
             (this IPath source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, RelationshipDirection dir)
         {
-            return SharedExtend(source, relationship, null, null, dir);
+            return PathExtensions.SharedExtend(source, relationship, null, null, dir);
         }
 
         /// <summary>
@@ -2461,7 +2528,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TBNode> E<TANode, TBNode>
             (this IPath source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string B)
         {
-            return SharedExtend(source, relationship, null, B, null);
+            return PathExtensions.SharedExtend(source, relationship, null, B, null);
         }
 
         /// <summary>
@@ -2475,7 +2542,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TBNode> E<TANode, TBNode>
             (this IPath source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string B, RelationshipDirection dir)
         {
-            return SharedExtend(source, relationship, null, B, dir);
+            return PathExtensions.SharedExtend(source, relationship, null, B, dir);
         }
 
         /// <summary>
@@ -2489,7 +2556,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TBNode> E<TANode, TBNode>
             (this IPath source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string R, string B)
         {
-            return SharedExtend(source, relationship, R, B, null);
+            return PathExtensions.SharedExtend(source, relationship, R, B, null);
         }
 
         /// <summary>
@@ -2503,7 +2570,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TBNode> E<TANode, TBNode>
             (this IPath source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string R, string B, RelationshipDirection dir)
         {
-            return SharedExtend(source, relationship, R, B, dir);
+            return PathExtensions.SharedExtend(source, relationship, R, B, dir);
         }
 
 
@@ -2518,7 +2585,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<CypherObject, TRel, TBNode> E<TRel, TBNode>
             (this IPath source, RelationshipDirection dir)
         {
-            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)SharedExtend<CypherObject, TRel, TBNode>(source, null, null, dir);
+            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)PathExtensions.SharedExtend<CypherObject, TRel, TBNode>(source, null, null, dir);
         }
 
         /// <summary>
@@ -2532,7 +2599,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<CypherObject, TRel, TBNode> E<TRel, TBNode>
             (this IPath source, string B, RelationshipDirection dir)
         {
-            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)SharedExtend<CypherObject, TRel, TBNode>(source, null, B, dir);
+            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)PathExtensions.SharedExtend<CypherObject, TRel, TBNode>(source, null, B, dir);
         }
 
         /// <summary>
@@ -2546,7 +2613,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<CypherObject, TRel, TBNode> E<TRel, TBNode>
             (this IPath source, string R, string B, RelationshipDirection dir)
         {
-            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)SharedExtend<CypherObject, TRel, TBNode>(source, R, B, dir);
+            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)PathExtensions.SharedExtend<CypherObject, TRel, TBNode>(source, R, B, dir);
         }
 
 
@@ -2562,7 +2629,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TRel, TBNode> E<TANode, TRel, TBNode>
             (this IPath source, string B)
         {
-            return (IPatternedPathExtension<TANode, TRel, TBNode>)SharedExtend<TANode, TRel, TBNode>(source, null, B, null);
+            return (IPatternedPathExtension<TANode, TRel, TBNode>)PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, null, B, null);
         }
 
         /// <summary>
@@ -2576,7 +2643,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TRel, TBNode> E<TANode, TRel, TBNode>
             (this IPath source, string B, RelationshipDirection dir)
         {
-            return (IPatternedPathExtension<TANode, TRel, TBNode>)SharedExtend<TANode, TRel, TBNode>(source, null, B, dir);
+            return (IPatternedPathExtension<TANode, TRel, TBNode>)PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, null, B, dir);
         }
 
         /// <summary>
@@ -2590,7 +2657,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TRel, TBNode> E<TANode, TRel, TBNode>
             (this IPath source, string R, string B)
         {
-            return (IPatternedPathExtension<TANode, TRel, TBNode>)SharedExtend<TANode, TRel, TBNode>(source, R, B, null);
+            return (IPatternedPathExtension<TANode, TRel, TBNode>)PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, R, B, null);
         }
 
         /// <summary>
@@ -2604,7 +2671,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TRel, TBNode> E<TANode, TRel, TBNode>
             (this IPath source, string R, string B, RelationshipDirection dir)
         {
-            return (IPatternedPathExtension<TANode, TRel, TBNode>)SharedExtend<TANode, TRel, TBNode>(source, R, B, dir);
+            return (IPatternedPathExtension<TANode, TRel, TBNode>)PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, R, B, dir);
         }
 
 
@@ -2620,7 +2687,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TRel, TBNode> E<TANode, TRel, TBNode>
             (this IPath source, Expression<Func<TANode, TRel>> beginRelationship)
         {
-            return (IPatternedPathExtension<TANode, TRel, TBNode>)SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, null);
+            return (IPatternedPathExtension<TANode, TRel, TBNode>)PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, null);
         }
 
         /// <summary>
@@ -2634,7 +2701,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TRel, TBNode> E<TANode, TRel, TBNode>
             (this IPath source, Expression<Func<TANode, TRel>> beginRelationship, RelationshipDirection dir)
         {
-            return (IPatternedPathExtension<TANode, TRel, TBNode>)SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, dir);
+            return (IPatternedPathExtension<TANode, TRel, TBNode>)PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, dir);
         }
 
         /// <summary>
@@ -2648,7 +2715,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TRel, TBNode> E<TANode, TRel, TBNode>
             (this IPath source, Expression<Func<TANode, TRel>> beginRelationship, string R, string B)
         {
-            return (IPatternedPathExtension<TANode, TRel, TBNode>)SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, null);
+            return (IPatternedPathExtension<TANode, TRel, TBNode>)PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, null);
         }
 
         /// <summary>
@@ -2662,7 +2729,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TRel, TBNode> E<TANode, TRel, TBNode>
             (this IPath source, Expression<Func<TANode, TRel>> beginRelationship, string R, string B, RelationshipDirection dir)
         {
-            return (IPatternedPathExtension<TANode, TRel, TBNode>)SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, dir);
+            return (IPatternedPathExtension<TANode, TRel, TBNode>)PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, dir);
         }
 
 
@@ -2678,7 +2745,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TRel, TBNode> E<TANode, TRel, TBNode>
             (this IPath source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship)
         {
-            return (IPatternedPathExtension<TANode, TRel, TBNode>)SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, null);
+            return (IPatternedPathExtension<TANode, TRel, TBNode>)PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, null);
         }
 
         /// <summary>
@@ -2692,7 +2759,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TRel, TBNode> E<TANode, TRel, TBNode>
             (this IPath source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship, RelationshipDirection dir)
         {
-            return (IPatternedPathExtension<TANode, TRel, TBNode>)SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, dir);
+            return (IPatternedPathExtension<TANode, TRel, TBNode>)PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, dir);
         }
 
         /// <summary>
@@ -2706,7 +2773,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TRel, TBNode> E<TANode, TRel, TBNode>
             (this IPath source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship, string R, string B)
         {
-            return (IPatternedPathExtension<TANode, TRel, TBNode>)SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, null);
+            return (IPatternedPathExtension<TANode, TRel, TBNode>)PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, null);
         }
 
         /// <summary>
@@ -2720,7 +2787,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TRel, TBNode> E<TANode, TRel, TBNode>
             (this IPath source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship, string R, string B, RelationshipDirection dir)
         {
-            return (IPatternedPathExtension<TANode, TRel, TBNode>)SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, dir);
+            return (IPatternedPathExtension<TANode, TRel, TBNode>)PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, dir);
         }
 
 
@@ -2738,7 +2805,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<TRel, TBNode>> endRelationship)
         {
             return (IPatternedPathExtension<TANode, TRel, TBNode>)
-                SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, null);
+                PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, null);
         }
 
         /// <summary>
@@ -2754,7 +2821,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<TRel, TBNode>> endRelationship, RelationshipDirection dir)
         {
             return (IPatternedPathExtension<TANode, TRel, TBNode>)
-                SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, dir);
+                PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, dir);
         }
 
         /// <summary>
@@ -2770,7 +2837,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<TRel, TBNode>> endRelationship, string B)
         {
             return (IPatternedPathExtension<TANode, TRel, TBNode>)
-                SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, null);
+                PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, null);
         }
 
         /// <summary>
@@ -2786,7 +2853,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<TRel, TBNode>> endRelationship, string B, RelationshipDirection dir)
         {
             return (IPatternedPathExtension<TANode, TRel, TBNode>)
-                SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, dir);
+                PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, dir);
         }
 
 
@@ -2804,7 +2871,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<TRel, TBNode>> endRelationship)
         {
             return (IPatternedPathExtension<TANode, TRel, TBNode>)
-                SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, null);
+                PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, null);
         }
 
         /// <summary>
@@ -2820,7 +2887,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<TRel, TBNode>> endRelationship, RelationshipDirection dir)
         {
             return (IPatternedPathExtension<TANode, TRel, TBNode>)
-                SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, dir);
+                PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, dir);
         }
 
         /// <summary>
@@ -2836,7 +2903,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<TRel, TBNode>> endRelationship, string B)
         {
             return (IPatternedPathExtension<TANode, TRel, TBNode>)
-                SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, null);
+                PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, null);
         }
 
         /// <summary>
@@ -2852,7 +2919,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<TRel, TBNode>> endRelationship, string B, RelationshipDirection dir)
         {
             return (IPatternedPathExtension<TANode, TRel, TBNode>)
-                SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, dir);
+                PathExtensions.SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, dir);
         }
         #endregion
 
@@ -2903,7 +2970,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             (this IPatternedPathExtension source, IEnumerable<string> R, IEnumerable<string> B,
             bool replaceR, bool replaceB)
         {
-            return SharedLabel(source, R, B, replaceR, replaceB);
+            return PathExtensions.SharedLabel(source, R, B, replaceR, replaceB);
         }
 
 
@@ -2954,7 +3021,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             (this IPatternedPathExtension<TBNode> source, IEnumerable<string> R, IEnumerable<string> B,
             bool replaceR, bool replaceB)
         {
-            return (IPatternedPathExtension<TBNode>)SharedLabel(source, R, B, replaceR, replaceB);
+            return (IPatternedPathExtension<TBNode>)PathExtensions.SharedLabel(source, R, B, replaceR, replaceB);
         }
 
 
@@ -3005,7 +3072,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             (this IPatternedPathExtension<TANode, TBNode> source, IEnumerable<string> R, IEnumerable<string> B,
             bool replaceR, bool replaceB)
         {
-            return (IPatternedPathExtension<TANode, TBNode>)SharedLabel(source, R, B, replaceR, replaceB);
+            return (IPatternedPathExtension<TANode, TBNode>)PathExtensions.SharedLabel(source, R, B, replaceR, replaceB);
         }
 
 
@@ -3056,7 +3123,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             (this IPatternedPathExtension<CypherObject, TRel, TBNode> source, IEnumerable<string> R, IEnumerable<string> B,
             bool replaceR, bool replaceB)
         {
-            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)SharedLabel(source, R, B, replaceR, replaceB);
+            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)PathExtensions.SharedLabel(source, R, B, replaceR, replaceB);
         }
 
 
@@ -3107,7 +3174,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             (this IPatternedPathExtension<TANode, TRel, TBNode> source, IEnumerable<string> R, IEnumerable<string> B,
             bool replaceR, bool replaceB)
         {
-            return (IPatternedPathExtension<TANode, TRel, TBNode>)SharedLabel(source, R, B, replaceR, replaceB);
+            return (IPatternedPathExtension<TANode, TRel, TBNode>)PathExtensions.SharedLabel(source, R, B, replaceR, replaceB);
         }
         #endregion
 
@@ -3160,7 +3227,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension H
             (this IPatternedPathExtension source, int? from, int? to)
         {
-            return SharedHop<CypherObject, CypherObject, CypherObject>(source, from, to);
+            return PathExtensions.SharedHop<CypherObject, CypherObject, CypherObject>(source, from, to);
         }
 
 
@@ -3213,7 +3280,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TBNode> H<TBNode>
             (this IPatternedPathExtension<TBNode> source, int? from, int? to)
         {
-            return (IPatternedPathExtension<TBNode>)SharedHop<CypherObject, CypherObject, TBNode>(source, from, to);
+            return (IPatternedPathExtension<TBNode>)PathExtensions.SharedHop<CypherObject, CypherObject, TBNode>(source, from, to);
         }
 
 
@@ -3266,7 +3333,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TBNode> H<TANode, TBNode>
             (this IPatternedPathExtension<TANode, TBNode> source, int? from, int? to)
         {
-            return (IPatternedPathExtension<TANode, TBNode>)SharedHop<TANode, CypherObject, TBNode>(source, from, to);
+            return (IPatternedPathExtension<TANode, TBNode>)PathExtensions.SharedHop<TANode, CypherObject, TBNode>(source, from, to);
         }
 
 
@@ -3319,7 +3386,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<CypherObject, TRel, TBNode> H<TRel, TBNode>
             (this IPatternedPathExtension<CypherObject, TRel, TBNode> source, int? from, int? to)
         {
-            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)SharedHop<CypherObject, TRel, TBNode>(source, from, to);
+            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)PathExtensions.SharedHop<CypherObject, TRel, TBNode>(source, from, to);
         }
 
 
@@ -3372,7 +3439,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public static IPatternedPathExtension<TANode, TRel, TBNode> H<TANode, TRel, TBNode>
             (this IPatternedPathExtension<TANode, TRel, TBNode> source, int? from, int? to)
         {
-            return (IPatternedPathExtension<TANode, TRel, TBNode>)SharedHop<TANode, TRel, TBNode>(source, from, to);
+            return (IPatternedPathExtension<TANode, TRel, TBNode>)PathExtensions.SharedHop<TANode, TRel, TBNode>(source, from, to);
         }
         #endregion
 
@@ -3414,7 +3481,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<CypherObject, bool>> R,
             Expression<Func<CypherObject, bool>> B)
         {
-            return SharedConstrain<CypherObject, CypherObject, CypherObject>(source, R, B);
+            return PathExtensions.SharedConstrain<CypherObject, CypherObject, CypherObject>(source, R, B);
         }
 
 
@@ -3456,7 +3523,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<CypherObject, bool>> R,
             Expression<Func<TBNode, bool>> B)
         {
-            return (IPatternedPathExtension<TBNode>)SharedConstrain<CypherObject, CypherObject, TBNode>(source, R, B);
+            return (IPatternedPathExtension<TBNode>)PathExtensions.SharedConstrain<CypherObject, CypherObject, TBNode>(source, R, B);
         }
 
 
@@ -3498,7 +3565,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<CypherObject, bool>> R,
             Expression<Func<TBNode, bool>> B)
         {
-            return (IPatternedPathExtension<TANode, TBNode>)SharedConstrain<TANode, CypherObject, TBNode>(source, R, B);
+            return (IPatternedPathExtension<TANode, TBNode>)PathExtensions.SharedConstrain<TANode, CypherObject, TBNode>(source, R, B);
         }
 
 
@@ -3521,7 +3588,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<TRel, bool>> R,
             Expression<Func<TBNode, bool>> B)
         {
-            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)SharedConstrain<CypherObject, TRel, TBNode>(source, R, B);
+            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)PathExtensions.SharedConstrain<CypherObject, TRel, TBNode>(source, R, B);
         }
 
 
@@ -3563,7 +3630,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<TRel, bool>> R,
             Expression<Func<TBNode, bool>> B)
         {
-            return (IPatternedPathExtension<TANode, TRel, TBNode>)SharedConstrain<TANode, TRel, TBNode>(source, R, B);
+            return (IPatternedPathExtension<TANode, TRel, TBNode>)PathExtensions.SharedConstrain<TANode, TRel, TBNode>(source, R, B);
         }
         #endregion
 
@@ -3607,7 +3674,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<object>> R,
             Expression<Func<object>> B)
         {
-            return SharedProp<CypherObject, CypherObject, CypherObject>(source, R, B);
+            return PathExtensions.SharedProp<CypherObject, CypherObject, CypherObject>(source, R, B);
         }
 
 
@@ -3651,7 +3718,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<object>> R,
             Expression<Func<object>> B)
         {
-            return (IPatternedPathExtension<TBNode>)SharedProp<CypherObject, CypherObject, TBNode>(source, R, B);
+            return (IPatternedPathExtension<TBNode>)PathExtensions.SharedProp<CypherObject, CypherObject, TBNode>(source, R, B);
         }
 
 
@@ -3695,7 +3762,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<object>> R,
             Expression<Func<object>> B)
         {
-            return (IPatternedPathExtension<TANode, TBNode>)SharedProp<TANode, CypherObject, TBNode>(source, R, B);
+            return (IPatternedPathExtension<TANode, TBNode>)PathExtensions.SharedProp<TANode, CypherObject, TBNode>(source, R, B);
         }
 
 
@@ -3719,7 +3786,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<object>> R,
             Expression<Func<object>> B)
         {
-            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)SharedProp<CypherObject, TRel, TBNode>(source, R, B);
+            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)PathExtensions.SharedProp<CypherObject, TRel, TBNode>(source, R, B);
         }
 
 
@@ -3763,7 +3830,75 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<object>> R,
             Expression<Func<object>> B)
         {
-            return (IPatternedPathExtension<TANode, TRel, TBNode>)SharedProp<TANode, TRel, TBNode>(source, R, B);
+            return (IPatternedPathExtension<TANode, TRel, TBNode>)PathExtensions.SharedProp<TANode, TRel, TBNode>(source, R, B);
+        }
+        #endregion
+
+        #region ExtensionT
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<TBNode> T<TBNode>
+            (this IPatternedPathExtension<TBNode> source, Type B)
+        {
+            return (IPatternedPathExtension<TBNode>)PathExtensions.SharedType(source, null, B);
+        }
+
+
+
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<TANode, TBNode> T<TANode, TBNode>
+            (this IPatternedPathExtension<TANode, TBNode> source, Type B)
+        {
+            return (IPatternedPathExtension<TANode, TBNode>)PathExtensions.SharedType(source, null, B);
+        }
+
+
+
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<CypherObject, TRel, TBNode> T<TRel, TBNode>
+            (this IPatternedPathExtension<CypherObject, TRel, TBNode> source, Type B)
+        {
+            return T(source, null, B);
+        }
+
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<CypherObject, TRel, TBNode> T<TRel, TBNode>
+            (this IPatternedPathExtension<CypherObject, TRel, TBNode> source, Type R, Type B)
+        {
+            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)PathExtensions.SharedType(source, R, B);
+        }
+
+
+
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<TANode, TRel, TBNode> T<TANode, TRel, TBNode>
+            (this IPatternedPathExtension<TANode, TRel, TBNode> source, Type B)
+        {
+            return T(source, null, B);
+        }
+
+        /// <summary>
+        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<TANode, TRel, TBNode> T<TANode, TRel, TBNode>
+            (this IPatternedPathExtension<TANode, TRel, TBNode> source, Type R, Type B)
+        {
+            return (IPatternedPathExtension<TANode, TRel, TBNode>)PathExtensions.SharedType(source, R, B);
         }
         #endregion
 
@@ -4234,7 +4369,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <returns></returns>
         public static IPathExtent S(this IPath source)
         {
-            return SharedShortest(source);
+            return PathExtensions.SharedShortest(source);
         }
 
         /// <summary>
@@ -4249,7 +4384,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <returns></returns>
         public static IPathExtent S(this IPath source, string pathVariable)
         {
-            return SharedShortest(source, pathVariable);
+            return PathExtensions.SharedShortest(source, pathVariable);
         }
         #endregion
 
@@ -4266,7 +4401,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <returns></returns>
         public static IPathExtent A(this IPath source)
         {
-            return SharedAssign(source);
+            return PathExtensions.SharedAssign(source);
         }
 
         /// <summary>
@@ -4282,7 +4417,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <returns></returns>
         public static IPathExtent A(this IPath source, string pathVariable)
         {
-            return SharedAssign(source, pathVariable);
+            return PathExtensions.SharedAssign(source, pathVariable);
         }
 
         /// <summary>
@@ -4297,7 +4432,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <returns></returns>
         public static IPathExtent A(this IPathExtension source)
         {
-            return SharedAssign(source);
+            return PathExtensions.SharedAssign(source);
         }
 
         /// <summary>
@@ -4313,7 +4448,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <returns></returns>
         public static IPathExtent A(this IPathExtension source, string pathVariable)
         {
-            return SharedAssign(source, pathVariable);
+            return PathExtensions.SharedAssign(source, pathVariable);
         }
         #endregion
     }
