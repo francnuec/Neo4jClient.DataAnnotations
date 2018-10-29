@@ -509,7 +509,10 @@ namespace Neo4jClient.DataAnnotations.Cypher
         private LambdaExpression aConstrs, rConstrs, bConstrs;
         public LambdaExpression AConstraints
         {
-            get { return aConstrs; }
+            get
+            {
+                return aConstrs;
+            }
             protected internal set
             {
                 aConstrs = value;
@@ -1724,7 +1727,24 @@ namespace Neo4jClient.DataAnnotations.Cypher
         {
             ResolveInternalUtilities(pattern);
 
-            var lambdaExpr = properties ?? (constraints != null ? Utilities.GetConstraintsAsPropertiesLambda(constraints, type) : null);
+            var lambdaExpr = properties;
+
+            if (lambdaExpr == null && constraints != null)
+            {
+                //check if the constraint param type matches before proceeding
+                if (constraints.Parameters.FirstOrDefault() is ParameterExpression p
+                    && p.Type != type)
+                {
+                    //change the params to match
+                    var visitor = new ParameterReplacerVisitor(new Dictionary<string, Expression>()
+                        {
+                            { p.Name, Expression.Parameter(type, p.Name) }
+                        });
+                    constraints = visitor.Visit(constraints) as LambdaExpression;
+                }
+
+                lambdaExpr = Utilities.GetConstraintsAsPropertiesLambda(constraints, type);
+            }
 
             return Utilities.GetFinalProperties(lambdaExpr, pattern.QueryUtilities, out hasFunctions);
         }
