@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -12,7 +13,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace Neo4jClient.DataAnnotations
+namespace Neo4jClient.DataAnnotations.Utils
 {
     public class Defaults
     {
@@ -30,7 +31,7 @@ namespace Neo4jClient.DataAnnotations
         public static readonly Type NeoNonScalarType = typeof(NeoNonScalarAttribute);
         public static readonly Type ObjectType = typeof(object);
         public static readonly Type DictionaryType = typeof(IDictionary<,>);
-        public static readonly Type UtilitiesType = typeof(Utilities);
+        public static readonly Type UtilitiesType = typeof(Utils.Utilities);
         public static readonly Type StringType = typeof(string);
         public static readonly Type EnumerableType = typeof(Enumerable);
         public static readonly Type MathType = typeof(Math);
@@ -39,13 +40,9 @@ namespace Neo4jClient.DataAnnotations
         public static readonly Type ExtensionFuncsType = typeof(Cypher.Functions.ExtensionFuncs);
         public static readonly Type JRawType = typeof(JRaw);
         public static readonly Type ICypherResultItemType = typeof(ICypherResultItem);
+        public static readonly Type EntitySetType = typeof(EntitySet<>);
+        public static readonly Type ConcreteEntitySetType = typeof(ConcreteEntitySet<>);
         #endregion
-
-        public static string ComplexTypeNameSeparator = "_";
-
-        public static Serialization.EntityResolver EntityResolver { get; internal set; }
-        public static Serialization.EntityConverter EntityConverter { get; internal set; }
-        public static Serialization.ResolverDummyConverter ResolverDummyConverter { get; internal set; }
 
         public const BindingFlags MemberSearchBindingFlags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
 
@@ -58,13 +55,13 @@ namespace Neo4jClient.DataAnnotations
 
         internal static readonly PropertyInfo PropertyDummyPropertyInfo = PropertyDummyType.GetProperty("Property");
 
-        public static readonly MethodInfo AsMethodInfo = Utilities.GetMethodInfo(() => ObjectExtensions._As<object>(null));
+        public static readonly MethodInfo AsMethodInfo = Utils.Utilities.GetMethodInfo(() => ObjectExtensions._As<object>(null));
 
-        public static readonly MethodInfo AsListMethodInfo = Utilities.GetMethodInfo(() => ObjectExtensions._AsList<object>(null));
+        public static readonly MethodInfo AsListMethodInfo = Utils.Utilities.GetMethodInfo(() => ObjectExtensions._AsList<object>(null));
 
-        public static readonly MethodInfo IsNullMethodInfo = Utilities.GetMethodInfo(() => ObjectExtensions.IsNull<object>(null));
+        public static readonly MethodInfo IsNullMethodInfo = Utils.Utilities.GetMethodInfo(() => ObjectExtensions.IsNull<object>(null));
 
-        public static readonly MethodInfo IsNotNullMethodInfo = Utilities.GetMethodInfo(() => ObjectExtensions.IsNotNull<object>(null));
+        public static readonly MethodInfo IsNotNullMethodInfo = Utils.Utilities.GetMethodInfo(() => ObjectExtensions.IsNotNull<object>(null));
 
         public static readonly MethodInfo CypherObjectIndexerInfo =
             CypherObjectType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
@@ -76,5 +73,8 @@ namespace Neo4jClient.DataAnnotations
         public static readonly FieldInfo QueryWriterInfo = typeof(CypherFluentQuery).GetField("QueryWriter", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
         public static readonly FieldInfo QueryWriterParamsInfo = typeof(QueryWriter).GetField("queryParameters", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+
+        public static string ComplexTypeNameSeparator = "_";
     }
 }

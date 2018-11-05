@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Serialization;
 using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
@@ -33,7 +34,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
         public object GetValue(object target)
         {
             var instance = ValueProvider.GetValue(target);
-            Utilities.CheckIfComplexTypeInstanceIsNull(instance, Name, DeclaringType);
+            Utils.Utilities.CheckIfComplexTypeInstanceIsNull(instance, Name, DeclaringType);
 
             return ChildValueProvider.GetValue(instance);
         }
@@ -45,12 +46,12 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
             var instance = ValueProvider.GetValue(target);
 
-            instance = Utilities.GetComplexTypeInstance(Name, ref type, DeclaringType, instance, out var isNew,
+            instance = GetComplexTypeInstance(Name, ref type, DeclaringType, instance, out var isNew,
                 hasComplexChild: childComplexProvider != null, 
                 childName: childComplexProvider?.Name, childType: childComplexProvider?.Type,
                 childDeclaringType: childComplexProvider?.DeclaringType);
 
-            Utilities.CheckIfComplexTypeInstanceIsNull(instance, Name, DeclaringType);
+            Utils.Utilities.CheckIfComplexTypeInstanceIsNull(instance, Name, DeclaringType);
 
             if (isNew)
             {
@@ -59,6 +60,61 @@ namespace Neo4jClient.DataAnnotations.Serialization
             }
 
             ChildValueProvider.SetValue(instance, value);
+        }
+
+        public static object GetComplexTypeInstance(
+            string name, ref Type type, Type declaringType,
+            object existingInstance, out bool isNew,
+            bool hasComplexChild = false, string childName = null,
+            Type childType = null, Type childDeclaringType = null)
+        {
+            type = childDeclaringType ?? type;
+
+            isNew = false;
+
+            var instance = existingInstance;
+
+            if (instance == null)
+            {
+                instance = Utils.Utilities.CreateInstance(type);
+                isNew = true;
+            }
+
+            if (!isNew && hasComplexChild)
+            {
+                var members = instance.GetType().GetMembers(Defaults.MemberSearchBindingFlags).Where(m => m is FieldInfo || m is PropertyInfo);
+
+                //check if the instance has the child as a member
+                if (members?.Where(m => m.IsEquivalentTo(childName, childDeclaringType,
+                    childType)).FirstOrDefault() == null)
+                {
+                    //it doesn't, so create new instance from child declaring type
+                    existingInstance = instance;
+                    instance = Utils.Utilities.CreateInstance(type);
+                    isNew = true;
+
+                    //now copy the values from old instance unto this new one
+                    foreach (var member in members)
+                    {
+                        var field = member as FieldInfo;
+                        var property = member as PropertyInfo;
+
+                        try
+                        {
+                            if (property?.CanWrite == true)
+                                property.SetValue(instance, property.GetValue(existingInstance));
+                            else
+                                field?.SetValue(instance, field.GetValue(existingInstance));
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+                }
+            }
+
+            return instance;
         }
     }
 }

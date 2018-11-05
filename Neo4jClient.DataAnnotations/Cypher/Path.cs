@@ -1,4 +1,5 @@
 ﻿using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Text;
 using System.Collections;
@@ -34,7 +35,12 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
         public Path(IPathBuilder builder)
-            : base(builder.CypherQuery)
+            : this(builder, builder.AnnotationsContext)
+        {
+        }
+
+        public Path(IPathBuilder builder, IAnnotationsContext context)
+            : base(builder.CypherQuery, context)
         {
             Builder = builder;
             //PatternBuildStrategy = builder.PatternBuildStrategy;
@@ -81,10 +87,16 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Init();
         }
 
+        public Path(IPathBuilder builder, IAnnotationsContext context)
+            : base(builder, context)
+        {
+            Init();
+        }
+
         void Init()
         {
             //Add a new pattern
-            Patterns.Add(new Pattern(CypherQuery, this));
+            Patterns.Add(new Pattern(CypherQuery, this, AnnotationsContext));
         }
     }
 }

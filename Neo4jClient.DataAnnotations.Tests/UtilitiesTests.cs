@@ -5,6 +5,7 @@ using Neo4jClient.DataAnnotations.Expressions;
 using Neo4jClient.DataAnnotations.Tests.Models;
 using Newtonsoft.Json.Linq;
 using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -247,61 +248,6 @@ namespace Neo4jClient.DataAnnotations.Tests
                 ._AsList().Union(Math.Atan2(Vars.Get<int>("aInt"), 2.76457687)._AsList<int>())),
                 "* + atan2(aInt, 2.76457687)" },
         };
-
-        [Theory]
-        [MemberData(nameof(VarsData), MemberType = typeof(UtilitiesTests))]
-        public void VarsSerializationWithConverter<T>(Expression<Func<T>> expression,
-            string expectedText, bool useResolvedJsonName = true)
-        {
-            //TestUtilities.AddEntityTypes();
-
-            TestUtilities.RegisterEntityTypes(null, TestUtilities.Converter);
-
-            var retrievedMembers = Utilities.GetSimpleMemberAccessStretch(expression.Body, out var val);
-
-            Assert.Equal(true, Utilities.HasVars(retrievedMembers));
-
-            var expressionVisitor = new FunctionExpressionVisitor(new QueryUtilities()
-            {
-                SerializeCallback = TestUtilities.SerializeWithConverter
-            });
-            expressionVisitor.Visit(expression.Body);
-            var varText = expressionVisitor.Builder.ToString();
-
-            //var varText = Utilities
-            //    .BuildVars(retrievedMembers, null, TestUtilities.SerializeWithConverter, useResolvedJsonName: useResolvedJsonName);
-
-            Assert.Equal(expectedText, varText);
-            //Assert.Equal(typeof(T), typeReturned);
-        }
-
-        [Theory]
-        [MemberData(nameof(VarsData), MemberType = typeof(UtilitiesTests))]
-        public void VarsSerializationWithResolver<T>(Expression<Func<T>> expression,
-            string expectedText, bool useResolvedJsonName = true)
-        {
-            //TestUtilities.AddEntityTypes();
-
-            TestUtilities.RegisterEntityTypes(TestUtilities.Resolver, null);
-
-            var retrievedMembers = Utilities.GetSimpleMemberAccessStretch(expression.Body, out var val);
-
-            Assert.Equal(true, Utilities.HasVars(retrievedMembers));
-
-            var expressionVisitor = new FunctionExpressionVisitor(new QueryUtilities()
-            {
-                Resolver = TestUtilities.Resolver,
-                SerializeCallback = TestUtilities.SerializeWithResolver
-            });
-            expressionVisitor.Visit(expression.Body);
-            var varText = expressionVisitor.Builder.ToString();
-
-            //var varText = Utilities
-            //    .BuildVars(retrievedMembers, TestUtilities.Resolver, TestUtilities.SerializeWithResolver, useResolvedJsonName: useResolvedJsonName);
-
-            Assert.Equal(expectedText, varText);
-            //Assert.Equal(typeof(T), typeReturned);
-        }
 
         public static List<object[]> FinalPropertiesData = new List<object[]>()
         {
@@ -556,20 +502,52 @@ namespace Neo4jClient.DataAnnotations.Tests
         };
 
         [Theory]
+        [MemberData(nameof(VarsData), MemberType = typeof(UtilitiesTests))]
+        public void VarsSerializationWithConverter<T>(Expression<Func<T>> expression, string expectedText)
+        {
+            var testContext = new ConverterTestContext();
+
+            var retrievedMembers = ExpressionUtilities.GetSimpleMemberAccessStretch
+                (testContext.AnnotationsContext.EntityService, expression.Body, out var val);
+
+            Assert.Equal(true, Utils.Utilities.HasVars(retrievedMembers));
+
+            var expressionVisitor = new FunctionExpressionVisitor(testContext.QueryContext);
+            expressionVisitor.Visit(expression.Body);
+            var varText = expressionVisitor.Builder.ToString();
+
+            Assert.Equal(expectedText, varText);
+        }
+
+        [Theory]
+        [MemberData(nameof(VarsData), MemberType = typeof(UtilitiesTests))]
+        public void VarsSerializationWithResolver<T>(Expression<Func<T>> expression, string expectedText)
+        {
+            var testContext = new ResolverTestContext();
+
+            var retrievedMembers = ExpressionUtilities.GetSimpleMemberAccessStretch
+                (testContext.AnnotationsContext.EntityService, expression.Body, out var val);
+
+            Assert.Equal(true, Utils.Utilities.HasVars(retrievedMembers));
+
+            var expressionVisitor = new FunctionExpressionVisitor(testContext.QueryContext);
+            expressionVisitor.Visit(expression.Body);
+            var varText = expressionVisitor.Builder.ToString();
+
+            Assert.Equal(expectedText, varText);
+        }
+
+        [Theory]
         [MemberData(nameof(FinalPropertiesData), MemberType = typeof(UtilitiesTests))]
         public void FinalPropertiesResolutionWithConverter(Dictionary<string, dynamic> expected, LambdaExpression expression,
             Type expectedExceptionType = null, string expectedExceptionMessage = null)
         {
-            TestUtilities.RegisterEntityTypes(null, TestUtilities.Converter);
+            var testContext = new ConverterTestContext();
 
-            Func<JObject> action = () => Utilities.GetFinalProperties
-                    (expression, new QueryUtilities()
-                    {
-                        Converter = TestUtilities.Converter,
-                        SerializeCallback = TestUtilities.SerializeWithConverter
-                    }, out var hasFuncs);
+            Func<JObject> action = () => CypherUtilities.GetFinalProperties
+                    (expression, testContext.QueryContext, out var hasFuncs);
 
-            FinalPropertiesResolution(action, TestUtilities.SerializeWithConverter,
+            FinalPropertiesResolution(action, testContext.Serializer,
                 expected, expectedExceptionType, expectedExceptionMessage);
         }
 
@@ -578,16 +556,12 @@ namespace Neo4jClient.DataAnnotations.Tests
         public void FinalPropertiesResolutionWithResolver(Dictionary<string, dynamic> expected, LambdaExpression expression,
             Type expectedExceptionType = null, string expectedExceptionMessage = null)
         {
-            TestUtilities.RegisterEntityTypes(TestUtilities.Resolver, null);
+            var testContext = new ResolverTestContext();
 
-            Func<JObject> action = () => Utilities.GetFinalProperties
-                    (expression, new QueryUtilities()
-                    {
-                        Resolver = TestUtilities.Resolver,
-                        SerializeCallback = TestUtilities.SerializeWithResolver
-                    }, out var hasFuncs);
+            Func<JObject> action = () => CypherUtilities.GetFinalProperties
+                    (expression, testContext.QueryContext, out var hasFuncs);
 
-            FinalPropertiesResolution(action, TestUtilities.SerializeWithResolver,
+            FinalPropertiesResolution(action, testContext.Serializer,
                 expected, expectedExceptionType, expectedExceptionMessage);
         }
 

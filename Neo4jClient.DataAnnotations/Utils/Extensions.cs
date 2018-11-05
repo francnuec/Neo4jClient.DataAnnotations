@@ -1,4 +1,5 @@
 ﻿using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
@@ -10,7 +11,7 @@ using System.Linq.Expressions;
 using Neo4jClient.DataAnnotations.Expressions;
 using Neo4jClient.DataAnnotations.Cypher;
 
-namespace Neo4jClient.DataAnnotations
+namespace Neo4jClient.DataAnnotations.Utils
 {
     public static class Extensions
     {
@@ -42,7 +43,7 @@ namespace Neo4jClient.DataAnnotations
         public static bool IsMatch(this Type propType, Type propertyType, bool includeIEnumerableArg = true)
         {
             return propType == propertyType
-                      || (includeIEnumerableArg && Utilities.GetEnumerableGenericType(propType) == propertyType);
+                      || (includeIEnumerableArg && Utils.Utilities.GetEnumerableGenericType(propType) == propertyType);
         }
 
         internal static IEnumerable<PropertyInfo> OrderNavs(this IEnumerable<PropertyInfo> props, EntityTypeInfo typeInfo)
@@ -97,7 +98,7 @@ namespace Neo4jClient.DataAnnotations
         public static object GetDefaultValue(this Type type)
         {
             if (type.GetTypeInfo().IsValueType)
-                return Utilities.CreateInstance(type);
+                return Utils.Utilities.CreateInstance(type);
 
             return null;
         }
@@ -114,6 +115,8 @@ namespace Neo4jClient.DataAnnotations
                 catch
                 {
                     //try our way then
+                    //unwrap it first
+                    expr = (expr as LambdaExpression).Body;
                 }
             }
 
@@ -132,6 +135,8 @@ namespace Neo4jClient.DataAnnotations
                 catch
                 {
                     //try our way then
+                    //unwrap it first
+                    expr = (expr as LambdaExpression).Body;
                 }
             }
 
@@ -309,14 +314,14 @@ namespace Neo4jClient.DataAnnotations
             return false;
         }
 
-        public static bool IsEntity(this Expression expression)
+        public static bool IsEntity(this Expression expression, IEntityService entityService)
         {
-            return Neo4jAnnotations.ContainsEntityType(expression.Type);
+            return entityService.ContainsEntityType(expression.Type);
         }
 
-        public static bool IsScalar(this Type type)
+        public static bool IsScalar(this Type type, IEntityService entityService)
         {
-            return Utilities.IsScalarType(type);
+            return Utils.Utilities.IsScalarType(type, entityService);
         }
 
         /// <summary>

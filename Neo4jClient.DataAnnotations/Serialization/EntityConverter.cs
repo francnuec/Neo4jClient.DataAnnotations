@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
@@ -9,29 +10,37 @@ using System.IO;
 
 namespace Neo4jClient.DataAnnotations.Serialization
 {
-    public class EntityConverter : JsonConverter
+    public class EntityConverter : JsonConverter, IHaveAnnotationsContext
     {
-        public override bool CanConvert(Type objectType)
+        public EntityConverter()
         {
-            return Defaults.EntityResolver == null &&
-                Neo4jAnnotations.ContainsEntityType(objectType);
         }
 
-        public override bool CanRead => Defaults.EntityResolver == null;
+        public override bool CanConvert(Type objectType)
+        {
+            return AnnotationsContext.EntityResolver == null &&
+                EntityService.ContainsEntityType(objectType);
+        }
 
-        public override bool CanWrite => Defaults.EntityResolver == null;
+        public override bool CanRead => AnnotationsContext.EntityResolver == null; //resolver takes precedence by default
+
+        public override bool CanWrite => AnnotationsContext.EntityResolver == null;
+
+        public virtual IAnnotationsContext AnnotationsContext { get; internal set; }
+
+        public IEntityService EntityService => AnnotationsContext.EntityService;
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            Utilities.EnsureSerializerInstance(ref serializer);
+            SerializationUtilities.EnsureSerializerInstance(ref serializer);
 
-            var value = existingValue ?? Utilities.CreateInstance(objectType);
+            var value = existingValue ?? Utils.Utilities.CreateInstance(objectType);
 
             if (value != null)
             {
                 var valueType = objectType;
 
-                var entityInfo = Neo4jAnnotations.GetEntityTypeInfo(valueType);
+                var entityInfo = EntityService.GetEntityTypeInfo(valueType);
 
                 //set necessarily things
                 InitializeEntityInfo(entityInfo, serializer);
@@ -40,12 +49,12 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
                 //temporarily remove this converter from the main serializer to avoid an unending loop
                 List<Tuple<JsonConverter, int>> entityConverters;
-                Utilities.RemoveThisConverter(thisConverterType, serializer, out entityConverters);
+                SerializationUtilities.RemoveThisConverter(thisConverterType, serializer, out entityConverters);
 
                 //now convert to JObject
                 var valueJObject = serializer.Deserialize<JObject>(reader);
 
-                Utilities.EnsureRightJObject(ref valueJObject);
+                SerializationUtilities.EnsureRightJObject(ref valueJObject);
 
                 if (valueJObject == null || valueJObject.Type == JTokenType.Null)
                     return null;
@@ -58,7 +67,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 {
                     valueJObject.Remove(Defaults.MetadataPropertyName);
 
-                    metadata = Utilities.DeserializeMetadata(metadataPropValue.ToObject<string>());
+                    metadata = SerializationUtilities.DeserializeMetadata(metadataPropValue.ToObject<string>());
 
                     if (metadata?.NullProperties?.Count > 0)
                     {
@@ -76,19 +85,19 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 }
 
                 //restore the removed converters
-                Utilities.RestoreThisConverter(serializer, entityConverters);
+                SerializationUtilities.RestoreThisConverter(serializer, entityConverters);
 
-                HandleComplexTypedPropsRead(serializer, value, valueJObject, entityInfo);
+                HandleComplexTypedPropsRead(EntityService, serializer, value, valueJObject, entityInfo);
 
                 ////remove all object tokens that may still remain
                 //RemoveJsonObjectProperties(valueJObject, entityInfo);
 
-                Utilities.RemoveThisConverter(thisConverterType, serializer, out entityConverters);
+                SerializationUtilities.RemoveThisConverter(thisConverterType, serializer, out entityConverters);
 
                 //finally deserialize
                 serializer.Populate(new JTokenReader(valueJObject), value);
 
-                Utilities.RestoreThisConverter(serializer, entityConverters);
+                SerializationUtilities.RestoreThisConverter(serializer, entityConverters);
             }
             else
             {
@@ -100,13 +109,13 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            Utilities.EnsureSerializerInstance(ref serializer);
+            SerializationUtilities.EnsureSerializerInstance(ref serializer);
 
             if (value != null)
             {
                 var valueType = value.GetType();
 
-                var entityInfo = Neo4jAnnotations.GetEntityTypeInfo(valueType);
+                var entityInfo = EntityService.GetEntityTypeInfo(valueType);
 
                 //set necessarily things
                 InitializeEntityInfo(entityInfo, serializer);
@@ -115,13 +124,13 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
                 //temporarily remove this converter from the main serializer to avoid an unending loop
                 List<Tuple<JsonConverter, int>> entityConverters;
-                Utilities.RemoveThisConverter(thisConverterType, serializer, out entityConverters);
+                SerializationUtilities.RemoveThisConverter(thisConverterType, serializer, out entityConverters);
 
                 //now convert to JObject
                 var valueJObject = JObject.FromObject(value, serializer);
 
                 //restore the removed converters
-                Utilities.RestoreThisConverter(serializer, entityConverters);
+                SerializationUtilities.RestoreThisConverter(serializer, entityConverters);
 
                 var nullValueHandling = serializer.NullValueHandling;
                 var defaultValueHandling = serializer.DefaultValueHandling;
@@ -130,17 +139,17 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
                 var metadata = new Metadata();
 
-                HandleComplexTypedPropsWrite(serializer, value, valueJObject, entityInfo, metadata);
+                HandleComplexTypedPropsWrite(EntityService, serializer, value, valueJObject, entityInfo, metadata);
 
                 //remove all object tokens that may still remain
                 RemoveJsonObjectProperties(valueJObject, entityInfo);
 
-                Utilities.RemoveThisConverter(thisConverterType, serializer, out entityConverters);
+                SerializationUtilities.RemoveThisConverter(thisConverterType, serializer, out entityConverters);
 
                 if (!metadata.IsEmpty())
                 {
                     //serialize the metadata to the object
-                    valueJObject.Add(Defaults.MetadataPropertyName, Utilities.SerializeMetadata(metadata));
+                    valueJObject.Add(Defaults.MetadataPropertyName, SerializationUtilities.SerializeMetadata(metadata));
                 }
 
                 //finally serialize object
@@ -150,7 +159,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 serializer.NullValueHandling = nullValueHandling;
                 serializer.DefaultValueHandling = defaultValueHandling;
 
-                Utilities.RestoreThisConverter(serializer, entityConverters);
+                SerializationUtilities.RestoreThisConverter(serializer, entityConverters);
             }
             else
             {
@@ -180,10 +189,10 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 {
                     //determine is the property is scalar.
                     //if not scalar, remove.
-                    if (entityInfo.JsonNamePropertyMap.TryGetValue(child.Name, out var memberInfo))
+                    if (entityInfo.JsonNamePropertyMap.FirstOrDefault(p => p.Key.Json == child.Name).Value is MemberInfo memberInfo) //TryGetValue(child.Name, out var memberInfo))
                     {
                         var propInfo = memberInfo as PropertyInfo;
-                        if (!Utilities.IsScalarType(propInfo?.PropertyType))
+                        if (!Utils.Utilities.IsScalarType(propInfo?.PropertyType, entityInfo.EntityService))
                         {
                             remove = true;
                         }
@@ -203,7 +212,8 @@ namespace Neo4jClient.DataAnnotations.Serialization
             }
         }
 
-        private static void HandleComplexTypedPropsRead(JsonSerializer serializer,
+        private static void HandleComplexTypedPropsRead
+            (IEntityService entityService, JsonSerializer serializer,
             object value, JObject valueJObject, EntityTypeInfo entityInfo)
         {
             var complexTypedProps = entityInfo.ComplexTypedProperties;
@@ -212,7 +222,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
             {
                 var propValueType = prop.PropertyType;
 
-                string propJsonName = prop.Name;
+                MemberName propJsonName = new MemberName(prop.Name, prop.Name);
 
                 foreach (var propJsonNameMap in entityInfo.JsonNamePropertyMap)
                 {
@@ -223,9 +233,9 @@ namespace Neo4jClient.DataAnnotations.Serialization
                     }
                 }
 
-                var childProps = valueJObject.Properties().Where(jp => jp.Name.StartsWith(propJsonName)
+                var childProps = valueJObject.Properties().Where(jp => jp.Name.StartsWith(propJsonName.Json)
                 //an actual complex type property should not be found on the entity
-                && !entityInfo.JsonNamePropertyMap.Any(map => map.Key == jp.Name
+                && !entityInfo.JsonNamePropertyMap.Any(map => map.Key.Json == jp.Name
                 && entityInfo.AllProperties.Contains(map.Value))
                 ).ToArray();
 
@@ -234,24 +244,24 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
                 foreach (var childProp in childProps)
                 {
-                    propValueJObject.Add(childProp.Name.Remove(0, propJsonName.Length + 1), childProp.Value);
+                    propValueJObject.Add(childProp.Name.Remove(0, propJsonName.Json.Length + 1), childProp.Value);
                 }
 
                 //first ascertain we handle this type
-                Neo4jAnnotations.AddEntityType(propValueType);
+                entityService.AddEntityType(propValueType);
 
                 //now find the entity info that has all the jsonproperties. that would be the real property type
                 EntityTypeInfo propValueInfo = null;
-                var derivedInfos = Neo4jAnnotations.GetDerivedEntityTypeInfos(propValueType, getFromEntityTypesToo: true);
+                var derivedInfos = entityService.GetDerivedEntityTypeInfos(propValueType, getFromEntityTypesToo: true);
 
                 foreach (var derivedInfo in derivedInfos)
                 {
                     InitializeEntityInfo(derivedInfo, serializer);
 
                     var sepIndex = -1;
-                    if (propValueJObject.Properties().All(jp => derivedInfo.JsonNamePropertyMap.ContainsKey(jp.Name)
+                    if (propValueJObject.Properties().All(jp => derivedInfo.JsonNamePropertyMap.Any(p => p.Key.Json == jp.Name)//.ContainsKey(jp.Name)
                     || ((sepIndex = jp.Name.IndexOf(Defaults.ComplexTypeNameSeparator)) > 0
-                    && derivedInfo.JsonNamePropertyMap.ContainsKey(jp.Name.Substring(0, sepIndex)))))
+                    && derivedInfo.JsonNamePropertyMap.Any(p => p.Key.Json == jp.Name.Substring(0, sepIndex))))) //.ContainsKey(jp.Name.Substring(0, sepIndex)))))
                     {
                         //found it
                         propValueInfo = derivedInfo;
@@ -291,14 +301,17 @@ namespace Neo4jClient.DataAnnotations.Serialization
                     }
 
                     //add to the jsonmap first
-                    entityInfo.JsonNamePropertyMap[childProp.Name] = propValueInfo.JsonNamePropertyMap[childProp.Name.Substring(propJsonName.Length + 1)];
+                    var childNamePair = propValueInfo.JsonNamePropertyMap.FirstOrDefault(pair => pair.Key.Json == childProp.Name.Substring(propJsonName.Json.Length + 1));
+                    var newChildName = new MemberName($"{propJsonName.Actual}{Defaults.ComplexTypeNameSeparator}{childNamePair.Key.Actual}", childProp.Name);
+                    entityInfo.JsonNamePropertyMap[newChildName] = childNamePair.Value; //propValueInfo.JsonNamePropertyMap[childProp.Name.Substring(propJsonName.Json.Length + 1)];
 
                     childProp.Remove();
                 }
             }
         }
 
-        private static void HandleComplexTypedPropsWrite(JsonSerializer serializer,
+        private static void HandleComplexTypedPropsWrite
+            (IEntityService entityService, JsonSerializer serializer,
             object value, JObject valueJObject, EntityTypeInfo entityInfo, Metadata metadata)
         {
             var complexTypedProps = entityInfo.ComplexTypedProperties;
@@ -316,7 +329,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 var propValueType = propValue.GetType();
 
                 JProperty propBefore = null;
-                string propJsonName = prop.Name;
+                MemberName propJsonName = new MemberName(prop.Name, prop.Name);
 
                 foreach (var propJsonNameMap in entityInfo.JsonNamePropertyMap)
                 {
@@ -326,7 +339,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
                         break;
                     }
 
-                    propBefore = valueJObject.Property(propJsonNameMap.Key) ?? propBefore;
+                    propBefore = valueJObject.Property(propJsonNameMap.Key?.Json) ?? propBefore;
                 }
 
                 JProperty currentProp = propBefore, temp = null;
@@ -340,11 +353,11 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 }
 
                 //first ascertain we handle this type
-                Neo4jAnnotations.AddEntityType(propValueType);
+                entityService.AddEntityType(propValueType);
 
                 //then serialize the value
                 var propValueJObject = JObject.FromObject(propValue, serializer);
-                var propValueInfo = Neo4jAnnotations.GetEntityTypeInfo(propValueType);
+                var propValueInfo = entityService.GetEntityTypeInfo(propValueType);
 
                 foreach (var propChild in propValueJObject.Children<JProperty>())
                 {
@@ -362,11 +375,16 @@ namespace Neo4jClient.DataAnnotations.Serialization
                     }
 
                     //add to the parent object itself.
-                    var newProp = new JProperty(propJsonName + Defaults.ComplexTypeNameSeparator + propChild.Name, propChild.Value);
+                    var propNamePair = propValueInfo.JsonNamePropertyMap.FirstOrDefault(pair => pair.Key.Json == propChild.Name);
+                    var newPropName = new MemberName($"{propJsonName.Actual}{Defaults.ComplexTypeNameSeparator}{propNamePair.Key.Actual}",
+                        $"{propJsonName.Json}{Defaults.ComplexTypeNameSeparator}{propChild.Name}");
+
+                    var newProp = new JProperty(newPropName.Json, //propJsonName.Json + Defaults.ComplexTypeNameSeparator + propChild.Name,
+                        propChild.Value);
                     currentProp.AddAfterSelf(newProp);
                     currentProp = newProp;
 
-                    entityInfo.JsonNamePropertyMap[newProp.Name] = propValueInfo.JsonNamePropertyMap[propChild.Name];
+                    entityInfo.JsonNamePropertyMap[newPropName] = propNamePair.Value; //propValueInfo.JsonNamePropertyMap[propChild.Name];
 
                     if (newProp.Value == null || newProp.Value.Type == JTokenType.Null)
                     {

@@ -3,6 +3,7 @@ using Neo4jClient.DataAnnotations.Cypher;
 using Neo4jClient.DataAnnotations.Tests.Models;
 using NSubstitute;
 using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Text;
 using Xunit;
@@ -19,7 +20,8 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void ABTypes_ABSelector()
         {
-            var query = Substitute.For<ICypherFluentQuery>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
@@ -30,7 +32,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             Assert.NotNull(abSelector);
             Assert.Equal("A", abSelector.Parameters[0].Name);
 
-            var propInfo = Utilities.GetPropertyInfoFrom(abSelector.Body, typeof(MovieNode), typeof(DirectorNode));
+            var propInfo = Utils.Utilities.GetPropertyInfoFrom(abSelector.Body, typeof(MovieNode), typeof(DirectorNode));
             Assert.NotNull(propInfo);
             Assert.Equal(typeof(DirectorNode), propInfo.PropertyType);
             Assert.Equal("Director", propInfo.Name);
@@ -39,7 +41,8 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void ARSelector_RBSelector()
         {
-            var query = Substitute.For<ICypherFluentQuery>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
@@ -48,7 +51,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var rbSelector = pattern.RBSelector;
             Assert.NotNull(rbSelector);
 
-            var propInfo = Utilities.GetPropertyInfoFrom(rbSelector.Body, typeof(MovieActorRelationship), typeof(ActorNode));
+            var propInfo = Utils.Utilities.GetPropertyInfoFrom(rbSelector.Body, typeof(MovieActorRelationship), typeof(ActorNode));
             Assert.NotNull(propInfo);
             Assert.Equal(typeof(ActorNode), propInfo.PropertyType);
             Assert.Equal("Actor", propInfo.Name);
@@ -57,7 +60,8 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void ARBTypes_ARandRBSelectors()
         {
-            var query = Substitute.For<ICypherFluentQuery>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
@@ -67,7 +71,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             Assert.NotNull(arSelector);
             Assert.Equal("Lagos", arSelector.Parameters[0].Name);
 
-            var rPropInfo = Utilities.GetPropertyInfoFrom(arSelector.Body, typeof(MovieNode), typeof(MovieActorRelationship));
+            var rPropInfo = Utils.Utilities.GetPropertyInfoFrom(arSelector.Body, typeof(MovieNode), typeof(MovieActorRelationship));
             Assert.NotNull(rPropInfo);
             Assert.Equal(typeof(ICollection<MovieActorRelationship>), rPropInfo.PropertyType);
             Assert.Equal("Actors", rPropInfo.Name);
@@ -75,7 +79,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var rbSelector = pattern.RBSelector;
             Assert.NotNull(rbSelector);
 
-            var bPropInfo = Utilities.GetPropertyInfoFrom(rbSelector.Body, typeof(MovieActorRelationship), typeof(ActorNode));
+            var bPropInfo = Utils.Utilities.GetPropertyInfoFrom(rbSelector.Body, typeof(MovieActorRelationship), typeof(ActorNode));
             Assert.NotNull(bPropInfo);
             Assert.Equal(typeof(ActorNode), bPropInfo.PropertyType);
             Assert.Equal("Actor", bPropInfo.Name);
@@ -84,7 +88,8 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void ABTypes_RType()
         {
-            var query = Substitute.For<ICypherFluentQuery>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
@@ -104,7 +109,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             Assert.NotNull(arSelector);
             Assert.Equal("Ambode", arSelector.Parameters[0].Name);
 
-            var rPropInfo = Utilities.GetPropertyInfoFrom(arSelector.Body, typeof(ActorNode), typeof(MovieActorRelationship));
+            var rPropInfo = Utils.Utilities.GetPropertyInfoFrom(arSelector.Body, typeof(ActorNode), typeof(MovieActorRelationship));
             Assert.NotNull(rPropInfo);
             Assert.Equal(typeof(ICollection<MovieActorRelationship>), rPropInfo.PropertyType);
             Assert.Equal("Movies", rPropInfo.Name);
@@ -112,7 +117,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var rbSelector = pattern.RBSelector;
             Assert.NotNull(rbSelector);
 
-            var bPropInfo = Utilities.GetPropertyInfoFrom(rbSelector.Body, typeof(MovieActorRelationship), typeof(MovieNode));
+            var bPropInfo = Utils.Utilities.GetPropertyInfoFrom(rbSelector.Body, typeof(MovieActorRelationship), typeof(MovieNode));
             Assert.NotNull(bPropInfo);
             Assert.Equal(typeof(MovieNode), bPropInfo.PropertyType);
             Assert.Equal("Movie", bPropInfo.Name);
@@ -121,7 +126,8 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void RBTypes_AType()
         {
-            var query = Substitute.For<ICypherFluentQuery>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
@@ -147,7 +153,8 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void ARTypes_BType()
         {
-            var query = Substitute.For<ICypherFluentQuery>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
@@ -171,7 +178,8 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void TableAttribute_RTypes()
         {
-            var query = Substitute.For<ICypherFluentQuery>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
@@ -187,7 +195,8 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void ForeignKeyAttribute_RTypes()
         {
-            var query = Substitute.For<ICypherFluentQuery>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
@@ -203,7 +212,8 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void ColumnAttributeWithName_RTypes()
         {
-            var query = Substitute.For<ICypherFluentQuery>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
@@ -219,7 +229,8 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void NoNameAttributes_RTypes()
         {
-            var query = Substitute.For<ICypherFluentQuery>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
@@ -235,7 +246,8 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void UserSetRTypes_RTypes()
         {
-            var query = Substitute.For<ICypherFluentQuery>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
@@ -257,7 +269,8 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void UserSetExactRTypes_RTypes()
         {
-            var query = Substitute.For<ICypherFluentQuery>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
@@ -275,12 +288,11 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
-        public void Properties_FinalProperties(string serializerName, EntityResolver resolver, EntityConverter converter)
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void Properties_FinalProperties(string testContextName, TestContext testContext)
         {
-            TestUtilities.RegisterEntityTypes(resolver, converter);
-
-            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+            var client = testContext.AnnotationsContext.GraphClient;
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
@@ -309,16 +321,15 @@ namespace Neo4jClient.DataAnnotations.Tests
                 { "Age", "\"47\"" }, //because we assigned a 47 string and not a 47 int.
             };
 
-            TestUtilities.TestFinalPropertiesForEquality((instance) => serializer.Serialize(instance), expected, aFinalProperties);
+            TestUtilities.TestFinalPropertiesForEquality((instance) => client.Serializer.Serialize(instance), expected, aFinalProperties);
         }
 
         [Theory]
-        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
-        public void Constraints_FinalProperties(string serializerName, EntityResolver resolver, EntityConverter converter)
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void Constraints_FinalProperties(string testContextName, TestContext testContext)
         {
-            TestUtilities.RegisterEntityTypes(resolver, converter);
-
-            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+            var client = testContext.AnnotationsContext.GraphClient;
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
@@ -343,18 +354,17 @@ namespace Neo4jClient.DataAnnotations.Tests
                 { "Roles", "[\r\n  \"Meredith Grey\"\r\n]" }
             };
 
-            TestUtilities.TestFinalPropertiesForEquality((instance) => serializer.Serialize(instance), expected, aFinalProperties);
+            TestUtilities.TestFinalPropertiesForEquality((instance) => client.Serializer.Serialize(instance), expected, aFinalProperties);
 
             var str = pattern.Build(ref query);
         }
 
         [Theory]
-        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
-        public void NoParamsStrategy_Build(string serializerName, EntityResolver resolver, EntityConverter converter)
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void NoParamsStrategy_Build(string testContextName, TestContext testContext)
         {
-            TestUtilities.RegisterEntityTypes(resolver, converter);
-
-            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+            var client = testContext.AnnotationsContext.GraphClient;
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
@@ -376,12 +386,11 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
-        public void WithParamsStrategy_Build(string serializerName, EntityResolver resolver, EntityConverter converter)
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void WithParamsStrategy_Build(string testContextName, TestContext testContext)
         {
-            TestUtilities.RegisterEntityTypes(resolver, converter);
-
-            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+            var client = testContext.AnnotationsContext.GraphClient;
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
@@ -406,12 +415,11 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
-        public void WithParamsForValuesStrategy_Build(string serializerName, EntityResolver resolver, EntityConverter converter)
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void WithParamsForValuesStrategy_Build(string testContextName, TestContext testContext)
         {
-            TestUtilities.RegisterEntityTypes(resolver, converter);
-
-            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+            var client = testContext.AnnotationsContext.GraphClient;
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 

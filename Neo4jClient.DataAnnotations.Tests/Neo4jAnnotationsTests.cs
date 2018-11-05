@@ -1,5 +1,6 @@
 ﻿using Neo4jClient.DataAnnotations.Serialization;
 using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
@@ -12,53 +13,54 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void EntityTypesAtStart_NotNull()
         {
-            Assert.NotNull(Neo4jAnnotations.EntityTypes);
+            Assert.NotNull(new ResolverTestContext().AnnotationsContext.EntityService.EntityTypes);
+            Assert.NotNull(new ConverterTestContext().AnnotationsContext.EntityService.EntityTypes);
         }
 
         [Fact]
         public void RegisterWithResolverImplict()
         {
-            Neo4jAnnotations.RegisterWithResolver(TestUtilities.EntityTypes);
+            var testContext = new ResolverTestContext();
 
-            Assert.All(TestUtilities.EntityTypes, (type) => Assert.True(Neo4jAnnotations.EntityTypes.Contains(type)));
+            Assert.All(TestUtilities.EntityTypes, (type) => Assert.True(testContext.AnnotationsContext.EntityService.EntityTypes.Contains(type)));
 
-            Assert.Equal(typeof(EntityResolver), GraphClient.DefaultJsonContractResolver.GetType());
+            Assert.Equal(typeof(EntityResolver), testContext.QueryContext.Client.JsonContractResolver.GetType());
 
-            Assert.Contains(GraphClient.DefaultJsonConverters, c => typeof(ResolverDummyConverter) == c.GetType());
+            Assert.Contains(testContext.QueryContext.Client.JsonConverters, c => typeof(EntityResolverConverter) == c.GetType());
         }
 
         [Fact]
         public void RegisterWithConverterImplicit()
         {
-            Neo4jAnnotations.RegisterWithConverter(TestUtilities.EntityTypes);
+            var testContext = new ConverterTestContext();
 
-            Assert.All(TestUtilities.EntityTypes, (type) => Assert.True(Neo4jAnnotations.EntityTypes.Contains(type)));
+            Assert.All(TestUtilities.EntityTypes, (type) => Assert.True(testContext.AnnotationsContext.EntityService.EntityTypes.Contains(type)));
 
-            Assert.Contains(GraphClient.DefaultJsonConverters, c => typeof(EntityConverter) == c.GetType());
+            Assert.Contains(testContext.QueryContext.Client.JsonConverters, c => typeof(EntityConverter) == c.GetType());
 
-            //Assert.Equal(typeof(EntityConverter), GraphClient.DefaultJsonConverters.Last().GetType());
+            //Assert.Equal(typeof(EntityConverter), client.JsonConverters.Last().GetType());
         }
 
         [Fact]
         public void RegisterWithResolver()
         {
-            Neo4jAnnotations.RegisterWithResolver(TestUtilities.EntityTypes, TestUtilities.Resolver);
+            var testContext = new ResolverTestContext();
 
-            Assert.All(TestUtilities.EntityTypes, (type) => Assert.True(Neo4jAnnotations.EntityTypes.Contains(type)));
+            Assert.All(TestUtilities.EntityTypes, (type) => Assert.True(testContext.AnnotationsContext.EntityService.EntityTypes.Contains(type)));
 
-            Assert.True(GraphClient.DefaultJsonContractResolver == TestUtilities.Resolver);
+            Assert.True(testContext.QueryContext.Client.JsonContractResolver == testContext.AnnotationsContext.EntityResolver);
 
-            Assert.Contains(GraphClient.DefaultJsonConverters, c => typeof(ResolverDummyConverter) == c.GetType());
+            Assert.Contains(testContext.QueryContext.Client.JsonConverters, c => typeof(EntityResolverConverter) == c.GetType());
         }
 
         [Fact]
         public void RegisterWithConverter()
         {
-            Neo4jAnnotations.RegisterWithConverter(TestUtilities.EntityTypes, TestUtilities.Converter);
+            var testContext = new ConverterTestContext();
 
-            Assert.All(TestUtilities.EntityTypes, (type) => Assert.True(Neo4jAnnotations.EntityTypes.Contains(type)));
+            Assert.All(TestUtilities.EntityTypes, (type) => Assert.True(testContext.AnnotationsContext.EntityService.EntityTypes.Contains(type)));
 
-            Assert.True(GraphClient.DefaultJsonConverters.Last() == TestUtilities.Converter);
+            Assert.True(testContext.QueryContext.Client.JsonConverters.Last() == testContext.AnnotationsContext.EntityConverter);
         }
     }
 }

@@ -1,6 +1,7 @@
 using Neo4jClient.Cypher;
 using NSubstitute;
 using System;
+using Neo4jClient.DataAnnotations.Utils;
 using Xunit;
 using Neo4jClient.DataAnnotations;
 using Neo4jClient.DataAnnotations.Cypher;
@@ -14,7 +15,10 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void ARBAreAllNull_InvalidOperationException()
         {
-            var builder = Substitute.For<IPathBuilder>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
+
+            var builder = new PathBuilder(query);
 
             var ex = Assert.Throws<InvalidOperationException>(() => builder.Pattern(null, null, null));
 
@@ -24,7 +28,10 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void RelationshipIsNull_ArgumentNullException()
         {
-            var builder = Substitute.For<IPathBuilder>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
+
+            var builder = new PathBuilder(query);
 
             var ex = Assert.Throws<ArgumentNullException>(() =>
             builder.Pattern((Expression<Func<ActorNode, MovieNode>>)null));
@@ -35,7 +42,10 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void BeginRelationshipIsNull_ArgumentNullException()
         {
-            var builder = Substitute.For<IPathBuilder>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
+
+            var builder = new PathBuilder(query);
 
             var ex = Assert.Throws<ArgumentNullException>(() =>
             builder.Pattern((Expression<Func<ActorNode, MovieActorRelationship>>)null, (r) => r.Movie));
@@ -46,7 +56,8 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void ExtensionRBAreBothNull_NoInvalidOperationException()
         {
-            var query = Substitute.For<ICypherFluentQuery>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
@@ -59,7 +70,8 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void ExtensionPattern_TrueIsExtensionProperty()
         {
-            var query = Substitute.For<ICypherFluentQuery>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
@@ -72,19 +84,20 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             Assert.NotNull(pattern.AVariable);
             Assert.True(pattern.AVarIsAuto);
-            Assert.Equal(pattern.RVariable, "R2"); //test this to make sure we are interacting with the right pattern here, and not a previous one.
-            Assert.Equal(pattern.BVariable, "C");
+            Assert.Equal("R2", pattern.RVariable); //test this to make sure we are interacting with the right pattern here, and not a previous one.
+            Assert.Equal("C", pattern.BVariable);
             Assert.True(pattern.IsExtension);
         }
 
         [Fact]
         public void BothConstraintsAndPropsAreSet_InvalidOperationException()
         {
-            var query = Substitute.For<ICypherFluentQuery>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
-            var ex = Assert.Throws<InvalidOperationException>(() => builder. Pattern((ActorNode actor) => actor.Movies, (r) => r.Movie)
+            var ex = Assert.Throws<InvalidOperationException>(() => builder.Pattern((ActorNode actor) => actor.Movies, (r) => r.Movie)
                 .Constrain((actor) => actor.Name == "Ellen Pompeo" && actor.Born == 1969)
                 .Prop(() => new { Name = "Ellen Pompeo", Born = 1969 }));
 
@@ -94,7 +107,8 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void NewTypeIsNotAssignableToOldType_InvalidOperationException()
         {
-            var query = Substitute.For<ICypherFluentQuery>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 
@@ -108,7 +122,8 @@ namespace Neo4jClient.DataAnnotations.Tests
         [Fact]
         public void NewTypeIsAssignableToOldType()
         {
-            var query = Substitute.For<ICypherFluentQuery>();
+            var testContext = new ResolverTestContext();
+            var query = testContext.Query;
 
             var builder = new PathBuilder(query);
 

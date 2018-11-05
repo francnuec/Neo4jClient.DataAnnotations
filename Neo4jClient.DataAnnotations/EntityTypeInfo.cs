@@ -1,19 +1,38 @@
 ﻿using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using System.Linq;
 using System.ComponentModel.DataAnnotations.Schema;
 using Newtonsoft.Json.Serialization;
+using Neo4jClient.DataAnnotations.Serialization;
 
 namespace Neo4jClient.DataAnnotations
 {
-    public class EntityTypeInfo
+    public sealed class EntityTypeInfo : IHaveEntityService
     {
-        public EntityTypeInfo(Type type)
+        private Dictionary<string, Dictionary<PropertyInfo, IEnumerable<Attribute>>> attrTypeToPropsToAttrs
+            = new Dictionary<string, Dictionary<PropertyInfo, IEnumerable<Attribute>>>();
+        private List<PropertyInfo> complexTypedProps;
+        private List<string> labelsWithTypeNameCatch;
+        private List<PropertyInfo> allProperties;
+        private Dictionary<MemberName, MemberInfo> jsonNamePropertyMap;
+        private List<ForeignKeyProperty> foreignKeyProperties;
+        private List<PropertyInfo> navigationProps;
+        private Dictionary<Type, List<ForeignKeyProperty>> attributedForeignKeys
+            = new Dictionary<Type, List<ForeignKeyProperty>>();
+        private JsonObjectContract JsonContract { get; set; }
+        private List<JsonProperty> _jsonProps = null;
+
+
+        public EntityTypeInfo(Type type, IEntityService service)
         {
-            Type = type;
+            Type = type ?? throw new ArgumentNullException(nameof(type));
+            EntityService = service ?? throw new ArgumentNullException(nameof(service));
         }
+
+        public IEntityService EntityService { get; }
 
         public Type Type { get; }
 
@@ -36,84 +55,76 @@ namespace Neo4jClient.DataAnnotations
             }
         }
 
-        private List<string> labelsWithTypeNameCatch;
-
         public List<string> LabelsWithTypeNameCatch
         {
             get
             {
-                return labelsWithTypeNameCatch ?? (labelsWithTypeNameCatch = Utilities.GetLabels(Type, useTypeNameIfEmpty: true));
+                lock (this)
+                {
+                    if (labelsWithTypeNameCatch == null)
+                    {
+                        labelsWithTypeNameCatch = Utils.Utilities.GetLabels(Type, useTypeNameIfEmpty: true);
+                    }
+                }
+
+                return labelsWithTypeNameCatch;
             }
         }
-
-        private List<PropertyInfo> allProperties;
 
         public List<PropertyInfo> AllProperties
         {
             get
             {
-                return allProperties ?? 
-                    (allProperties = Type.GetProperties
-                    (Defaults.MemberSearchBindingFlags)?.ToList() 
-                    ?? new List<PropertyInfo>());
-            }
-        }
-
-        private Dictionary<string, Dictionary<PropertyInfo, IEnumerable<Attribute>>> attrTypeToPropsToAttrs
-            = new Dictionary<string, Dictionary<PropertyInfo, IEnumerable<Attribute>>>();
-
-        public Dictionary<PropertyInfo, IEnumerable<Attribute>> GetPropertiesWithAttribute(Type attributeType, bool inherit = false)
-        {
-            Dictionary<PropertyInfo, IEnumerable<Attribute>> props;
-            if (!attrTypeToPropsToAttrs.TryGetValue(attributeType.FullName, out props))
-            {
-                props = new Dictionary<PropertyInfo, IEnumerable<Attribute>>();
-
-                var properties = AllProperties;
-                foreach(var property in properties)
+                lock (this)
                 {
-                    var attrs = property.GetCustomAttributes(attributeType, inherit)?.Cast<Attribute>();
-
-                    if(attrs != null && attrs.Count() > 0)
+                    if (allProperties == null)
                     {
-                        props[property] = attrs;
+                        allProperties = Type.GetProperties
+                            (Defaults.MemberSearchBindingFlags)?.ToList()
+                            ?? new List<PropertyInfo>();
                     }
                 }
 
-                attrTypeToPropsToAttrs[attributeType.FullName] = props;
+                return allProperties;
             }
-
-            return props;
         }
 
-        private List<PropertyInfo> complexTypedProps;
+        public List<PropertyInfo> NavigationableProperties
+        {
+            get
+            {
+                lock (this)
+                {
+                    if (navigationProps == null)
+                    {
+                        navigationProps = AllProperties
+                            .Where(p => !Utils.Utilities.IsScalarType(p.PropertyType, EntityService))
+                            .Except(ComplexTypedProperties)
+                            .ToList();
+                    }
+                }
+
+                return navigationProps;
+            }
+        }
 
         public List<PropertyInfo> ComplexTypedProperties
         {
             get
             {
-                if (complexTypedProps != null)
-                    return complexTypedProps;
-
-                complexTypedProps = AllProperties
-                    .Where(p => p.PropertyType.IsComplex())
-                    .ToList();
+                lock (this)
+                {
+                    if (complexTypedProps == null)
+                    {
+                        complexTypedProps = AllProperties
+                            .Where(p => p.PropertyType.IsComplex())
+                            .ToList();
+                    }
+                }
 
                 return complexTypedProps;
             }
         }
-
-        private Dictionary<string, MemberInfo> jsonNamePropertyMap;
-
-        public Dictionary<string, MemberInfo> JsonNamePropertyMap
-        {
-            get { return jsonNamePropertyMap ?? (jsonNamePropertyMap = new Dictionary<string, MemberInfo>()); }
-            private set { jsonNamePropertyMap = value; }
-        }
-
-        //public List<string> IgnoredJsonProperties { get; private set; } = new List<string>();
-
-        private List<ForeignKeyProperty> foreignKeyProperties;
 
         public List<ForeignKeyProperty> ForeignKeyProperties
         {
@@ -124,82 +135,88 @@ namespace Neo4jClient.DataAnnotations
                 if (foreignKeyProperties != null)
                     return foreignKeyProperties;
 
-                foreignKeyProperties = new List<ForeignKeyProperty>();
-
-                var propsConsidered = new List<string>();
-
-                var foreignKeyedProps = GetPropertiesWithAttribute(typeof(ForeignKeyAttribute));
-
-                foreach (var foreignKeyedProp in foreignKeyedProps)
+                lock (this)
                 {
-                    var foreignKeyAttribute = foreignKeyedProp.Value.FirstOrDefault() as ForeignKeyAttribute;
-
-                    if (foreignKeyAttribute == null)
-                        continue;
-
-                    var foreignKeyProperty = new ForeignKeyProperty()
+                    if (foreignKeyProperties == null)
                     {
-                        Attribute = foreignKeyAttribute
-                    };
+                        foreignKeyProperties = new List<ForeignKeyProperty>();
 
-                    AssignForeignKey(foreignKeyProperty, foreignKeyedProp.Key);
-                    propsConsidered.Add(foreignKeyedProp.Key.Name);
+                        var propsConsidered = new List<string>();
 
-                    //determine if the foreignkeyattribute name points to another property on this object
-                    var otherPropertyInfo = AllProperties.Where(p => p.Name == foreignKeyAttribute.Name).SingleOrDefault();
+                        var foreignKeyedProps = GetPropertiesWithAttribute(typeof(ForeignKeyAttribute));
 
-                    if (otherPropertyInfo != null)
-                    {
-                        AssignForeignKey(foreignKeyProperty, otherPropertyInfo);
-                        propsConsidered.Add(otherPropertyInfo.Name);
-                    }
-
-                    foreignKeyProperties.Add(foreignKeyProperty);
-                }
-
-                //check other properties on this entity by using conventions
-                //any property name that ends with "Id" or "_id" is expected to be the scalar foreign key
-                //and the name of its navigation property should equal the rest of the property name string with "Id" removed.
-
-                var propertiesNotConsidered = AllProperties.Where(p => !propsConsidered.Contains(p.Name)).ToList();
-
-                foreach (var propInfo in propertiesNotConsidered)
-                {
-                    string fkName = null;
-
-                    if ((propInfo.Name.EndsWith("Id") || propInfo.Name.ToLower().EndsWith("_id"))
-                        && Utilities.IsScalarType(propInfo.PropertyType) //it must be scalar to be considered
-                        && !string.IsNullOrWhiteSpace(fkName = propInfo.Name.Substring(0, propInfo.Name.Length - 2).TrimEnd('_'))) 
-                    {
-                        //check if this name belongs to a nav property already chosen as foreign key above
-                        //but whose defined foreignkey does not point to its scalar property.
-                        ForeignKeyProperty foreignKeyProperty = foreignKeyProperties
-                            .Where(fk => fk.NavigationProperty?.Name == fkName).SingleOrDefault();
-
-                        if (foreignKeyProperty == null)
+                        foreach (var foreignKeyedProp in foreignKeyedProps)
                         {
-                            var foreignKeyAttribute = new ForeignKeyAttribute(fkName);
+                            var foreignKeyAttribute = foreignKeyedProp.Value.FirstOrDefault() as ForeignKeyAttribute;
 
-                            foreignKeyProperty = new ForeignKeyProperty()
+                            if (foreignKeyAttribute == null)
+                                continue;
+
+                            var foreignKeyProperty = new ForeignKeyProperty()
                             {
-                                Attribute = foreignKeyAttribute,
-                                IsAttributeAutoCreated = true
+                                Attribute = foreignKeyAttribute
                             };
 
-                            foreignKeyProperties.Add(foreignKeyProperty);
+                            AssignForeignKey(foreignKeyProperty, foreignKeyedProp.Key);
+                            propsConsidered.Add(foreignKeyedProp.Key.Name);
 
                             //determine if the foreignkeyattribute name points to another property on this object
-                            var otherPropertyInfo = propertiesNotConsidered.Where(p => p.Name == fkName).SingleOrDefault();
+                            var otherPropertyInfo = AllProperties.Where(p => p.Name == foreignKeyAttribute.Name).SingleOrDefault();
 
                             if (otherPropertyInfo != null)
                             {
-                                //assign the nav property
                                 AssignForeignKey(foreignKeyProperty, otherPropertyInfo);
+                                propsConsidered.Add(otherPropertyInfo.Name);
                             }
+
+                            foreignKeyProperties.Add(foreignKeyProperty);
                         }
 
-                        //assign the scalar property
-                        AssignForeignKey(foreignKeyProperty, propInfo);
+                        //check other properties on this entity by using conventions
+                        //any property name that ends with "Id" or "_id" is expected to be the scalar foreign key
+                        //and the name of its navigation property should equal the rest of the property name string with "Id" removed.
+
+                        var propertiesNotConsidered = AllProperties.Where(p => !propsConsidered.Contains(p.Name)).ToList();
+
+                        foreach (var propInfo in propertiesNotConsidered)
+                        {
+                            string fkName = null;
+
+                            if ((propInfo.Name.EndsWith("Id") || propInfo.Name.ToLower().EndsWith("_id"))
+                                && Utils.Utilities.IsScalarType(propInfo.PropertyType, EntityService) //it must be scalar to be considered
+                                && !string.IsNullOrWhiteSpace(fkName = propInfo.Name.Substring(0, propInfo.Name.Length - 2).TrimEnd('_')))
+                            {
+                                //check if this name belongs to a nav property already chosen as foreign key above
+                                //but whose defined foreignkey does not point to its scalar property.
+                                ForeignKeyProperty foreignKeyProperty = foreignKeyProperties
+                                    .Where(fk => fk.NavigationProperty?.Name == fkName).SingleOrDefault();
+
+                                if (foreignKeyProperty == null)
+                                {
+                                    var foreignKeyAttribute = new ForeignKeyAttribute(fkName);
+
+                                    foreignKeyProperty = new ForeignKeyProperty()
+                                    {
+                                        Attribute = foreignKeyAttribute,
+                                        IsAttributeAutoCreated = true
+                                    };
+
+                                    foreignKeyProperties.Add(foreignKeyProperty);
+
+                                    //determine if the foreignkeyattribute name points to another property on this object
+                                    var otherPropertyInfo = propertiesNotConsidered.Where(p => p.Name == fkName).SingleOrDefault();
+
+                                    if (otherPropertyInfo != null)
+                                    {
+                                        //assign the nav property
+                                        AssignForeignKey(foreignKeyProperty, otherPropertyInfo);
+                                    }
+                                }
+
+                                //assign the scalar property
+                                AssignForeignKey(foreignKeyProperty, propInfo);
+                            }
+                        }
                     }
                 }
 
@@ -207,46 +224,62 @@ namespace Neo4jClient.DataAnnotations
             }
         }
 
-        private void AssignForeignKey(ForeignKeyProperty property, PropertyInfo propertyInfo)
-        {
-            //check if its scalar
-            if (Utilities.IsScalarType(propertyInfo.PropertyType))
-            {
-                //only assign if scalar property hasn't been earlier on assigned.
-                //if it has been assigned, skip. it may mean the propertyinfo has nothing to do with foreignkeys and was just a coincedence.
-                property.ScalarProperty = property.ScalarProperty ?? propertyInfo; 
-            }
-            else
-            {
-                //its navigation prop
-                property.NavigationProperty = propertyInfo;
-            }
 
-            property.IsAttributePointingToProperty = property.NavigationProperty?.Name == property.Attribute?.Name
-                || property.ScalarProperty?.Name == property.Attribute?.Name;
-        }
-
-        private List<PropertyInfo> navigationProps;
-
-        public List<PropertyInfo> NavigationableProperties
+        internal List<JsonProperty> JsonProperties
         {
             get
             {
-                return navigationProps ?? (navigationProps = 
-                    AllProperties
-                    .Where(p => !Utilities.IsScalarType(p.PropertyType))
-                    .Except(ComplexTypedProperties)
-                    .ToList());
+                return _jsonProps;
+            }
+            set
+            {
+                lock (this)
+                {
+                    if (value == null || _jsonProps == null || value.Count != _jsonProps.Count
+                    || value.Any(np => !_jsonProps.Contains(np)))
+                    {
+                        //something has changed
+                        _jsonProps = value;
+                        ResolveJsonProperties();
+                    }
+                }
             }
         }
 
-        private Dictionary<Type, List<ForeignKeyProperty>> attributedForeignKeys 
-            = new Dictionary<Type, List<ForeignKeyProperty>>();
+        internal Dictionary<MemberName, MemberInfo> JsonNamePropertyMap
+        {
+            get
+            {
+                lock (this)
+                {
+                    if (jsonNamePropertyMap == null)
+                    {
+                        jsonNamePropertyMap = new Dictionary<MemberName, MemberInfo>();
+                    }
+                }
+
+                return jsonNamePropertyMap;
+            }
+            private set
+            {
+                lock (this)
+                {
+                    jsonNamePropertyMap = value;
+                }
+            }
+        }
+
+        internal List<ForeignKeyProperty> ColumnAttributeFKs
+        {
+            get { return GetForeignKeysWithAttribute(Defaults.ColumnType); }
+        }
+
+        internal DefaultContractResolver JsonResolver { get; set; }
 
         /// <summary>
         /// Gets properties that have specific attribute on either the scalar or nav property of a foreign key.
         /// </summary>
-        public List<ForeignKeyProperty> GetForeignKeysWithAttribute(Type attributeType)
+        internal List<ForeignKeyProperty> GetForeignKeysWithAttribute(Type attributeType)
         {
             List<ForeignKeyProperty> props;
 
@@ -261,60 +294,80 @@ namespace Neo4jClient.DataAnnotations
             return props;
         }
 
-        public List<ForeignKeyProperty> ColumnAttributeFKs
+        internal void AssignForeignKey(ForeignKeyProperty property, PropertyInfo propertyInfo)
         {
-            get { return GetForeignKeysWithAttribute(Defaults.ColumnType); }
+            //check if its scalar
+            if (Utils.Utilities.IsScalarType(propertyInfo.PropertyType, EntityService))
+            {
+                //only assign if scalar property hasn't been earlier on assigned.
+                //if it has been assigned, skip. it may mean the propertyinfo has nothing to do with foreignkeys and was just a coincedence.
+                property.ScalarProperty = property.ScalarProperty ?? propertyInfo;
+            }
+            else
+            {
+                //its navigation prop
+                property.NavigationProperty = propertyInfo;
+            }
+
+            property.IsAttributePointingToProperty = property.NavigationProperty?.Name == property.Attribute?.Name
+                || property.ScalarProperty?.Name == property.Attribute?.Name;
         }
 
-        public DefaultContractResolver JsonResolver { get; internal set; }
-
-        private JsonObjectContract JsonContract { get; set; }
-
-        private List<JsonProperty> _jsonProps = null;
-
-        public List<JsonProperty> JsonProperties
+        internal Dictionary<PropertyInfo, IEnumerable<Attribute>> GetPropertiesWithAttribute(Type attributeType, bool inherit = false)
         {
-            get
+            Dictionary<PropertyInfo, IEnumerable<Attribute>> props;
+            if (!attrTypeToPropsToAttrs.TryGetValue(attributeType.FullName, out props))
             {
-                return _jsonProps;
-            }
-            internal set
-            {
-                if (value == null || _jsonProps == null || value.Count != _jsonProps.Count 
-                    || value.Any(np => !_jsonProps.Contains(np)))
+                props = new Dictionary<PropertyInfo, IEnumerable<Attribute>>();
+
+                var properties = AllProperties;
+                foreach (var property in properties)
                 {
-                    //something has changed
-                    _jsonProps = value;
-                    ResolveJsonProperties();
+                    var attrs = property.GetCustomAttributes(attributeType, inherit)?.Cast<Attribute>();
+
+                    if (attrs != null && attrs.Count() > 0)
+                    {
+                        props[property] = attrs;
+                    }
                 }
+
+                attrTypeToPropsToAttrs[attributeType.FullName] = props;
             }
+
+            return props;
         }
 
-        public void WithJsonResolver(DefaultContractResolver resolver)
+        internal void WithJsonResolver(DefaultContractResolver resolver)
         {
-            if (JsonResolver != resolver)
+            lock (this)
             {
-                var contract = resolver?.ResolveContract(Type) as JsonObjectContract;
-
-                if (contract == null || contract.Properties == null || contract.Properties.Count == 0)
+                if (JsonResolver != resolver && (resolver == null || JsonResolver?.GetType() != resolver.GetType()))
                 {
-                    throw new InvalidOperationException(string.Format(Messages.NoContractResolvedError, Type.FullName));
+                    var contract = resolver?.ResolveContract(Type) as JsonObjectContract;
+
+                    if (contract == null || contract.Properties == null || contract.Properties.Count == 0)
+                    {
+                        throw new InvalidOperationException(string.Format(Messages.NoContractResolvedError, Type.FullName));
+                    }
+
+                    JsonResolver = resolver;
+                    JsonContract = contract;
+
+                    JsonProperties = new List<JsonProperty>(contract.Properties);
                 }
-
-                JsonResolver = resolver;
-                JsonContract = contract;
-
-                JsonProperties = new List<JsonProperty>(contract.Properties);
             }
         }
 
         internal void ResolveJsonProperties()
         {
-            //map the properties
-            MapJsonProperties();
+            lock (this)
+            {
+                //map the properties
+                MapJsonProperties();
 
-            //ignore properties that have been marked with relevant attributes
-            IgnoreJsonProperties();
+                //ignore properties that have been marked with relevant attributes
+                IgnoreJsonProperties();
+            }
         }
 
         internal void MapJsonProperties()
@@ -327,7 +380,7 @@ namespace Neo4jClient.DataAnnotations
                         .Where(m => m.IsEquivalentTo(p.UnderlyingName, p.DeclaringType, p.PropertyType)).FirstOrDefault()
                     })
                     .Where(np => np.MemberInfo != null)
-                    .ToDictionary(np => np.JsonProperty.PropertyName, np => np.MemberInfo);
+                    .ToDictionary(np => new MemberName(np.JsonProperty.GetComplexOrActualUnderlyingName(), np.JsonProperty.PropertyName), np => np.MemberInfo);
         }
 
         internal void IgnoreJsonProperties()
@@ -353,6 +406,19 @@ namespace Neo4jClient.DataAnnotations
 
                 //IgnoredJsonProperties = IgnoredJsonProperties.Distinct().ToList();
             }
+        }
+
+        public override string ToString()
+        {
+            try
+            {
+                return $"Entity: {Type.ToString()}";
+            }
+            catch
+            {
+
+            }
+            return base.ToString();
         }
     }
 }

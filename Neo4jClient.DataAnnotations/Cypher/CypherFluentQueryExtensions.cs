@@ -1,8 +1,11 @@
 ﻿using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Linq.Expressions;
 using System.Linq;
 using Neo4jClient.Cypher;
 using System.Reflection;
+using Neo4jClient.DataAnnotations.Expressions;
+using Neo4jClient.DataAnnotations.Serialization;
 
 namespace Neo4jClient.DataAnnotations.Cypher
 {
@@ -10,6 +13,16 @@ namespace Neo4jClient.DataAnnotations.Cypher
     {
         static MethodInfo mutateMethodInfo = null;
         static MethodInfo mutateGenericMethodInfo = null;
+
+        #region AnnotationsContext
+        public static IAnnotationsContext GetAnnotationsContext(this ICypherFluentQuery query)
+        {
+            var client = (query as IAttachedReference)?.Client;
+            IAnnotationsContext context = client?.GetAnnotationsContext();
+
+            return context ?? throw new InvalidOperationException($"Could not get an instance of {nameof(IAnnotationsContext)} from query.");
+        }
+        #endregion
 
         #region AnnotatedQuery
         /// <summary>
@@ -179,7 +192,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             PropertiesBuildStrategy defaultBuildStrategy,
             params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
-            pattern = Utilities.BuildPaths(ref query,
+            pattern = CypherUtilities.BuildPaths(ref query,
                 patternDescriptions ?? throw new ArgumentNullException(nameof(patternDescriptions)),
                 query.GetBuildStrategy(defaultBuildStrategy));
 
@@ -286,12 +299,12 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Expression<Func<T, object>> expressions, out string[] values, bool isMemberAccess, 
             string variable, PropertiesBuildStrategy defaultBuildStrategy)
         {
-            var queryUtilities = Utilities.GetQueryUtilities(query);
+            var queryContext = CypherUtilities.GetQueryContext(query);
 
-            queryUtilities.CurrentBuildStrategy = 
-                queryUtilities.CurrentBuildStrategy ?? defaultBuildStrategy;
+            queryContext.CurrentBuildStrategy = 
+                queryContext.CurrentBuildStrategy ?? defaultBuildStrategy;
 
-            values = Utilities.GetVariableExpressions(expressions, queryUtilities, 
+            values = ExpressionUtilities.GetVariableExpressions(expressions, queryContext, 
                 isMemberAccess: isMemberAccess, variable: variable);
 
             return query;
@@ -534,7 +547,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            var propertiesExpression = Utilities.GetConstraintsAsPropertiesLambda(predicate, typeof(T));
+            var propertiesExpression = CypherUtilities.GetConstraintsAsPropertiesLambda(predicate, typeof(T));
 
             return SharedSet(query, variable ?? predicate.Parameters[0].Name, propertiesExpression, PropertiesBuildStrategy.WithParams, out setParameter, add: true);
         }
@@ -552,16 +565,35 @@ namespace Neo4jClient.DataAnnotations.Cypher
         internal static ICypherFluentQuery SharedSet(this ICypherFluentQuery query, string variable,
             LambdaExpression properties, PropertiesBuildStrategy defaultBuildStrategy, out string setParameter, bool add)
         {
-            var queryUtilities = Utilities.GetQueryUtilities(query);
+            var queryContext = CypherUtilities.GetQueryContext(query);
 
-            var buildStrategy = queryUtilities.CurrentBuildStrategy ?? defaultBuildStrategy;
+            var buildStrategy = queryContext.CurrentBuildStrategy ?? defaultBuildStrategy;
+            bool finalPropsHasFunctions = false;
 
-            var finalProperties = Utilities.GetFinalProperties(properties, queryUtilities, out var hasFunctions);
+            CypherUtilities.ResolveFinalObjectProperties(() =>
+            {
+                if (properties != null)
+                {
+                    try
+                    {
+                        return (properties as Expression<Func<object>>)?.Compile().Invoke(); //ExecuteExpression<object>();
+                    }
+                    catch
+                    {
 
-            string setParam = Utilities.GetRandomVariableFor($"{variable}_set");
+                    }
+                }
+
+                return null;
+            }, () =>
+            {
+                return CypherUtilities.GetFinalProperties(properties, queryContext, out finalPropsHasFunctions);
+            }, () => finalPropsHasFunctions, ref buildStrategy, out var finalObject, out var finalProperties);
+
+            string setParam = Utils.Utilities.GetRandomVariableFor($"{variable}_set");
             setParameter = setParam;
 
-            buildStrategy = hasFunctions && buildStrategy == PropertiesBuildStrategy.WithParams ? 
+            buildStrategy = finalPropsHasFunctions && buildStrategy == PropertiesBuildStrategy.WithParams ? 
                 PropertiesBuildStrategy.WithParamsForValues : buildStrategy;
 
             string value = null;
@@ -577,7 +609,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
                         if (buildStrategy == PropertiesBuildStrategy.WithParamsForValues)
                         {
-                            value = Utilities.BuildWithParamsForValues(finalProperties, queryUtilities.SerializeCallback,
+                            value = CypherUtilities.BuildWithParamsForValues(finalProperties, queryContext.SerializeCallback,
                                 getKey: (propertyName) => propertyName, separator: ": ", 
                                 getValue: (propertyName) => $"${setParam}.{propertyName}",
                                 hasRaw: out var hasRaw, newFinalProperties: out var newFinalProperties);
@@ -585,13 +617,13 @@ namespace Neo4jClient.DataAnnotations.Cypher
                             _finalProperties = newFinalProperties ?? _finalProperties;
                         }
 
-                        query = query.WithParam(setParam, _finalProperties);
+                        query = query.WithParam(setParam, finalObject != null && _finalProperties == finalProperties ? finalObject : _finalProperties);
                         break;
                     }
                 case PropertiesBuildStrategy.NoParams:
                     {
                         value = finalProperties.Properties()
-                                .Select(jp => $"{jp.Name}: {queryUtilities.SerializeCallback(jp.Value)}")
+                                .Select(jp => $"{jp.Name}: {queryContext.SerializeCallback(jp.Value)}")
                                 .Aggregate((first, second) => $"{first}, {second}");
                         break;
                     }
@@ -619,16 +651,18 @@ namespace Neo4jClient.DataAnnotations.Cypher
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            var queryUtilities = Utilities.GetQueryUtilities(query);
+            var queryContext = CypherUtilities.GetQueryContext(query);
 
-            var buildStrategy = queryUtilities.CurrentBuildStrategy ?? defaultBuildStrategy;
+            var buildStrategy = queryContext.CurrentBuildStrategy ?? defaultBuildStrategy;
 
             if (!string.IsNullOrWhiteSpace(variable))
             {
                 //replace the variable
-                var replacer = new Expressions.ReplacerExpressionVisitor(new System.Collections.Generic.Dictionary<Expression, Expression>()
+                var newParamExpr = Expression.Parameter(typeof(T), variable);
+
+                var replacer = new ReplacerExpressionVisitor(new System.Collections.Generic.Dictionary<Expression, Expression>()
                 {
-                    { predicate.Parameters.First(), Expression.Parameter(typeof(T), variable) }
+                    { predicate.Parameters.First(),  newParamExpr }
                 });
 
                 predicate = replacer.Visit(predicate) as Expression<Func<T, bool>>;
@@ -638,10 +672,10 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 variable = predicate.Parameters[0].Name;
             }
 
-            var finalProperties = Utilities.GetFinalProperties(Utilities.GetConstraintsAsPropertiesLambda(predicate, typeof(T)),
-                queryUtilities, out var hasFunctions);
+            var finalProperties = CypherUtilities.GetFinalProperties(CypherUtilities.GetConstraintsAsPropertiesLambda(predicate, typeof(T)),
+                queryContext, out var hasFunctions);
 
-            var setParam = Utilities.GetRandomVariableFor($"{variable}_set");
+            var setParam = Utils.Utilities.GetRandomVariableFor($"{variable}_set");
             setParameter = setParam;
 
             buildStrategy = hasFunctions && buildStrategy == PropertiesBuildStrategy.WithParams ? 
@@ -655,7 +689,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 case PropertiesBuildStrategy.WithParamsForValues:
                     {
                         //in this type of SET statement, both WithParams, and WithParamsForValues are the same
-                        value = Utilities.BuildWithParamsForValues(finalProperties, queryUtilities.SerializeCallback,
+                        value = CypherUtilities.BuildWithParamsForValues(finalProperties, queryContext.SerializeCallback,
                                 getKey: (propertyName) => $"{variable}.{propertyName}", separator: " = ",
                                 getValue: (propertyName) => $"${setParam}.{propertyName}",
                                 hasRaw: out var hasRaw, newFinalProperties: out var newFinalProperties);
@@ -668,7 +702,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 case PropertiesBuildStrategy.NoParams:
                     {
                         value = finalProperties.Properties()
-                                .Select(jp => $"{variable}.{jp.Name} = {queryUtilities.SerializeCallback(jp.Value)}")
+                                .Select(jp => $"{variable}.{jp.Name} = {queryContext.SerializeCallback(jp.Value)}")
                                 .Aggregate((first, second) => $"{first}, {second}");
                         break;
                     }
@@ -785,7 +819,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
             var aggregatePropNames = propNames.Aggregate((first, second) => $"{first}, {second}");
 
-            var label = Neo4jAnnotations.GetEntityTypeInfo(typeof(T)).LabelsWithTypeNameCatch.First(); //you only set constraints on a label so the type has to be specific.
+            var label = query.GetAnnotationsContext().EntityService.GetEntityTypeInfo(typeof(T)).LabelsWithTypeNameCatch.First(); //you only set constraints on a label so the type has to be specific.
 
             return Clause(query, $"{clause} INDEX ON :{label}({aggregatePropNames})");
         }
@@ -915,7 +949,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
             var aggregatePropNames = propNames.Aggregate((first, second) => $"{first}, {second}");
 
-            var label = Neo4jAnnotations.GetEntityTypeInfo(typeof(T)).LabelsWithTypeNameCatch.First(); //you only set constraints on a label so the type has to be specific.
+            var label = query.GetAnnotationsContext().EntityService.GetEntityTypeInfo(typeof(T)).LabelsWithTypeNameCatch.First(); //you only set constraints on a label so the type has to be specific.
 
             var pattern = !isRelationship ? $"({properties.Parameters[0].Name}:{label})" : $"()-[{properties.Parameters[0].Name}:{label}]-()";
 
@@ -966,7 +1000,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <returns></returns>
         public static ICypherFluentQuery RemoveLabel<T>(this ICypherFluentQuery query, string variable)
         {
-            var labels = Neo4jAnnotations.GetEntityTypeInfo(typeof(T)).LabelsWithTypeNameCatch; //the type has to be there one way or another.
+            var labels = query.GetAnnotationsContext().EntityService.GetEntityTypeInfo(typeof(T)).LabelsWithTypeNameCatch; //the type has to be there one way or another.
             return RemoveMultipleLabels(query, variable, labels.First());
         }
 
@@ -981,7 +1015,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <returns></returns>
         public static ICypherFluentQuery RemoveAllLabels<T>(this ICypherFluentQuery query, string variable)
         {
-            var labels = Neo4jAnnotations.GetEntityTypeInfo(typeof(T)).LabelsWithTypeNameCatch; //the type has to be there one way or another.
+            var labels = query.GetAnnotationsContext().EntityService.GetEntityTypeInfo(typeof(T)).LabelsWithTypeNameCatch; //the type has to be there one way or another.
             return RemoveMultipleLabels(query, variable, labels.ToArray());
         }
 
@@ -996,7 +1030,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <returns></returns>
         public static ICypherFluentQuery RemoveMultipleLabels(this ICypherFluentQuery query, string variable, params Type[] labelTypes)
         {
-            var labels = labelTypes?.Select(lt => Utilities.GetLabel(lt, useTypeNameIfEmpty: true)).ToArray();
+            var labels = labelTypes?.Select(lt => Utils.Utilities.GetLabel(lt, useTypeNameIfEmpty: true)).ToArray();
 
             return RemoveMultipleLabels(query, variable, labels);
         }

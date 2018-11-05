@@ -1,4 +1,5 @@
 ﻿using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
@@ -41,39 +42,43 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
             if (previous == null)
             {
-                QueryUtilities = Utilities.GetQueryUtilities(query);
+                QueryContext = CypherUtilities.GetQueryContext(query);
 
                 CamelCaseProperties = (bool)query.GetType().GetField("CamelCaseProperties", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).GetValue(query);
-                FunctionVisitor = new FunctionExpressionVisitor(QueryUtilities);
+                FunctionVisitor = new FunctionExpressionVisitor(QueryContext);
             }
             else
             {
-                QueryUtilities = previous.QueryUtilities;
-                QueryUtilities.CurrentQueryWriter = QueryWriterGetter(query);
-                QueryUtilities.CurrentBuildStrategy = QueryUtilities.BuildStrategyGetter(query);
+                QueryContext = previous.QueryContext;
+                QueryContext.CurrentQueryWriter = QueryWriterGetter(query);
+                QueryContext.CurrentBuildStrategy = QueryContext.BuildStrategyGetter(query);
 
                 CamelCaseProperties = previous.CamelCaseProperties;
                 var funcsVisitor = previous.FunctionVisitor;
-                funcsVisitor.QueryUtilities = QueryUtilities;
+                funcsVisitor.QueryContext = QueryContext;
                 FunctionVisitor = funcsVisitor;
             }
+
+            var context = QueryContext?.AnnotationsContext ?? previous?.AnnotationsContext;
+            if (context != null)
+                AnnotationsContext = context;
         }
 
-        public QueryUtilities QueryUtilities { get; }
+        public QueryContext QueryContext { get; }
 
-        public IGraphClient Client => QueryUtilities?.Client;
+        public IGraphClient Client => QueryContext?.Client;
 
         public bool CamelCaseProperties { get; }
 
-        protected Func<ICypherFluentQuery, QueryWriter> QueryWriterGetter => QueryUtilities.QueryWriterGetter;
+        protected Func<ICypherFluentQuery, QueryWriter> QueryWriterGetter => QueryContext.QueryWriterGetter;
 
         protected QueryWriter QueryWriter { get { return QueryWriterGetter.Invoke(CypherQuery); } }
 
-        protected EntityConverter Converter => QueryUtilities?.Converter;
+        protected EntityConverter Converter => QueryContext?.Converter;
 
-        protected EntityResolver Resolver => QueryUtilities?.Resolver;
+        protected EntityResolver Resolver => QueryContext?.Resolver;
 
-        protected Func<object, string> Serializer => QueryUtilities?.SerializeCallback;
+        protected Func<object, string> Serializer => QueryContext?.SerializeCallback;
 
         private FunctionExpressionVisitor _funcVisitor;
         protected FunctionExpressionVisitor FunctionVisitor
@@ -82,8 +87,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
             {
                 if (_funcVisitor != null)
                 {
-                    _funcVisitor.QueryUtilities.CurrentQueryWriter = QueryWriter;
-                    _funcVisitor.QueryUtilities.CurrentBuildStrategy = QueryUtilities.BuildStrategyGetter(CypherQuery);
+                    _funcVisitor.QueryContext.CurrentQueryWriter = QueryWriter;
+                    _funcVisitor.QueryContext.CurrentBuildStrategy = QueryContext.BuildStrategyGetter(CypherQuery);
                 }
 
                 return _funcVisitor;
@@ -120,7 +125,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         protected LambdaExpression VisitForICypherResultItem(LambdaExpression expression)
         {
             //fish out all the parameterexpression accesses
-            var paramAccessStretchVisitor = new ParameterAccessStretchVisitor();
+            var paramAccessStretchVisitor = new ParameterAccessStretchVisitor(EntityService);
             paramAccessStretchVisitor.Visit(expression);
 
             var replacements = new Dictionary<Expression, Expression>();
@@ -129,7 +134,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             foreach (var paramAccess in paramAccessStretchVisitor.ParameterAccesses)
             {
                 //"As" expression itself should be index 1.
-                var paramAccessExprs = Utilities.GetSimpleMemberAccessStretch(paramAccess.Key, out var entityExpr);
+                var paramAccessExprs = ExpressionUtilities.GetSimpleMemberAccessStretch(EntityService, paramAccess.Key, out var entityExpr);
                 if (paramAccessExprs.Count >= 2)
                 {
                     var returnAsMethodCallExpr = paramAccessExprs[1] as MethodCallExpression;
@@ -146,7 +151,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                         .Value as string == paramAccess.Value.Name).Value is var varsGetExpr
                         && varsGetExpr == null) //try get existing vars.get call
                     {
-                        varsGetExpr = Utilities.GetVarsGetExpressionFor(paramAccess.Value.Name, sourceType);
+                        varsGetExpr = ExpressionUtilities.GetVarsGetExpressionFor(paramAccess.Value.Name, sourceType);
                     }
 
                     //replace the "As" call expression with our new parameter
@@ -174,8 +179,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
             //(u, v) => new User(){ Name = u.Id() } //member init
 
             expression = VisitForICypherResultItem(expression);
-            QueryUtilities.CurrentBuildStrategy = QueryUtilities.CurrentBuildStrategy ?? PropertiesBuildStrategy.WithParams;
-            var result = Utilities.BuildProjectionQueryExpression(expression, QueryUtilities, FunctionVisitor,
+            QueryContext.CurrentBuildStrategy = QueryContext.CurrentBuildStrategy ?? PropertiesBuildStrategy.WithParams;
+            var result = ExpressionUtilities.BuildProjectionQueryExpression(expression, QueryContext, FunctionVisitor,
                 out resultMode, out resultFormat);
 
             return result;
@@ -184,7 +189,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         #region Where
         protected string BuildWhereText(LambdaExpression expression)
         {
-            var vbCompareReplacerVisitor = Utilities.CreateInstance(VbCompareReplacerType, nonPublic: true) as ExpressionVisitor;
+            var vbCompareReplacerVisitor = Utils.Utilities.CreateInstance(VbCompareReplacerType, nonPublic: true) as ExpressionVisitor;
             var expr = vbCompareReplacerVisitor.Visit(expression) as LambdaExpression;
 
             //visit the expression

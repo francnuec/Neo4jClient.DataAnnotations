@@ -1,35 +1,41 @@
 ﻿using Neo4jClient.DataAnnotations.Cypher;
 using Neo4jClient.DataAnnotations.Serialization;
 using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.ComponentModel;
 
 namespace Neo4jClient.DataAnnotations.Expressions
 {
-    public partial class FunctionExpressionVisitor : ExpressionVisitor
+    public partial class FunctionExpressionVisitor : ExpressionVisitor, IHaveAnnotationsContext
     {
-        public FunctionExpressionVisitor(QueryUtilities queryUtilities, FunctionVisitorContext context = null)
+        public FunctionExpressionVisitor(QueryContext queryContext, FunctionVisitorContext context = null)
         {
-            QueryUtilities = queryUtilities;
+            QueryContext = queryContext ??  throw new ArgumentNullException(nameof(queryContext));
             Context = context ?? new FunctionVisitorContext();
             Context.Visitor = this;
         }
 
         public FunctionVisitorContext Context { get; }
 
+        public IAnnotationsContext AnnotationsContext => QueryContext.AnnotationsContext;
+
         public StringBuilder Builder { get; } = new StringBuilder();
 
-        public QueryUtilities QueryUtilities { get; internal set; }
+        public QueryContext QueryContext { get; internal set; }
 
-        public EntityResolver Resolver => QueryUtilities?.Resolver;
+        public EntityResolver Resolver => QueryContext?.Resolver;
 
-        public Func<object, string> Serializer => QueryUtilities?.SerializeCallback;
+        public Func<object, string> Serializer => QueryContext?.SerializeCallback;
 
         protected List<Expression> IgnoredNodes { get; private set; } = new List<Expression>();
         protected List<Expression> UnhandledNodes { get; private set; } = new List<Expression>();
+
+        public IEntityService EntityService => AnnotationsContext.EntityService;
 
         private FunctionHandlerContext handlerTestContext = null;
         private List<Func<FunctionHandlerContext, Func<Expression>>> canHandleHandlers
@@ -117,23 +123,23 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
             bool removeVariable = false;
 
-            if (!Utilities.HasVars(_unhandledNodes))
+            if (!Utils.Utilities.HasVars(_unhandledNodes))
             {
                 if (!_unhandledNodes.Any(n => n.NodeType == ExpressionType.MemberAccess))
                     return; //we need at least one memberaccess for this to work
 
                 //it doesn't have a vars get call, so add one
-                var randomVar = "_fev_" + Utilities.GetRandomVariableFor("fevr");
+                var randomVar = "_fev_" + Utils.Utilities.GetRandomVariableFor("fevr");
 
                 //create a Vars.Get call for this variable
-                var varsGetCallExpr = Utilities.GetVarsGetExpressionFor(randomVar, currentNode.Type);
+                var varsGetCallExpr = ExpressionUtilities.GetVarsGetExpressionFor(randomVar, currentNode.Type);
 
                 _unhandledNodes.Insert(0, varsGetCallExpr); //this is just going to be the header
 
                 removeVariable = true;
             }
 
-            var value = Utilities.BuildSimpleVars(_unhandledNodes, QueryUtilities, useResolvedJsonName: Context.UseResolvedJsonName);
+            var value = ExpressionUtilities.BuildSimpleVars(_unhandledNodes, QueryContext, useResolvedJsonName: Context.UseResolvedJsonName);
 
             if (string.IsNullOrWhiteSpace(value))
             {
@@ -262,26 +268,33 @@ namespace Neo4jClient.DataAnnotations.Expressions
         public virtual bool WriteArgument(Expression argExpr, bool isRawValue = false, bool writeOnlySimpleValue = false)
         {
             bool isContinuous = false, hasSimpleValue = false;
-            string argument = null;
+            object argumentObj = null;
+
+            Func<string> serializedArgumentGetter = null;
 
             try
             {
                 var _arg = argExpr.Uncast(out var cast);
                 isRawValue = isRawValue || _arg.Type == typeof(Newtonsoft.Json.Linq.JRaw);
 
-                var result = _arg.ExecuteExpression<object>();
+                argumentObj = _arg.ExecuteExpression<object>();
 
-                argument = Serializer(result);
-
-                if (isRawValue
-                    && _arg.Type != typeof(Newtonsoft.Json.Linq.JRaw)
-                    && !string.IsNullOrWhiteSpace(argument)
-                    && argument.StartsWith("\"")
-                    && argument.EndsWith("\""))
+                serializedArgumentGetter = () =>
                 {
-                    //remove the quotation
-                    argument = argument.Substring(0, argument.Length - 1).Remove(0, 1);
-                }
+                    var _argument = Serializer(argumentObj);
+
+                    if (isRawValue
+                        && _arg.Type != typeof(Newtonsoft.Json.Linq.JRaw)
+                        && !string.IsNullOrWhiteSpace(_argument)
+                        && _argument.StartsWith("\"")
+                        && _argument.EndsWith("\""))
+                    {
+                        //remove the quotation
+                        _argument = _argument.Substring(0, _argument.Length - 1).Remove(0, 1);
+                    }
+
+                    return _argument;
+                };
 
                 isContinuous = hasSimpleValue = true;
             }
@@ -295,7 +308,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
             if (!hasSimpleValue)
             {
                 //maybe a vars call
-                var exprs = Utilities.GetSimpleMemberAccessStretch(argExpr, out var entity, out isContinuous);
+                var exprs = ExpressionUtilities.GetSimpleMemberAccessStretch(EntityService, argExpr, out var entity, out isContinuous);
             }
 
             if (!isContinuous)
@@ -304,12 +317,23 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
             if (hasSimpleValue)
             {
+                string argument = null;
+                if (argumentObj == null)
+                {
+                    argument = serializedArgumentGetter();
+                }
+
                 if (!isRawValue //never use params for raw values.
                     && Context.BuildStrategy != PropertiesBuildStrategy.NoParams
                     && Context.CreateParameter != null)
                 {
-                    argument = Context.CreateParameter(argument);
-                    argument = Utilities.GetNewNeo4jParameterSyntax(argument);
+                    argument = Context.CreateParameter(argumentObj ?? argument);
+                    argument = Utils.Utilities.GetNewNeo4jParameterSyntax(argument);
+                }
+                else
+                {
+                    if (argument == null)
+                        argument = serializedArgumentGetter();
                 }
 
                 Builder.Append(argument);

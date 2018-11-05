@@ -1,13 +1,14 @@
 ﻿using Neo4jClient.DataAnnotations.Cypher;
 using Neo4jClient.DataAnnotations.Serialization;
 using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace Neo4jClient.DataAnnotations.Expressions
 {
-    public class FunctionVisitorContext
+    public class FunctionVisitorContext : IHaveAnnotationsContext
     {
         protected internal FunctionExpressionVisitor Visitor { get; set; }
 
@@ -35,7 +36,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
         {
             get
             {
-                if (Visitor?.QueryUtilities?.CurrentQueryWriter is var qw && qw != null)
+                if (Visitor?.QueryContext?.CurrentQueryWriter is var qw && qw != null)
                     return qw.CreateParameter;
 
                 return null;
@@ -46,19 +47,23 @@ namespace Neo4jClient.DataAnnotations.Expressions
         {
             get
             {
-                if (Visitor?.QueryUtilities?.CurrentQueryWriter is var qw && qw != null)
+                if (Visitor?.QueryContext?.CurrentQueryWriter is var qw && qw != null)
                     return qw.CreateParameter;
 
                 return null;
             }
         }
 
-        public PropertiesBuildStrategy BuildStrategy => Visitor?.QueryUtilities?.CurrentBuildStrategy ?? 
+        public PropertiesBuildStrategy BuildStrategy => Visitor?.QueryContext?.CurrentBuildStrategy ?? 
             (CreateParameter != null ? PropertiesBuildStrategy.WithParams : PropertiesBuildStrategy.NoParams);
 
         /// <summary>
         /// Any other information/options that may be needed by methods should be added here.
         /// </summary>
         public Dictionary<string, object> Misc { get; set; } = new Dictionary<string, object>();
+
+        public IAnnotationsContext AnnotationsContext => Visitor?.AnnotationsContext;
+
+        public IEntityService EntityService => AnnotationsContext?.EntityService;
     }
 }

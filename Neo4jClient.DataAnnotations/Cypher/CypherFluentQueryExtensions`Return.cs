@@ -1,4 +1,5 @@
 ﻿using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Linq.Expressions;
 using System.Linq;
 using Neo4jClient.Cypher;

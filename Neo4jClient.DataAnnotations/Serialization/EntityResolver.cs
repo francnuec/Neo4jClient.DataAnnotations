@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Serialization;
 using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
@@ -8,13 +9,24 @@ using System.Reflection;
 
 namespace Neo4jClient.DataAnnotations.Serialization
 {
-    public class EntityResolver : DefaultContractResolver
+    public class EntityResolver : DefaultContractResolver, IHaveAnnotationsContext
     {
+        public EntityResolver()
+        {
+            DeserializeConverter = new EntityResolverConverter(this);
+        }
+
+        public virtual IAnnotationsContext AnnotationsContext { get; internal set; }
+
+        public virtual EntityResolverConverter DeserializeConverter { get; }
+
+        public IEntityService EntityService => AnnotationsContext.EntityService;
+
         protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
         {
             var _props = base.CreateProperties(type, memberSerialization);
 
-            if (Neo4jAnnotations.ContainsEntityType(type))
+            if (EntityService.ContainsEntityType(type))
             {
                 var isComplex = type.IsComplex();
 
@@ -31,7 +43,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
                     properties.Add(prop);
                 }
 
-                var typeInfo = Neo4jAnnotations.GetEntityTypeInfo(type);
+                var typeInfo = EntityService.GetEntityTypeInfo(type);
 
                 //check for complextypes
                 var complexTypedProperties = typeInfo.ComplexTypedProperties;
@@ -55,12 +67,12 @@ namespace Neo4jClient.DataAnnotations.Serialization
                     {
                         //get the complexTypedProperty's own jsonproperties
                         //include derived classes
-                        var derivedTypes = Neo4jAnnotations.GetDerivedEntityTypes(complexTypedJsonProp.Key.PropertyType)?
+                        var derivedTypes = EntityService.GetDerivedEntityTypes(complexTypedJsonProp.Key.PropertyType)?
                             .Where(t => t.IsComplex()).ToList();
 
                         if (derivedTypes == null || derivedTypes.Count == 0)
                         {
-                            Neo4jAnnotations.AddEntityType(complexTypedJsonProp.Key.PropertyType);
+                            EntityService.AddEntityType(complexTypedJsonProp.Key.PropertyType);
                             derivedTypes = new List<Type>() { complexTypedJsonProp.Key.PropertyType };
                         }
 
@@ -125,41 +137,43 @@ namespace Neo4jClient.DataAnnotations.Serialization
             return _props;
         }
 
-        protected virtual JsonProperty GetJsonPropertyDuplicate(JsonProperty prop)
+        protected virtual EntityJsonProperty GetJsonPropertyDuplicate(JsonProperty prop)
         {
-            var newProp = new JsonProperty()
-            {
-                AttributeProvider = prop.AttributeProvider,
-                Converter = prop.Converter,
-                DeclaringType = prop.DeclaringType,
-                DefaultValue = prop.DefaultValue,
-                DefaultValueHandling = prop.DefaultValueHandling,
-                GetIsSpecified = prop.GetIsSpecified,
-                HasMemberAttribute = prop.HasMemberAttribute,
-                Ignored = prop.Ignored,
-                IsReference = prop.IsReference,
-                ItemConverter = prop.ItemConverter,
-                ItemIsReference = prop.ItemIsReference,
-                ItemReferenceLoopHandling = prop.ItemReferenceLoopHandling,
-                ItemTypeNameHandling = prop.ItemTypeNameHandling,
-                MemberConverter = prop.MemberConverter,
-                NullValueHandling = prop.NullValueHandling,
-                ObjectCreationHandling = prop.ObjectCreationHandling,
-                Order = prop.Order,
-                PropertyName = prop.PropertyName,
-                PropertyType = prop.PropertyType,
-                Readable = prop.Readable,
-                ReferenceLoopHandling = prop.ReferenceLoopHandling,
-                Required = prop.Required,
-                SetIsSpecified = prop.SetIsSpecified,
-                ShouldDeserialize = prop.ShouldDeserialize,
-                ShouldSerialize = prop.ShouldSerialize,
-                TypeNameHandling = prop.TypeNameHandling,
-                UnderlyingName = prop.UnderlyingName,
-                ValueProvider = prop.ValueProvider,
-                Writable = prop.Writable
+            var newProp = new EntityJsonProperty(prop);
 
-            };
+            //var newProp = new JsonProperty()
+            //{
+            //    AttributeProvider = prop.AttributeProvider,
+            //    Converter = prop.Converter,
+            //    DeclaringType = prop.DeclaringType,
+            //    DefaultValue = prop.DefaultValue,
+            //    DefaultValueHandling = prop.DefaultValueHandling,
+            //    GetIsSpecified = prop.GetIsSpecified,
+            //    HasMemberAttribute = prop.HasMemberAttribute,
+            //    Ignored = prop.Ignored,
+            //    IsReference = prop.IsReference,
+            //    ItemConverter = prop.ItemConverter,
+            //    ItemIsReference = prop.ItemIsReference,
+            //    ItemReferenceLoopHandling = prop.ItemReferenceLoopHandling,
+            //    ItemTypeNameHandling = prop.ItemTypeNameHandling,
+            //    MemberConverter = prop.MemberConverter,
+            //    NullValueHandling = prop.NullValueHandling,
+            //    ObjectCreationHandling = prop.ObjectCreationHandling,
+            //    Order = prop.Order,
+            //    PropertyName = prop.PropertyName,
+            //    PropertyType = prop.PropertyType,
+            //    Readable = prop.Readable,
+            //    ReferenceLoopHandling = prop.ReferenceLoopHandling,
+            //    Required = prop.Required,
+            //    SetIsSpecified = prop.SetIsSpecified,
+            //    ShouldDeserialize = prop.ShouldDeserialize,
+            //    ShouldSerialize = prop.ShouldSerialize,
+            //    TypeNameHandling = prop.TypeNameHandling,
+            //    UnderlyingName = prop.UnderlyingName,
+            //    ValueProvider = prop.ValueProvider,
+            //    Writable = prop.Writable
+
+            //};
 
             return newProp;
         }
@@ -171,6 +185,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
             //set complex name
             newChild.PropertyName = $"{complexTypedProperty.PropertyName}{Defaults.ComplexTypeNameSeparator}{child.PropertyName}";
+            newChild.ComplexUnderlyingName = $"{complexTypedProperty.GetComplexOrActualUnderlyingName()}{Defaults.ComplexTypeNameSeparator}{child.UnderlyingName}";
 
             //set new value provider
             newChild.ValueProvider = new ComplexTypedPropertyValueProvider
@@ -191,7 +206,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
             {
                 var propertyInfo = entity.GetType().GetProperty(parentActualName);
                 var parentValue = propertyInfo.GetValue(entity);
-                Utilities.CheckIfComplexTypeInstanceIsNull(parentValue, parentActualName, propertyInfo.DeclaringType);
+                Utils.Utilities.CheckIfComplexTypeInstanceIsNull(parentValue, parentActualName, propertyInfo.DeclaringType);
 
                 var parentValueType = parentValue.GetType();
 

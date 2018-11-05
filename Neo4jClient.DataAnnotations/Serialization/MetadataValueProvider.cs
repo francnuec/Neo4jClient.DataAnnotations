@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Serialization;
 using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
@@ -23,7 +24,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
         public object GetValue(object target)
         {
             //serialize metadata
-            var ret = Utilities.SerializeMetadata(BuildMetadata(target));
+            var ret = SerializationUtilities.SerializeMetadata(BuildMetadata(target));
             return ret;
         }
 
@@ -34,7 +35,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
             if (value != null && (metadataJson = value as string) != null)
             {
                 //deserialize
-                var metadata = Utilities.DeserializeMetadata(metadataJson);
+                var metadata = SerializationUtilities.DeserializeMetadata(metadataJson);
 
                 if (metadata?.NullProperties?.Count > 0 && Properties?.Count > 0)
                 {

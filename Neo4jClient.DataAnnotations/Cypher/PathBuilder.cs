@@ -1,5 +1,6 @@
 ﻿using Neo4jClient.Cypher;
 using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Text;
 using System.Linq.Expressions;
 
@@ -7,21 +8,24 @@ namespace Neo4jClient.DataAnnotations.Cypher
 {
     public class PathBuilder : Annotated, IPathBuilder //, IPathFinish
     {
-        public PathBuilder(ICypherFluentQuery query)
-            :base(query)
+        public PathBuilder(ICypherFluentQuery query, IAnnotationsContext context = null)
+            :base(query, context)
         {
 
         }
 
-        public PathBuilder(ICypherFluentQuery query, Expression<Func<IPathBuilder, IPathExtent>> expression)
-            : this(query)
+        public PathBuilder(ICypherFluentQuery query, 
+            Expression<Func<IPathBuilder, IPathExtent>> expression,
+            IAnnotationsContext context = null)
+            : this(query, context)
         {
             Path = expression?.Compile().Invoke(this);
             PathVariable = expression?.Parameters[0].Name;
         }
 
-        public PathBuilder(ICypherFluentQuery query, IPathExtent path, string pathVariable)
-            : this(query)
+        public PathBuilder(ICypherFluentQuery query, IPathExtent path,
+            string pathVariable, IAnnotationsContext context)
+            : this(query, context)
         {
             Path = path;
             PathVariable = pathVariable;

@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using NSubstitute;
 using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Text;
 using Xunit;
@@ -18,12 +19,10 @@ namespace Neo4jClient.DataAnnotations.Tests
     public class PathTests
     {
         [Theory]
-        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
-        public void PatternNoParamsStrategy_Build(string serializerName, EntityResolver resolver, EntityConverter converter)
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void PatternNoParamsStrategy_Build(string testContextName, TestContext testContext)
         {
-            TestUtilities.RegisterEntityTypes(resolver, converter);
-
-            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+            var query = testContext.Query;
 
             Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
                 .Extend(RelationshipDirection.Outgoing);
@@ -42,12 +41,10 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
-        public void PatternWithParamsStrategy_Build(string serializerName, EntityResolver resolver, EntityConverter converter)
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void PatternWithParamsStrategy_Build(string testContextName, TestContext testContext)
         {
-            TestUtilities.RegisterEntityTypes(resolver, converter);
-
-            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+            var query = testContext.Query;
 
             Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPathMixed(P)
                 .Extend(RelationshipDirection.Outgoing);
@@ -68,12 +65,10 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
-        public void PatternWithParamsForValuesStrategy_Build(string serializerName, EntityResolver resolver, EntityConverter converter)
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void PatternWithParamsForValuesStrategy_Build(string testContextName, TestContext testContext)
         {
-            TestUtilities.RegisterEntityTypes(resolver, converter);
-
-            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+            var query = testContext.Query;
 
             Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
                 .Extend(RelationshipDirection.Outgoing);
@@ -94,12 +89,10 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
-        public void AssignPathParameter_Build(string serializerName, EntityResolver resolver, EntityConverter converter)
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void AssignPathParameter_Build(string testContextName, TestContext testContext)
         {
-            TestUtilities.RegisterEntityTypes(resolver, converter);
-
-            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+            var query = testContext.Query;
 
             Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
                 .Extend(RelationshipDirection.Outgoing)
@@ -119,12 +112,10 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         [Theory]
-        [MemberData(nameof(TestUtilities.SerializerData), MemberType = typeof(TestUtilities))]
-        public void FindShortestPath_Build(string serializerName, EntityResolver resolver, EntityConverter converter)
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void FindShortestPath_Build(string testContextName, TestContext testContext)
         {
-            TestUtilities.RegisterEntityTypes(resolver, converter);
-
-            var query = TestUtilities.GetCypherQuery(out var client, out var serializer);
+            var query = testContext.Query;
 
             Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
                 .Shortest(); //adds the shortestPath function and consequently assigns path parameter

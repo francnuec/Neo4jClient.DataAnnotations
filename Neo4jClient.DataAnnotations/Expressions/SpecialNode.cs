@@ -1,6 +1,7 @@
 ﻿using Neo4jClient.DataAnnotations.Cypher;
 using Neo4jClient.DataAnnotations.Serialization;
 using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
@@ -25,7 +26,8 @@ namespace Neo4jClient.DataAnnotations.Expressions
         private List<Expression> filtered;
         public List<Expression> Filtered
         {
-            get { return filtered ?? (Node != null ? (filtered = Utilities.GetSimpleMemberAccessStretch(Node, out filteredVal)) : null); }
+            get { return filtered ?? (Node != null ? (filtered = ExpressionUtilities.GetSimpleMemberAccessStretch
+                    (Visitor.EntityService, Node, out filteredVal)) : null); }
             protected internal set { filtered = value; }
         }
 
@@ -69,7 +71,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
             {
                 if (concreteValue == null)
                 {
-                    concreteValue = ResolveConcreteValue(this, Visitor.QueryUtilities, useResolvedJsonName: null);
+                    concreteValue = ResolveConcreteValue(this, Visitor.QueryContext, useResolvedJsonName: null);
                 }
 
                 return concreteValue;
@@ -82,7 +84,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         public bool FoundWhileVisitingPredicate { get; protected internal set; }
 
-        public static object ResolveConcreteValue(SpecialNode specialNode, QueryUtilities queryUtilities,
+        public static object ResolveConcreteValue(SpecialNode specialNode, QueryContext queryContext,
             bool? useResolvedJsonName = null)
         {
             object ret = null;
@@ -94,7 +96,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
             catch
             {
                 //maybe has functions/variables that can be handled
-                var varsVisitor = new FunctionExpressionVisitor(queryUtilities, new FunctionVisitorContext()
+                var varsVisitor = new FunctionExpressionVisitor(queryContext, new FunctionVisitorContext()
                 {
                     UseResolvedJsonName = useResolvedJsonName,
                 });

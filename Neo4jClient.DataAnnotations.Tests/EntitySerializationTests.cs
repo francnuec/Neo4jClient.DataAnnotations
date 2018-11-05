@@ -1,11 +1,14 @@
-﻿using Neo4jClient.DataAnnotations.Cypher;
+﻿using Neo4jClient.Cypher;
+using Neo4jClient.DataAnnotations.Cypher;
 using Neo4jClient.DataAnnotations.Serialization;
 using Neo4jClient.DataAnnotations.Tests.Models;
+using Neo4jClient.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using NSubstitute;
 using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -17,43 +20,22 @@ namespace Neo4jClient.DataAnnotations.Tests
 {
     public class EntitySerializationTests
     {
-        public static List<object[]> SerializerData { get; } = new List<object[]>()
-        {
-            new object[] { "ConverterSerializer", TestUtilities.SerializeWithConverter },
-            new object[] { "ResolverSerializer", TestUtilities.SerializeWithResolver },
-        };
-
-        public static List<object[]> DeserializerData { get; } = new List<object[]>()
-        {
-            new object[] { "ConverterSerializerSettings", TestUtilities.SerializerSettingsWithConverter },
-            new object[] { "ResolverSerializerSettings", TestUtilities.SerializerSettingsWithResolver },
-        };
-
         [Theory]
-        [MemberData(nameof(SerializerData), MemberType = typeof(EntitySerializationTests))]
-        public void NullComplexTypePropertyWrite_InvalidOperationException(string serializerName, Func<object, string> serializer)
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void NullComplexTypePropertyWrite_InvalidOperationException
+            (string testContextName, TestContext testContext)
         {
-            if (serializerName.StartsWith("Resolver"))
-                TestUtilities.RegisterEntityTypes(TestUtilities.Resolver, null);
-            else
-                TestUtilities.RegisterEntityTypes(null, TestUtilities.Converter);
-
             var actor = new ActorNode();
 
-            var ex = Assert.Throws<InvalidOperationException>(() => serializer(actor));
+            var ex = Assert.Throws<InvalidOperationException>(() => testContext.Serializer(actor));
 
             Assert.Equal(string.Format(Messages.NullComplexTypePropertyError, "Address", "PersonNode"), ex.Message);
         }
 
         [Theory]
-        [MemberData(nameof(SerializerData), MemberType = typeof(EntitySerializationTests))]
-        public void EntityWrite(string serializerName, Func<object, string> serializer)
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void EntityWrite(string testContextName, TestContext testContext)
         {
-            if (serializerName.StartsWith("Resolver"))
-                TestUtilities.RegisterEntityTypes(TestUtilities.Resolver, null);
-            else
-                TestUtilities.RegisterEntityTypes(null, TestUtilities.Converter);
-
             var actor = new ActorNode<int>()
             {
                 Name = "Ellen Pompeo",
@@ -74,7 +56,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 }
             };
 
-            var serialized = serializer(actor);
+            var serialized = testContext.Serializer(actor);
 
             Dictionary<string, Tuple<JTokenType, dynamic>> tokensExpected = new Dictionary<string, Tuple<JTokenType, dynamic>>()
             {
@@ -118,14 +100,14 @@ namespace Neo4jClient.DataAnnotations.Tests
                 catch
                 {
                     //double check
-                    Assert.Equal(serializer(tokenExpected.Item2), serializer(property.Value));
+                    Assert.Equal(testContext.Serializer(tokenExpected.Item2), testContext.Serializer(property.Value));
                 }
             }
         }
 
         [Theory]
-        [MemberData(nameof(DeserializerData), MemberType = typeof(EntitySerializationTests))]
-        public void EntityRead(string settingsName, JsonSerializerSettings deserializerSettings)
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void EntityRead(string testContextName, TestContext testContext)
         {
             Dictionary<string, dynamic> actorTokens = new Dictionary<string, dynamic>()
             {
@@ -146,14 +128,9 @@ namespace Neo4jClient.DataAnnotations.Tests
                 { "__ncdannotationsmeta__", "{\"null_props\":[\"NewAddressName_AddressLine\",\"NewAddressName_City\",\"NewAddressName_State\",\"NewAddressName_Country\"]}" }
             };
 
-            if (settingsName.StartsWith("Resolver"))
-                TestUtilities.RegisterEntityTypes(TestUtilities.Resolver, null);
-            else
-                TestUtilities.RegisterEntityTypes(null, TestUtilities.Converter);
-
             var actorJObject = JObject.FromObject(actorTokens);
 
-            var serializer = JsonSerializer.CreateDefault(deserializerSettings);
+            var serializer = JsonSerializer.CreateDefault(testContext.DeserializerSettings);
 
             var actor = actorJObject.ToObject<ActorNode<int>>(serializer);
 
@@ -161,7 +138,8 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             Assert.Equal(typeof(ActorNode<int>), actor.GetType());
 
-            var actorContract = TestUtilities.Resolver.ResolveContract(actor.GetType());
+            var resolverTestContext = new ResolverTestContext();
+            var actorContract = resolverTestContext.AnnotationsContext.EntityResolver.ResolveContract(actor.GetType());
 
             var jsonProperties = (actorContract as JsonObjectContract)?.Properties;
 

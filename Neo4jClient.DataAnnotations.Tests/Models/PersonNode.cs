@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;

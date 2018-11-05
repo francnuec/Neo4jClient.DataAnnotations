@@ -1,11 +1,10 @@
-﻿using Neo4jClient.DataAnnotations.Cypher;
-using Neo4jClient.DataAnnotations.Cypher.Extensions;
+﻿using Neo4jClient.DataAnnotations.Cypher.Extensions;
 using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using static Neo4jClient.DataAnnotations.Expressions.FunctionExpressionVisitor;
 
 namespace Neo4jClient.DataAnnotations.Expressions
 {
@@ -98,7 +97,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 return () =>
                 {
                     //convert this to a vars call
-                    var varsGetCallExpr = Utilities.GetVarsGetExpressionFor(node.Name, node.Type);
+                    var varsGetCallExpr = ExpressionUtilities.GetVarsGetExpressionFor(node.Name, node.Type);
 
                     //trigger the vars write
                     context.Visitor.Ignore(node);
@@ -157,7 +156,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
                     Expression operandNode = node.Left != nullNode ? node.Left : node.Right;
 
-                    var genericMethodInfo = Utilities.GetGenericMethodInfo(Defaults.IsNullMethodInfo, operandNode.Type);
+                    var genericMethodInfo = Utils.Utilities.GetGenericMethodInfo(Defaults.IsNullMethodInfo, operandNode.Type);
                     MethodCallExpression methodCall = Expression.Call(genericMethodInfo, operandNode);
 
                     //trigger the IS NULL write
@@ -196,7 +195,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
                     Expression operandNode = node.Left != nullNode ? node.Left : node.Right;
 
-                    var genericMethodInfo = Utilities.GetGenericMethodInfo(Defaults.IsNotNullMethodInfo, operandNode.Type);
+                    var genericMethodInfo = Utils.Utilities.GetGenericMethodInfo(Defaults.IsNotNullMethodInfo, operandNode.Type);
                     MethodCallExpression methodCall = Expression.Call(genericMethodInfo, operandNode);
 
                     //trigger the IS NOT NULL write
@@ -912,7 +911,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     //would be: source + arg
                     var sourceGenericType = methodInfo.GetGenericArguments()[0];
 
-                    var concatMethod = Utilities.GetGenericMethodInfo(Utilities.GetMethodInfo
+                    var concatMethod = Utils.Utilities.GetGenericMethodInfo(Utils.Utilities.GetMethodInfo
                         (() => Enumerable.Concat<object>(null, null)), sourceGenericType);
 
                     var concatMethodCall = Expression.Call(concatMethod, methodCallExpr.Arguments); //i.e., Concat(source, arg)
@@ -951,18 +950,18 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     var argExpr = methodCallExpr.Arguments[1];
                     var sourceGenericType = methodInfo.GetGenericArguments()[0];
 
-                    var randomVar = $"_is_{Utilities.GetRandomVariableFor("isect")}_rdm_";
+                    var randomVar = $"_is_{Utils.Utilities.GetRandomVariableFor("isect")}_rdm_";
                     var parameter = Expression.Parameter(sourceGenericType, randomVar);
 
-                    var containsMethod = Utilities.GetGenericMethodInfo(
-                        Utilities.GetMethodInfo(() => Enumerable.Contains<object>(null, null)), sourceGenericType);
+                    var containsMethod = Utils.Utilities.GetGenericMethodInfo(
+                        Utils.Utilities.GetMethodInfo(() => Enumerable.Contains<object>(null, null)), sourceGenericType);
 
                     var containsMethodCall = Expression.Call(containsMethod, argExpr, parameter); //i.e., Contains(arg, randomVar)
 
                     var predicateExpr = Expression.Lambda(containsMethodCall, parameter); //i.e., randomVar => Contains(arg, randomVar)
 
-                    var whereMethod = Utilities.GetGenericMethodInfo(
-                        Utilities.GetMethodInfo(() => Enumerable.Where<object>(null, f => false)), sourceGenericType);
+                    var whereMethod = Utils.Utilities.GetGenericMethodInfo(
+                        Utils.Utilities.GetMethodInfo(() => Enumerable.Where<object>(null, f => false)), sourceGenericType);
 
                     var whereMethodCall = Expression.Call(whereMethod, sourceExpr, predicateExpr); //i.e., Where(source, randomVar => arg.Contains(randomVar))
 
@@ -1219,16 +1218,16 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     var sourceEnumerableExpr = methodCallExpr.Arguments[0];
                     var sourceType = methodInfo.GetGenericArguments()[0];
 
-                    var randomVar = $"_ea_{Utilities.GetRandomVariableFor("any")}_rdm_";
+                    var randomVar = $"_ea_{Utils.Utilities.GetRandomVariableFor("any")}_rdm_";
                     var parameter = Expression.Parameter(sourceType, randomVar);
 
-                    var isNotNullMethod = Utilities.GetGenericMethodInfo(
-                        Utilities.GetMethodInfo(() => ObjectExtensions.IsNotNull<object>(null)), sourceType);
+                    var isNotNullMethod = Utils.Utilities.GetGenericMethodInfo(
+                        Utils.Utilities.GetMethodInfo(() => ObjectExtensions.IsNotNull<object>(null)), sourceType);
 
                     var isNotNullMethodCall = Expression.Call(isNotNullMethod, parameter); //i.e., randomVar.IsNotNull()
 
-                    var anyWithPredicateMethod = Utilities.GetGenericMethodInfo(
-                        Utilities.GetMethodInfo(() => Enumerable.Any<object>(null, null)), sourceType);
+                    var anyWithPredicateMethod = Utils.Utilities.GetGenericMethodInfo(
+                        Utils.Utilities.GetMethodInfo(() => Enumerable.Any<object>(null, null)), sourceType);
 
                     var predicateExpr = Expression.Lambda(isNotNullMethodCall, parameter); //i.e., randomVar => randomVar.IsNotNull()
 

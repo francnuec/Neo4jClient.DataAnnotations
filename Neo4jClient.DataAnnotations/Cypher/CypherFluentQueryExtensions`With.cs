@@ -1,4 +1,5 @@
 ﻿using System;
+using Neo4jClient.DataAnnotations.Utils;
 using System.Linq.Expressions;
 using System.Linq;
 using Neo4jClient.Cypher;
@@ -12,10 +13,10 @@ namespace Neo4jClient.DataAnnotations.Cypher
         internal static ICypherFluentQuery<TResult> SharedProjectionQuery<TResult>
             (this ICypherFluentQuery query, LambdaExpression expression, string clause, bool applyResultMode = true, bool applyResultFormat = true)
         {
-            var queryUtilities = Utilities.GetQueryUtilities(query);
-            queryUtilities.CurrentBuildStrategy = queryUtilities.CurrentBuildStrategy ?? PropertiesBuildStrategy.WithParams;
-            var funcVisitor = new FunctionExpressionVisitor(queryUtilities);
-            var result = Utilities.BuildProjectionQueryExpression(expression, queryUtilities, funcVisitor, out var mode, out var format);
+            var queryContext = CypherUtilities.GetQueryContext(query);
+            queryContext.CurrentBuildStrategy = queryContext.CurrentBuildStrategy ?? PropertiesBuildStrategy.WithParams;
+            var funcVisitor = new FunctionExpressionVisitor(queryContext);
+            var result = ExpressionUtilities.BuildProjectionQueryExpression(expression, queryContext, funcVisitor, out var mode, out var format);
 
             return Mutate<TResult>(query, w =>
             {
