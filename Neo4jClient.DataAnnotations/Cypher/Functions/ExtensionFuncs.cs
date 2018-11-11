@@ -19,7 +19,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static List<TSource> Collect<TSource>(this TSource source)
         {
-            return new List<TSource>() { }; //doing our best to return something asides null so our methods compile
+            throw new NotImplementedException(Messages.FunctionsInvokeError); //return new List<TSource>() { }; //doing our best to return something asides null so our methods compile
         }
 
         /// <summary>
@@ -29,7 +29,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static int Length<TSource>(this TSource source)
         {
-            return 0;
+            throw new NotImplementedException(Messages.FunctionsInvokeError); //return 0;
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static bool Exists<TSource>(this TSource source)
         {
-            return false;
+            throw new NotImplementedException(Messages.FunctionsInvokeError); //return false;
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static int Size<TSource>(this TSource source)
         {
-            return 0;
+            throw new NotImplementedException(Messages.FunctionsInvokeError); //return 0;
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static int Id<TSource>(this TSource source)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -69,7 +69,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static string Type<TSource>(this TSource source)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static CypherObject Properties<TSource>(this TSource source)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -89,7 +89,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static double Average<TSource>(this TSource source)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -99,7 +99,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static TSource Max<TSource>(this TSource source)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static TSource Min<TSource>(this TSource source)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static double Sum<TSource>(this TSource source)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static TReturn StartNode<TReturn>(this object source)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -139,7 +139,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static TReturn EndNode<TReturn>(this object source)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -149,7 +149,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static int Count<TSource>(this TSource source)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -159,7 +159,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static List<string> Keys<TSource>(this TSource source)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -169,7 +169,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static List<string> Labels<TSource>(this TSource source)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -179,7 +179,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static List<TReturn> Nodes<TReturn>(this object source)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -189,7 +189,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static List<TReturn> Relationships<TReturn>(this object source)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -199,7 +199,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static TSource Distinct<TSource>(this TSource source)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -209,7 +209,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static List<TSource> Tail<TSource>(this IEnumerable<TSource> source)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -219,7 +219,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static double StandardDeviation<TSource>(this TSource source)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -229,7 +229,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static double StandardDeviationP<TSource>(this TSource source)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -239,7 +239,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static double PercentileCont<TSource>(this TSource source, double percentile)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -249,7 +249,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static int PercentileDisc<TSource>(this TSource source, double percentile)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -261,7 +261,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static bool None<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
 
         /// <summary>
@@ -273,7 +273,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <returns></returns>
         public static bool Single<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
         }
     }
 }

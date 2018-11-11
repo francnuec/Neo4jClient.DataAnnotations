@@ -212,9 +212,9 @@ namespace Neo4jClient.DataAnnotations.Utils
                     && (callExpr.Method.Name.StartsWith("_As")
                     && callExpr.Method.DeclaringType == Defaults.ObjectExtensionsType)):
                     {
-                        var unary = (expression as UnaryExpression);
                         if (castToRemove == null || castToRemove == expression.Type)
                         {
+                            var unary = (expression as UnaryExpression);
                             castRemoved = expression.Type;
                             return unary?.Operand ?? callExpr?.Arguments[0];
                         }

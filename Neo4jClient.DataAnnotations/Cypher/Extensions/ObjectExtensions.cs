@@ -32,19 +32,21 @@ namespace Neo4jClient.DataAnnotations.Cypher.Extensions
         /// <returns></returns>
         public static TReturn _As<TReturn>(this object obj)
         {
-            //do something, just in case this method was executed
-            TReturn ret = default(TReturn);
+            throw new NotImplementedException(Messages.DummyMethodInvokeError);
 
-            try
-            {
-                ret = (TReturn)obj;
-            }
-            catch
-            {
+            ////do something, just in case this method was executed
+            //TReturn ret = default(TReturn);
 
-            }
+            //try
+            //{
+            //    ret = (TReturn)obj;
+            //}
+            //catch
+            //{
 
-            return ret;
+            //}
+
+            //return ret;
         }
 
         /// <summary>
@@ -57,19 +59,21 @@ namespace Neo4jClient.DataAnnotations.Cypher.Extensions
         /// <returns></returns>
         public static List<TReturn> _AsList<TReturn>(this object obj)
         {
-            //do something, just in case this method was executed
-            List<TReturn> ret = null;
+            throw new NotImplementedException(Messages.DummyMethodInvokeError);
 
-            try
-            {
-                ret = (List<TReturn>)obj;
-            }
-            catch
-            {
+            ////do something, just in case this method was executed
+            //List<TReturn> ret = null;
 
-            }
+            //try
+            //{
+            //    ret = (List<TReturn>)obj;
+            //}
+            //catch
+            //{
 
-            return ret;
+            //}
+
+            //return ret;
         }
 
         /// <summary>
@@ -82,18 +86,20 @@ namespace Neo4jClient.DataAnnotations.Cypher.Extensions
         /// <returns></returns>
         public static List<TSource> _AsList<TSource>(this TSource obj)
         {
-            //do something, just in case this method was executed
-            List<TSource> ret = _AsList<TSource>(obj as object);
+            throw new NotImplementedException(Messages.DummyMethodInvokeError);
 
-            try
-            {
-                ret = new List<TSource>() { obj };
-            }
-            catch
-            {
-            }
+            ////do something, just in case this method was executed
+            //List<TSource> ret = _AsList<TSource>(obj as object);
 
-            return ret;
+            //try
+            //{
+            //    ret = new List<TSource>() { obj };
+            //}
+            //catch
+            //{
+            //}
+
+            //return ret;
         }
 
         /// <summary>
@@ -102,7 +108,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Extensions
         /// <returns></returns>
         public static JRaw _AsRaw(this string value)
         {
-            return new JRaw(value);
+            throw new NotImplementedException(Messages.DummyMethodInvokeError); //return new JRaw(value);
         }
 
         /// <summary>
@@ -133,7 +139,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Extensions
         /// <returns></returns>
         public static bool IsNull<T>(this T obj)
         {
-            return obj == null;
+            throw new NotImplementedException(Messages.FunctionsInvokeError); //return obj == null;
         }
 
         /// <summary>
@@ -143,7 +149,7 @@ namespace Neo4jClient.DataAnnotations.Cypher.Extensions
         /// <returns></returns>
         public static bool IsNotNull<T>(this T obj)
         {
-            return !IsNull(obj);
+            throw new NotImplementedException(Messages.FunctionsInvokeError); //return !IsNull(obj);
         }
     }
 }

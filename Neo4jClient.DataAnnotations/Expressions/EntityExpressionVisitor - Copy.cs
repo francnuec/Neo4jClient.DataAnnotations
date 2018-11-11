@@ -65,7 +65,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         public IEntityService EntityService => AnnotationsContext?.EntityService;
 
-        public Dictionary<EntityMemberInfo, Expression> Assignments { get; set; }
+        public Dictionary<EntityMemberInfo, Expression> PendingAssignments { get; set; }
             = new Dictionary<EntityMemberInfo, Expression>();
 
         private EntityMemberInfo currentMember;
@@ -171,10 +171,23 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
             foreach (var binding in node.Bindings)
             {
+                currentMember = new EntityMemberInfo(binding.Member, parentMember);
+
+                if (currentMember.MemberFinalType != currentType
+                    && (currentMember.MemberFinalType.IsAssignableFrom(lastType)
+                    || currentMember.MemberFinalType.IsGenericAssignableFrom(lastType)))
+                {
+                    currentMember.MemberFinalType = lastType;
+                }
+
                 switch (binding)
                 {
                     case MemberAssignment assignment:
                         {
+                            if (IsSpecialNode(assignment.Expression))
+                            {
+
+                            }
                             break;
                         }
                     case MemberListBinding listBinding:
@@ -186,53 +199,128 @@ namespace Neo4jClient.DataAnnotations.Expressions
                             break;
                         }
                 }
+            }
 
-                currentMember = new EntityMemberInfo(binding.Member, parentMember);
-                if (currentMember.MemberFinalType != currentType
-                    && (currentMember.MemberFinalType.IsAssignableFrom(lastType)
-                    || currentMember.MemberFinalType.IsGenericAssignableFrom(lastType)))
+            return node;
+        }
+
+        private IEnumerable<MemberBinding> InternalVisitBindings(List<MemberBinding> bindings, EntityMemberInfo parent)
+        {
+            var newBindings = bindings ?? new List<MemberBinding>();
+
+            foreach (var binding in bindings)
+            {
+                var currentMember = new EntityMemberInfo(binding.Member, parent);
+
+                switch (binding)
                 {
-                    currentMember.MemberFinalType = lastType;
+                    case MemberAssignment assignment:
+                        {
+                            if (IsSpecialNode(assignment.Expression, out var hasVars, out var hasFunctions, out var hasDummyMethod))
+                            {
+                                if (currentMember.MemberFinalType != currentType
+                                    && (currentMember.MemberFinalType.IsAssignableFrom(lastType)
+                                    || currentMember.MemberFinalType.IsGenericAssignableFrom(lastType)))
+                                {
+                                    currentMember.MemberFinalType = lastType;
+                                }
+                                assignment = Expression.Bind(assignment.Member, Expression.Constant());
+                            }
+
+                            break;
+                        }
+                    case MemberListBinding listBinding:
+                        {
+                            
+                            break;
+                        }
+                    case MemberMemberBinding memberMemberBinding:
+                        {
+                            break;
+                        }
+                }
+            }
+        }
+
+        private bool IsSpecialNode(Expression node, out bool hasVars, out bool hasFunctions, out bool hasDummyMethod)
+        {
+            hasVars = false; hasFunctions = false; hasDummyMethod = false;
+
+            if (node == null)
+                return false;
+
+            bool isSpecialNode = false;
+
+            //first see if we can successfully execute the expression
+            object value = null;
+            try
+            {
+                value = node.ExecuteExpression<object>();
+            }
+            catch(Exception e)
+            {
+                while (e != null)
+                {
+                    if (e is NotImplementedException ne)
+                    {
+                        switch (e.Message)
+                        {
+                            case Messages.VarsGetError:
+                                {
+                                    hasVars = true;
+                                    break;
+                                }
+                            case Messages.FunctionsInvokeError:
+                                {
+                                    hasFunctions = true;
+                                    break;
+                                }
+                            case Messages.DummyMethodInvokeError:
+                                {
+                                    hasDummyMethod = true;
+                                    break;
+                                }
+                        }
+
+                        isSpecialNode = hasVars || hasFunctions || hasDummyMethod;
+
+                        if (isSpecialNode)
+                            break;
+                    }
+
+                    e = e.InnerException;
                 }
             }
 
-            return node;
-        }
-
-        private void HandleBindings(IEnumerable<MemberBinding> bindings, EntityMemberInfo parent)
-        {
-            foreach (var binding in bindings)
+            if (!isSpecialNode)
             {
+                //try a full search then
+                List<Expression> filtered = ExpressionUtilities.GetSimpleMemberAccessStretch(EntityService, node, out var filteredVal, out var isContinuous);
+                var referenceNode = filtered.LastOrDefault();
 
+                //if (Utils.Utilities.HasVars(filtered))
+                //{
+                //    //found a special node.
+                //    isSpecialNode = true;
+                //}
+                //else 
+                if (referenceNode?.Type == Defaults.JRawType) //never directly delegate jraw to the serializer. use the functions visitor for it instead
+                {
+                    isSpecialNode = true;
+                }
+                else if (isContinuous && filtered.Count > 0 && referenceNode?.NodeType == ExpressionType.Call)
+                {
+                    //maybe one of our functions
+                    //check if it can be handled
+                    if (FuncsVisitor.CanHandle(referenceNode, out var handler))
+                    {
+                        //found a special node
+                        isSpecialNode = true;
+                    }
+                }
             }
-        }
 
-        protected override ElementInit VisitElementInit(ElementInit node)
-        {
-            return node;
-        }
-
-        protected override MemberAssignment VisitMemberAssignment(MemberAssignment node)
-        {
-            //if (ExpressionUtilities.HasNfpEscape(node.Expression) && !NfpEscapedMembers.Any(m => (m as MemberInfo)?.IsEquivalentTo(node.Member) == true))
-            //{
-            //    NfpEscapedMembers.Add(node.Member);
-            //}
-
-            var index = SpecialNodePaths.Count; //do this to know which Paths to add to
-            var newNode = base.VisitMemberAssignment(node);
-            AddToPaths(newNode, index);
-            return newNode;
-        }
-
-        protected override MemberListBinding VisitMemberListBinding(MemberListBinding node)
-        {
-            return node;
-        }
-
-        protected override MemberMemberBinding VisitMemberMemberBinding(MemberMemberBinding node)
-        {
-            return node;
+            return isSpecialNode;
         }
 
         protected override Expression VisitMember(MemberExpression node)

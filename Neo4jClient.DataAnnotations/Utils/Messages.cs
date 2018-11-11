@@ -27,6 +27,10 @@ namespace Neo4jClient.DataAnnotations.Utils
 
         public const string VarsGetError = "Please do not call this method directly. Use only in expressions.";
 
+        public const string FunctionsInvokeError = "Please do not call this Neo4j function directly. Use only in expressions.";
+
+        public const string DummyMethodInvokeError = "Please do not call this dummy method directly. Use only in expressions.";
+
         public const string ComplexTypedPropertyMatchingTypeNotFoundError = "No matching type found for Complex Typed Property: {0}, in Class: {1}.";
 
         public const string InvalidMemberAssignmentError = "Invalid member assignment. Member: {0}";
