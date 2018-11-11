@@ -19,7 +19,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
     {
         public static JObject GetFinalProperties(
             LambdaExpression lambdaExpr, QueryContext queryContext,
-            out bool hasFunctionsInProperties)
+            out bool hasFunctionsInProperties,
+            bool initializeComplexProperties = false)
         {
             hasFunctionsInProperties = false;
 
@@ -321,7 +322,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                                     (entityService, jsonNamePropertyMap, dictMemberNames,
                                     new Dictionary<object, Expression>()
                                 {
-                                    { memberBinding.Member, assignment?.Expression }
+                                    { new List<MemberInfo>{ memberBinding.Member }, assignment?.Expression }
                                 }, instanceJObject, instanceType.Name, out var complexAssignments).FirstOrDefault();
                             }
                             catch (Exception e)
@@ -523,101 +524,15 @@ namespace Neo4jClient.DataAnnotations.Cypher
             return null;
         }
 
-        private static string GetMemberJsonNameFromAssignment
-            (Dictionary<MemberName, MemberInfo> jsonNamePropertyMap,
-            Dictionary<string, List<DictMemberInfo>> dictMemberNames,
-            MemberInfo assignmentInfo, string assignmentName,
-            MemberInfo actual, string actualName,
-            string instanceTypeName)
-        {
-            string memberJsonName = null;
-
-            if (jsonNamePropertyMap != null)
-            {
-                var memberJsonNameMap = jsonNamePropertyMap
-                .Where(item => item.Value.IsEquivalentTo(actual))
-                .FirstOrDefault();
-
-                if (memberJsonNameMap.Value != null)
-                    memberJsonName = memberJsonNameMap.Key?.Json;
-            }
-
-            if (dictMemberNames != null && string.IsNullOrWhiteSpace(memberJsonName))
-            {
-                //try dictmembernames
-                if (actual != null)
-                {
-                    var tuple = dictMemberNames.SelectMany(item => item.Value)
-                        .FirstOrDefault(item => item.ComplexPath?.FirstOrDefault()?.IsEquivalentTo(actual) == true);
-
-                    if (tuple != null)
-                    {
-                        memberJsonName = tuple.JsonName;
-                    }
-                }
-
-                if (string.IsNullOrWhiteSpace(memberJsonName))
-                {
-                    //still empty
-                    //use the name to search dict keys
-                    actualName = actualName ?? actual?.Name;
-
-                    if (dictMemberNames.TryGetValue(actualName, out var values)
-                        || ((assignmentName = assignmentName ?? assignmentInfo?.Name) != null
-                        && dictMemberNames.TryGetValue(assignmentName, out values)))
-                    {
-                        memberJsonName = values?.FirstOrDefault(v => v.JsonName == actualName)?.JsonName ?? (values?.Count == 1 ? values[0].JsonName : null);
-                    }
-                }
-            }
-
-            return memberJsonName;
-        }
-
-        private static JProperty ResolveJPropertyFromAssignment
-            (Dictionary<MemberName, MemberInfo> jsonNamePropertyMap,
-            Dictionary<string, List<DictMemberInfo>> dictMemberNames,
-            JObject jObject, MemberInfo assignmentInfo, string assignmentName,
-            MemberInfo actual, string actualName, string instanceTypeName)
-        {
-            string memberJsonName = GetMemberJsonNameFromAssignment(jsonNamePropertyMap,
-                dictMemberNames, assignmentInfo, assignmentName, actual, actualName,
-                instanceTypeName);
-
-            if (memberJsonName == null)
-            {
-                //we have a problem
-                throw new Exception(string.Format(Messages.InvalidMemberAssignmentError, assignmentInfo?.Name ?? assignmentName));
-            }
-
-            //get the jproperty
-            return ResolveJPropertyFromJsonName(jObject, memberJsonName, instanceTypeName);
-        }
-
-        private static JProperty ResolveJPropertyFromJsonName
-            (JObject jObject, string memberJsonName, string instanceTypeName)
-        {
-            //get the jproperty
-            var jProp = jObject.Properties().FirstOrDefault(jp => jp.Name == memberJsonName);
-
-            if (jProp == null)
-            {
-                //another problem
-                throw new Exception(string.Format(Messages.JsonPropertyNotFoundError, memberJsonName, instanceTypeName));
-            }
-
-            return jProp;
-        }
-
-        private static Dictionary<string, List<DictMemberInfo>> filterDictionaryMap 
-            (string _baseActualName, string _baseJsonName, 
-            Dictionary<string, List<DictMemberInfo>> _dictMemberNames)
+        internal static Dictionary<string, List<DictMemberInfo>> FilterDictionaryMap
+            (string _baseActualName, string _baseJsonName,
+            IEnumerable<KeyValuePair<string, List<DictMemberInfo>>> _dictMemberNames)
         {
             _baseActualName = _baseActualName ?? _baseJsonName;
-            _baseJsonName = _baseJsonName ?? _baseJsonName;
+            _baseJsonName = _baseJsonName ?? _baseActualName;
 
-            if (_dictMemberNames != null 
-                && !string.IsNullOrWhiteSpace(_baseActualName) 
+            if (_dictMemberNames != null
+                && !string.IsNullOrWhiteSpace(_baseActualName)
                 && !string.IsNullOrWhiteSpace(_baseJsonName))
             {
                 //filter for only the ones that have the base json name
@@ -665,12 +580,12 @@ namespace Neo4jClient.DataAnnotations.Cypher
             return null;
         }
 
-        private static Dictionary<MemberName, MemberInfo> filterPropertyMap
+        internal static Dictionary<MemberName, MemberInfo> FilterPropertyMap
             (string _baseActualName, string _baseJsonName,
-            Dictionary<MemberName, MemberInfo> _jsonNamePropertyMap)
+            IEnumerable<KeyValuePair<MemberName, MemberInfo>> _jsonNamePropertyMap)
         {
             _baseActualName = _baseActualName ?? _baseJsonName;
-            _baseJsonName = _baseJsonName ?? _baseJsonName;
+            _baseJsonName = _baseJsonName ?? _baseActualName;
 
             if (_jsonNamePropertyMap != null
                 && !string.IsNullOrWhiteSpace(_baseActualName)
@@ -678,11 +593,95 @@ namespace Neo4jClient.DataAnnotations.Cypher
             {
                 //filter for only the ones that have the base json name
                 return _jsonNamePropertyMap
-                    .Where(jm => jm.Key.Actual.StartsWith(_baseActualName)|| jm.Key.Json.StartsWith(_baseJsonName))
+                    .Where(jm => jm.Key.Actual.StartsWith(_baseActualName) || jm.Key.Json.StartsWith(_baseJsonName))
                     .ToDictionary(jm => jm.Key, jm => jm.Value);
             }
 
             return null;
+        }
+
+        internal static string GetMemberJsonName
+            (Dictionary<MemberName, MemberInfo> jsonNamePropertyMap,
+            Dictionary<string, List<DictMemberInfo>> dictMemberNames,
+            MemberInfo rootMemberInfo, string rootMemberName,
+            MemberInfo targetMemberInfo, string targetMemberName)
+        {
+            string memberJsonName = null;
+
+            if (jsonNamePropertyMap != null)
+            {
+                var memberJsonNameMap = jsonNamePropertyMap
+                .Where(item => item.Value.IsEquivalentTo(targetMemberInfo))
+                .FirstOrDefault();
+
+                if (memberJsonNameMap.Value != null)
+                    memberJsonName = memberJsonNameMap.Key?.Json;
+            }
+
+            if (dictMemberNames != null && string.IsNullOrWhiteSpace(memberJsonName))
+            {
+                //try dictmembernames
+                if (targetMemberInfo != null)
+                {
+                    var tuple = dictMemberNames.SelectMany(item => item.Value)
+                        .FirstOrDefault(item => item.ComplexPath?.FirstOrDefault()?.IsEquivalentTo(targetMemberInfo) == true);
+
+                    if (tuple != null)
+                    {
+                        memberJsonName = tuple.JsonName;
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(memberJsonName))
+                {
+                    //still empty
+                    //use the name to search dict keys
+                    targetMemberName = targetMemberName ?? targetMemberInfo?.Name;
+
+                    if (dictMemberNames.TryGetValue(targetMemberName, out var values)
+                        || ((rootMemberName = rootMemberName ?? rootMemberInfo?.Name) != null
+                        && dictMemberNames.TryGetValue(rootMemberName, out values)))
+                    {
+                        memberJsonName = values?.FirstOrDefault(v => v.JsonName == targetMemberName)?.JsonName ?? (values?.Count == 1 ? values[0].JsonName : null);
+                    }
+                }
+            }
+
+            return memberJsonName;
+        }
+
+        private static JProperty ResolveJPropertyFromAssignment
+            (Dictionary<MemberName, MemberInfo> jsonNamePropertyMap,
+            Dictionary<string, List<DictMemberInfo>> dictMemberNames,
+            JObject jObject, MemberInfo assignmentInfo, string assignmentName,
+            MemberInfo actual, string actualName, string instanceTypeName)
+        {
+            string memberJsonName = GetMemberJsonName(jsonNamePropertyMap,
+                dictMemberNames, assignmentInfo, assignmentName, actual, actualName);
+
+            if (memberJsonName == null)
+            {
+                //we have a problem
+                throw new Exception(string.Format(Messages.InvalidMemberAssignmentError, assignmentInfo?.Name ?? assignmentName));
+            }
+
+            //get the jproperty
+            return ResolveJPropertyFromJsonName(jObject, memberJsonName, instanceTypeName);
+        }
+
+        private static JProperty ResolveJPropertyFromJsonName
+            (JObject jObject, string memberJsonName, string instanceTypeName)
+        {
+            //get the jproperty
+            var jProp = jObject.Properties().FirstOrDefault(jp => jp.Name == memberJsonName);
+
+            if (jProp == null)
+            {
+                //another problem
+                throw new Exception(string.Format(Messages.JsonPropertyNotFoundError, memberJsonName, instanceTypeName));
+            }
+
+            return jProp;
         }
 
         private static List<JProperty> ResolveAssignments
@@ -697,33 +696,70 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
             foreach (var assignment in assignments)
             {
+                var assignmentJsonNamePropertyMap = jsonNamePropertyMap;
+                var assignmentDictMemberNames = dictMemberNames;
+
                 var assignmentKey = assignment.Key;
-                var assignmentKeyInfo = assignmentKey as MemberInfo;
-                var assignmentKeyName = assignmentKey as string ?? assignmentKeyInfo?.Name;
+                string assignmentKeyName = assignmentKey as string;// ?? assignmentKeyInfo?.Name;
+                var assignmentKeyInfos = assignmentKey as List<MemberInfo>;
+
+                MemberInfo assignmentKeyInfo = null; //assignmentKeyInfos?.FirstOrDefault(); //assume it's only one member in the list at first. this should be more than one if it is a complex assignment
+                
+                if (assignmentKeyInfos?.Count > 0)
+                {
+                    string lastJsonName = null;
+                    string lastActualName = null;
+
+                    //find the right set of property map first
+                    foreach (var info in assignmentKeyInfos)
+                    {
+                        assignmentKeyInfo = info;
+                        assignmentKeyName = info.Name;
+
+                        //get base json name
+                        var jsonName = GetMemberJsonName
+                            (assignmentJsonNamePropertyMap, assignmentDictMemberNames,
+                            assignmentKeyInfo, assignmentKeyName,
+                            assignmentKeyInfo, assignmentKeyName);
+
+                        if (lastActualName != null)
+                            lastActualName = $"{lastActualName}{Defaults.ComplexTypeNameSeparator}{info.Name}";
+                        else
+                            lastActualName = info.Name;
+
+                        if (lastJsonName != null)
+                            lastJsonName = jsonName ?? $"{lastJsonName}{Defaults.ComplexTypeNameSeparator}{info.Name}";
+                        else
+                            lastJsonName = jsonName ?? info.Name;
+
+                        assignmentJsonNamePropertyMap = FilterPropertyMap(lastActualName, lastJsonName, assignmentJsonNamePropertyMap);
+                        assignmentDictMemberNames = FilterDictionaryMap(lastActualName, lastJsonName, assignmentDictMemberNames);
+                    }
+                }
 
                 var assignmentValue = assignment.Value;
-                var type = (assignmentKey as PropertyInfo)?.PropertyType
-                    ?? (assignmentKey as FieldInfo)?.FieldType
+                var type = (assignmentKeyInfo as PropertyInfo)?.PropertyType
+                    ?? (assignmentKeyInfo as FieldInfo)?.FieldType
                     ?? assignmentValue?.Type;
 
                 if (type.IsComplex() && (assignmentValue == null || !Utils.Utilities.HasNfpEscape(assignmentValue)))
                 {
                     var complexProps = new List<JProperty>();
 
+                    //get base json name
+                    var baseJsonName = GetMemberJsonName
+                        (assignmentJsonNamePropertyMap, assignmentDictMemberNames,
+                        assignmentKeyInfo, assignmentKeyName,
+                        assignmentKeyInfo, assignmentKeyName) ?? assignmentKeyName;
+
+                    var baseJsonPropMap = FilterPropertyMap(assignmentKeyName, baseJsonName, assignmentJsonNamePropertyMap);
+                    var baseDictMemberNames = FilterDictionaryMap(assignmentKeyName, baseJsonName, assignmentDictMemberNames);
+                    var baseAllDictMembers = baseDictMemberNames?.SelectMany(p => p.Value).ToArray();
+
                     //is complex type
                     //find the edges
                     ExpressionUtilities.ExplodeComplexTypeAndMemberAccess
                         (entityService, ref assignmentValue, type, out var inversePaths, shouldTryCast: true);
-
-                    //get base json name
-                    var baseJsonName = GetMemberJsonNameFromAssignment
-                        (jsonNamePropertyMap, dictMemberNames,
-                        assignmentKeyInfo, assignmentKeyName,
-                        assignmentKeyInfo, assignmentKeyName, instanceTypeName) ?? assignmentKeyName;
-
-                    var baseJsonPropMap = filterPropertyMap(assignmentKeyName, baseJsonName, jsonNamePropertyMap);
-                    var baseDictMemberNames = filterDictionaryMap(assignmentKeyName, baseJsonName, dictMemberNames);
-                    var baseAllDictMembers = baseDictMemberNames?.SelectMany(p => p.Value).ToArray();
 
                     foreach (var inversePath in inversePaths)
                     {
@@ -753,7 +789,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
                                 lastActualName = $"{lastActualName}{Defaults.ComplexTypeNameSeparator}{actualMember.Name}";
                                 lastJsonName = resolvedProp?.Name ?? $"{lastJsonName}{Defaults.ComplexTypeNameSeparator}{actualMember.Name}";
-                                lastJsonPropMap = filterPropertyMap(lastActualName, lastJsonName, lastJsonPropMap);
+                                lastJsonPropMap = FilterPropertyMap(lastActualName, lastJsonName, lastJsonPropMap);
                                 //lastDictMemberNames = filterDictionaryMap(lastJsonName, lastDictMemberNames);
                             }
 
@@ -765,22 +801,24 @@ namespace Neo4jClient.DataAnnotations.Cypher
                             //for dictionaries, find the one whose members matches this inversePath exactly
                             var inversePathCount = inversePath.Count;
 
-                            var pathJsonName = baseAllDictMembers.FirstOrDefault(v =>
-                            {
-                                if (v.ComplexPath == null)
-                                    return false;
+                            var pathJsonName = baseAllDictMembers.FirstOrDefault(v => v.ComplexPath == inversePath)?.JsonName;
 
-                                if (v.ComplexPath.Count != inversePathCount)
-                                    return false;
+                            //var pathJsonName = baseAllDictMembers.FirstOrDefault(v =>
+                            //{
+                            //    if (v.ComplexPath == null)
+                            //        return false;
 
-                                for (int i = 0; i < inversePathCount; i++)
-                                {
-                                    if (v.ComplexPath[i]?.IsEquivalentTo(inversePath[i]) != true)
-                                        return false;
-                                }
+                            //    if (v.ComplexPath.Count != inversePathCount)
+                            //        return false;
 
-                                return true;
-                            })?.JsonName;
+                            //    for (int i = 0; i < inversePathCount; i++)
+                            //    {
+                            //        if (v.ComplexPath[i]?.IsEquivalentTo(inversePath[i]) != true)
+                            //            return false;
+                            //    }
+
+                            //    return true;
+                            //})?.JsonName;
 
                             if (pathJsonName != null)
                             {
@@ -798,12 +836,12 @@ namespace Neo4jClient.DataAnnotations.Cypher
                         complexAssignments = new List<ComplexAssignmentInfo>();
 
                     complexAssignments.Add(new ComplexAssignmentInfo
-                        (assignmentKey, assignmentValue, assignmentValue?.Type ?? type, complexProps));
+                        ((object)assignmentKeyInfo ?? assignmentKeyName, assignmentValue, assignmentValue?.Type ?? type, complexProps));
                 }
                 else
                 {
                     filteredProps.Add(ResolveJPropertyFromAssignment
-                        (jsonNamePropertyMap, dictMemberNames, jObject,
+                        (assignmentJsonNamePropertyMap, assignmentDictMemberNames, jObject,
                         assignmentKeyInfo, assignmentKeyName,
                         assignmentKeyInfo, assignmentKeyName, instanceTypeName));
                 }
@@ -992,6 +1030,114 @@ namespace Neo4jClient.DataAnnotations.Cypher
                     buildStrategy = PropertiesBuildStrategy.WithParamsForValues;
                 }
             }
+        }
+
+        internal static string BuildFinalProperties
+            (QueryContext queryContext,
+            string variable,
+            LambdaExpression properties, 
+            ref PropertiesBuildStrategy buildStrategy,
+            out string parameter,
+            out JObject newFinalProperties,
+            out bool finalPropsHasFunctions,
+            string separator = ": ",
+            bool useVariableAsParameter = false,
+            bool wrapValueInJsonObjectNotation = false)
+        {
+            newFinalProperties = null;
+            var _finalPropsHasFunctions = finalPropsHasFunctions = false;
+
+            var value = BuildFinalProperties(queryContext, variable, () =>
+            {
+                if (properties != null)
+                {
+                    try
+                    {
+                        return (properties as Expression<Func<object>>)?.Compile().Invoke(); //ExecuteExpression<object>();
+                    }
+                    catch
+                    {
+
+                    }
+                }
+
+                return null;
+            }, () =>
+            {
+                return GetFinalProperties(properties, queryContext, out _finalPropsHasFunctions);
+            }, () => _finalPropsHasFunctions, ref buildStrategy, out parameter, out newFinalProperties,
+            separator: separator, useVariableAsParameter: useVariableAsParameter);
+
+            finalPropsHasFunctions = _finalPropsHasFunctions;
+
+            return value;
+        }
+
+        internal static string BuildFinalProperties
+            (QueryContext queryContext,
+            string variable, 
+            Func<object> finalObjectGetter,
+            Func<JObject> finalPropertiesGetter,
+            Func<bool> finalPropsHasFuncsGetter,
+            ref PropertiesBuildStrategy buildStrategy,
+            out string parameter,
+            out JObject newFinalProperties,
+            string separator = ": ",
+            bool useVariableAsParameter = false,
+            bool wrapValueInJsonObjectNotation = false)
+        {
+            newFinalProperties = null;
+
+            ResolveFinalObjectProperties
+                (finalObjectGetter, finalPropertiesGetter, finalPropsHasFuncsGetter,
+                ref buildStrategy, out var finalObject, out var finalProperties);
+
+            string param = !useVariableAsParameter ? Utils.Utilities.GetRandomVariableFor(variable) : variable;
+            parameter = param;
+
+            string value = null;
+
+            if (finalObject != null || finalProperties?.Count > 0)
+            {
+                switch (buildStrategy)
+                {
+                    case PropertiesBuildStrategy.WithParams:
+                    case PropertiesBuildStrategy.WithParamsForValues:
+                        {
+                            var _finalProperties = finalProperties;
+
+                            value = "$" + param;
+
+                            if (buildStrategy == PropertiesBuildStrategy.WithParamsForValues)
+                            {
+                                value = BuildWithParamsForValues(finalProperties, queryContext.SerializeCallback,
+                                    getKey: (propertyName) => propertyName, separator: separator,
+                                    getValue: (propertyName) => $"${param}.{propertyName}",
+                                    hasRaw: out var hasRaw, newFinalProperties: out newFinalProperties);
+
+                                _finalProperties = newFinalProperties ?? _finalProperties;
+                            }
+
+                            queryContext.CurrentQueryWriter.CreateParameter
+                                (param, finalObject != null && _finalProperties == finalProperties ? finalObject : _finalProperties);
+                            break;
+                        }
+                    case PropertiesBuildStrategy.NoParams:
+                        {
+                            value = finalProperties.Properties()
+                                    .Select(jp => $"{jp.Name}{separator}{queryContext.SerializeCallback(jp.Value)}")
+                                    .Aggregate((first, second) => $"{first}, {second}");
+                            break;
+                        }
+                }
+
+                if (wrapValueInJsonObjectNotation && value != null)
+                {
+                    value = value?.StartsWith("$") != true ? $"{{ {value} }}" : value;
+                }
+            }
+
+            return value;
         }
     }
 }

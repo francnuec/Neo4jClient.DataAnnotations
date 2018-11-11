@@ -568,70 +568,15 @@ namespace Neo4jClient.DataAnnotations.Cypher
             var queryContext = CypherUtilities.GetQueryContext(query);
 
             var buildStrategy = queryContext.CurrentBuildStrategy ?? defaultBuildStrategy;
-            bool finalPropsHasFunctions = false;
 
-            CypherUtilities.ResolveFinalObjectProperties(() =>
-            {
-                if (properties != null)
-                {
-                    try
-                    {
-                        return (properties as Expression<Func<object>>)?.Compile().Invoke(); //ExecuteExpression<object>();
-                    }
-                    catch
-                    {
+            var serializedValue = CypherUtilities.BuildFinalProperties
+                (queryContext, $"{variable}_set", properties,
+                ref buildStrategy, out setParameter, out var newProperties,
+                out var finalPropsHasFunctions, separator: ": ",
+                useVariableAsParameter: false,
+                wrapValueInJsonObjectNotation: true);
 
-                    }
-                }
-
-                return null;
-            }, () =>
-            {
-                return CypherUtilities.GetFinalProperties(properties, queryContext, out finalPropsHasFunctions);
-            }, () => finalPropsHasFunctions, ref buildStrategy, out var finalObject, out var finalProperties);
-
-            string setParam = Utils.Utilities.GetRandomVariableFor($"{variable}_set");
-            setParameter = setParam;
-
-            buildStrategy = finalPropsHasFunctions && buildStrategy == PropertiesBuildStrategy.WithParams ? 
-                PropertiesBuildStrategy.WithParamsForValues : buildStrategy;
-
-            string value = null;
-
-            switch (buildStrategy)
-            {
-                case PropertiesBuildStrategy.WithParams:
-                case PropertiesBuildStrategy.WithParamsForValues:
-                    {
-                        var _finalProperties = finalProperties;
-
-                        value = "$" + setParam;
-
-                        if (buildStrategy == PropertiesBuildStrategy.WithParamsForValues)
-                        {
-                            value = CypherUtilities.BuildWithParamsForValues(finalProperties, queryContext.SerializeCallback,
-                                getKey: (propertyName) => propertyName, separator: ": ", 
-                                getValue: (propertyName) => $"${setParam}.{propertyName}",
-                                hasRaw: out var hasRaw, newFinalProperties: out var newFinalProperties);
-
-                            _finalProperties = newFinalProperties ?? _finalProperties;
-                        }
-
-                        query = query.WithParam(setParam, finalObject != null && _finalProperties == finalProperties ? finalObject : _finalProperties);
-                        break;
-                    }
-                case PropertiesBuildStrategy.NoParams:
-                    {
-                        value = finalProperties.Properties()
-                                .Select(jp => $"{jp.Name}: {queryContext.SerializeCallback(jp.Value)}")
-                                .Aggregate((first, second) => $"{first}, {second}");
-                        break;
-                    }
-            }
-
-            var serializedValue = value?.StartsWith("$") != true ? $"{{ {value} }}" : value;
-
-            return query.Set($"{variable} {(add ? "+=" : "=")} {serializedValue}");
+            return query.Set($"{variable} {(add ? "+=" : "=")} {serializedValue ?? ""}");
         }
 
         /// <summary>
@@ -646,7 +591,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <param name="variable">Overrides the parameter used in the predicate lambda. This is useful if the actual variable is only known at runtime (dynamic).</param>
         /// <returns></returns>
         internal static ICypherFluentQuery SharedSet<T>(this ICypherFluentQuery query,
-            Expression<Func<T, bool>> predicate, PropertiesBuildStrategy defaultBuildStrategy, out string setParameter, string variable)
+            Expression<Func<T, bool>> predicate, PropertiesBuildStrategy defaultBuildStrategy,
+            out string setParameter, string variable)
         {
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
@@ -672,41 +618,50 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 variable = predicate.Parameters[0].Name;
             }
 
-            var finalProperties = CypherUtilities.GetFinalProperties(CypherUtilities.GetConstraintsAsPropertiesLambda(predicate, typeof(T)),
-                queryContext, out var hasFunctions);
+            var properties = CypherUtilities.GetConstraintsAsPropertiesLambda(predicate, typeof(T));
 
-            var setParam = Utils.Utilities.GetRandomVariableFor($"{variable}_set");
-            setParameter = setParam;
+            var value = CypherUtilities.BuildFinalProperties
+                (queryContext, $"{variable}_set", properties,
+                ref buildStrategy, out setParameter, out var newProperties,
+                out var finalPropsHasFunctions, separator: " = ",
+                useVariableAsParameter: false,
+                wrapValueInJsonObjectNotation: false);
 
-            buildStrategy = hasFunctions && buildStrategy == PropertiesBuildStrategy.WithParams ? 
-                PropertiesBuildStrategy.WithParamsForValues : buildStrategy;
+            //var finalProperties = CypherUtilities.GetFinalProperties(CypherUtilities.GetConstraintsAsPropertiesLambda(predicate, typeof(T)),
+            //    queryContext, out var hasFunctions);
 
-            string value = null;
+            //var setParam = Utils.Utilities.GetRandomVariableFor($"{variable}_set");
+            //setParameter = setParam;
 
-            switch (buildStrategy)
-            {
-                case PropertiesBuildStrategy.WithParams:
-                case PropertiesBuildStrategy.WithParamsForValues:
-                    {
-                        //in this type of SET statement, both WithParams, and WithParamsForValues are the same
-                        value = CypherUtilities.BuildWithParamsForValues(finalProperties, queryContext.SerializeCallback,
-                                getKey: (propertyName) => $"{variable}.{propertyName}", separator: " = ",
-                                getValue: (propertyName) => $"${setParam}.{propertyName}",
-                                hasRaw: out var hasRaw, newFinalProperties: out var newFinalProperties);
+            //buildStrategy = hasFunctions && buildStrategy == PropertiesBuildStrategy.WithParams ? 
+            //    PropertiesBuildStrategy.WithParamsForValues : buildStrategy;
 
-                        var _finalProperties = newFinalProperties ?? finalProperties;
+            //string value = null;
 
-                        query = query.WithParam(setParam, _finalProperties);
-                        break;
-                    }
-                case PropertiesBuildStrategy.NoParams:
-                    {
-                        value = finalProperties.Properties()
-                                .Select(jp => $"{variable}.{jp.Name} = {queryContext.SerializeCallback(jp.Value)}")
-                                .Aggregate((first, second) => $"{first}, {second}");
-                        break;
-                    }
-            }
+            //switch (buildStrategy)
+            //{
+            //    case PropertiesBuildStrategy.WithParams:
+            //    case PropertiesBuildStrategy.WithParamsForValues:
+            //        {
+            //            //in this type of SET statement, both WithParams, and WithParamsForValues are the same
+            //            value = CypherUtilities.BuildWithParamsForValues(finalProperties, queryContext.SerializeCallback,
+            //                    getKey: (propertyName) => $"{variable}.{propertyName}", separator: " = ",
+            //                    getValue: (propertyName) => $"${setParam}.{propertyName}",
+            //                    hasRaw: out var hasRaw, newFinalProperties: out var newFinalProperties);
+
+            //            var _finalProperties = newFinalProperties ?? finalProperties;
+
+            //            query = query.WithParam(setParam, _finalProperties);
+            //            break;
+            //        }
+            //    case PropertiesBuildStrategy.NoParams:
+            //        {
+            //            value = finalProperties.Properties()
+            //                    .Select(jp => $"{variable}.{jp.Name} = {queryContext.SerializeCallback(jp.Value)}")
+            //                    .Aggregate((first, second) => $"{first}, {second}");
+            //            break;
+            //        }
+            //}
 
             return query.Set(value);
         }

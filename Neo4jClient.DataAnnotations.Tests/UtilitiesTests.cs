@@ -542,6 +542,13 @@ namespace Neo4jClient.DataAnnotations.Tests
         public void FinalPropertiesResolutionWithConverter(Dictionary<string, dynamic> expected, LambdaExpression expression,
             Type expectedExceptionType = null, string expectedExceptionMessage = null)
         {
+            //var reducer = new ReducerExpressionVisitor();
+            //Expression<Func<object>> expr = () => new AddressWithComplexType()
+            //{
+            //    Location = { Longitude = 34.9 }
+            //};
+            //var reduced = reducer.Visit(expr);
+
             var testContext = new ConverterTestContext();
 
             Func<JObject> action = () => CypherUtilities.GetFinalProperties

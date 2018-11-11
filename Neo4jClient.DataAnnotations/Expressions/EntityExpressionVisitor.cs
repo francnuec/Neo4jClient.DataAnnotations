@@ -48,7 +48,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         public Dictionary<Expression, Expression> SetPredicateAssignments { get; private set; }
 
-        public Dictionary<MemberInfo, Expression> SetPredicateMemberAssignments { get; private set; }
+        public Dictionary<List<MemberInfo>, Expression> SetPredicateMemberAssignments { get; private set; }
 
         public Dictionary<string, Expression> SetPredicateDictionaryAssignments { get; private set; }
 
@@ -455,7 +455,9 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 {
                     if (type == SpecialNodeType.Function)
                     {
-                        nodePlaceholder = Expression.Call(Defaults.UtilitiesType, "GetValue", new[] { node.Type }, Expression.Constant(index));
+                        //if the type is complex, we should generate a new instance in place for the user during serialization
+                        nodePlaceholder = Expression.Call(Defaults.UtilitiesType, "GetValue", new[] { node.Type },
+                                Expression.Constant(index), Expression.Constant(node.Type.IsComplex()) /*createNewInstance*/);
                     }
                     else
                     {
@@ -566,7 +568,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         protected virtual List<object> GetPathBindings(IEnumerable<MemberInfo> members,
             Dictionary<MemberInfo, Tuple<Type, List<MemberInfo>>> memberChildren,
-            Dictionary<MemberInfo, Expression> memberAssignments)
+            Dictionary<List<MemberInfo>, Expression> memberAssignments)
         {
             List<object> bindings = new List<object>();
 
@@ -577,8 +579,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 var value = memberChildren[member];
                 var children = value.Item2;
 
-                Expression assignment = null;
-                memberAssignments.TryGetValue(member, out assignment);
+                Expression assignment = memberAssignments.FirstOrDefault(m => m.Key.Last() == member).Value; //TryGetValue(member, out assignment);
 
                 bool isWritable = propInfo?.CanWrite == true || fieldInfo != null;
                 bool hasChildren = children?.Count > 0 && assignment == null; //skip the children if it was assigned to directly
@@ -637,12 +638,12 @@ namespace Neo4jClient.DataAnnotations.Expressions
             return bindings;
         }
 
-        protected virtual Dictionary<MemberInfo, Expression> GetPredicateMemberAssignments(
+        protected virtual Dictionary<List<MemberInfo>, Expression> GetPredicateMemberAssignments(
             Dictionary<Expression, Expression> assignments,
             out List<MemberInfo> rootMembers,
             out Dictionary<MemberInfo, Tuple<Type, List<MemberInfo>>> memberChildren)
         {
-            var memberAssignments = new Dictionary<MemberInfo, Expression>();
+            var memberAssignments = new Dictionary<List<MemberInfo>, Expression>();
 
             memberChildren = new Dictionary<MemberInfo, Tuple<Type, List<MemberInfo>>>();
 
@@ -657,15 +658,20 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 ExpressionUtilities.TraverseEntityPath(EntityService, null, assignmentExprs, ref startIndex,
                     out var assignmentLastType, out var assignmentPath, buildPath: false);
 
-                memberAssignments[assignmentPath.Last().Key] = assignment.Value;
+                var members = assignmentPath.OrderBy(p => p.Value).Select(p => p.Key.MemberInfo).ToList(); //.PathIndex).Select(p => p.Key).ToList();
+
+                if (memberAssignments.FirstOrDefault(i => i.Key.All(k => members.Contains(k))).Key is var existingKey)
+                {
+                    existingKey = existingKey ?? members;
+                    memberAssignments[existingKey] = assignment.Value;
+                }
 
                 //sort members and children
-                var members = assignmentPath.OrderBy(p => p.Value.Item1).Select(p => p.Key).ToList();
-
                 rootMembers.Add(members.FirstOrDefault());
 
-                SortMemberAccess(memberChildren, members, (member) => assignmentPath
-                .TryGetValue(member, out var val) ? val.Item2 : member.GetMemberType());
+                SortMemberAccess(memberChildren, members, (member) => assignmentPath.FirstOrDefault(kv => kv.Key.MemberInfo == member).Key?.MemberFinalType
+                //.TryGetValue(member, out var val) ? val.Item2 : member.GetMemberType()
+                );
 
                 //foreach (var member in members)
                 //{
@@ -753,7 +759,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         protected virtual Expression GetPredicateExpression(
             ParameterExpression parameter, List<object> bindings,
-            Dictionary<MemberInfo, Expression> memberAssignments,
+            Dictionary<List<MemberInfo>, Expression> memberAssignments,
             Dictionary<string, Expression> dictionaryAssignments)
         {
             NewExpression newExpr = null;
@@ -800,7 +806,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     if (arg == null)
                     {
                         //try member assignments
-                        arg = memberAssignments.FirstOrDefault(mp => mp.Key.IsEquivalentTo(prop)).Value;
+                        arg = memberAssignments.FirstOrDefault(mp => mp.Key.Last().IsEquivalentTo(prop)).Value;
                     }
 
                     if (arg == null)

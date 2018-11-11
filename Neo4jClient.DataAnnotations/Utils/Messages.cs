@@ -46,5 +46,7 @@ namespace Neo4jClient.DataAnnotations.Utils
         public const string UnassignableTypeError = "Type '{0}' cannot be assigned to Type '{1}'.";
 
         public const string NoValidConstructorError = "Could not create an instance of Type '{0}' from the constructors available on that type.";
+
+        public const string InvalidProjectionError = "Only member assignments are permitted when projecting to a result. Member: {0}";
     }
 }

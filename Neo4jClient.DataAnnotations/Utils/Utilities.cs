@@ -313,7 +313,27 @@ namespace Neo4jClient.DataAnnotations.Utils
         /// <returns>A default value of the return type.</returns>
         internal static TReturn GetValue<TReturn>(int index)
         {
-            return (TReturn)typeof(TReturn).GetDefaultValue();
+            return GetValue<TReturn>(index, createNewInstance: false);
+        }
+
+        internal static TReturn GetValue<TReturn>(int index, bool createNewInstance = false)
+        {
+            var ret = (TReturn)typeof(TReturn).GetDefaultValue();
+
+            if (createNewInstance && ret == null)
+            {
+                //this shouldn't be null
+                try
+                {
+                    ret = (TReturn)CreateInstance(typeof(TReturn), nonPublic: true);
+                }
+                catch
+                {
+
+                }
+            }
+
+            return ret;
         }
 
         public static bool HasSet(Expression expression)

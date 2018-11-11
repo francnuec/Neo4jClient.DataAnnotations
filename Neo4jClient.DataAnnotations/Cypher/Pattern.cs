@@ -1113,46 +1113,54 @@ namespace Neo4jClient.DataAnnotations.Cypher
             ref ICypherFluentQuery query, string Variable,
             PropertiesBuildStrategy buildStrategy, Func<object, string> serializer)
         {
-            CypherUtilities.ResolveFinalObjectProperties(finalObjectGetter, finalPropertiesGetter, finalPropsHasFuncsGetter,
-                ref buildStrategy, out var finalObject, out var finalProperties);
+            var queryContext = CypherUtilities.GetQueryContext(query);
+            queryContext.CurrentBuildStrategy = buildStrategy;
 
-            string value = null;
+            var value = CypherUtilities.BuildFinalProperties(queryContext,
+                Variable, finalObjectGetter, finalPropertiesGetter, finalPropsHasFuncsGetter,
+                ref buildStrategy, out var param, out var newProperties,
+                separator: ": ", useVariableAsParameter: true, wrapValueInJsonObjectNotation: true);
 
-            if (finalObject != null || finalProperties?.Count > 0)
-            {
-                switch (buildStrategy)
-                {
-                    case PropertiesBuildStrategy.WithParams:
-                    case PropertiesBuildStrategy.WithParamsForValues:
-                        {
-                            var _finalProperties = finalProperties;
+            //CypherUtilities.ResolveFinalObjectProperties(finalObjectGetter, finalPropertiesGetter, finalPropsHasFuncsGetter,
+            //    ref buildStrategy, out var finalObject, out var finalProperties);
 
-                            value = "$" + Variable;
+            //string value = null;
 
-                            if (buildStrategy == PropertiesBuildStrategy.WithParamsForValues)
-                            {
-                                value = CypherUtilities.BuildWithParamsForValues(finalProperties, serializer,
-                                    getKey: (propertyName) => propertyName, separator: ": ",
-                                    getValue: (propertyName) => $"${Variable}.{propertyName}",
-                                    hasRaw: out var hasRaw, newFinalProperties: out var newFinalProperties);
+            //if (finalObject != null || finalProperties?.Count > 0)
+            //{
+            //    switch (buildStrategy)
+            //    {
+            //        case PropertiesBuildStrategy.WithParams:
+            //        case PropertiesBuildStrategy.WithParamsForValues:
+            //            {
+            //                var _finalProperties = finalProperties;
 
-                                _finalProperties = newFinalProperties ?? _finalProperties;
-                            }
+            //                value = "$" + Variable;
 
-                            query = query.WithParam(Variable, finalObject != null && _finalProperties == finalProperties ? finalObject : _finalProperties);
-                            break;
-                        }
-                    case PropertiesBuildStrategy.NoParams:
-                        {
-                            value = finalProperties.Properties()
-                                    .Select(jp => $"{jp.Name}: {serializer(jp.Value)}")
-                                    .Aggregate((first, second) => $"{first}, {second}");
-                            break;
-                        }
-                }
+            //                if (buildStrategy == PropertiesBuildStrategy.WithParamsForValues)
+            //                {
+            //                    value = CypherUtilities.BuildWithParamsForValues(finalProperties, serializer,
+            //                        getKey: (propertyName) => propertyName, separator: ": ",
+            //                        getValue: (propertyName) => $"${Variable}.{propertyName}",
+            //                        hasRaw: out var hasRaw, newFinalProperties: out var newFinalProperties);
 
-                return value?.StartsWith("$") != true ? $"{{ {value} }}" : value;
-            }
+            //                    _finalProperties = newFinalProperties ?? _finalProperties;
+            //                }
+
+            //                query = query.WithParam(Variable, finalObject != null && _finalProperties == finalProperties ? finalObject : _finalProperties);
+            //                break;
+            //            }
+            //        case PropertiesBuildStrategy.NoParams:
+            //            {
+            //                value = finalProperties.Properties()
+            //                        .Select(jp => $"{jp.Name}: {serializer(jp.Value)}")
+            //                        .Aggregate((first, second) => $"{first}, {second}");
+            //                break;
+            //            }
+            //    }
+
+            //    return value?.StartsWith("$") != true ? $"{{ {value} }}" : value;
+            //}
 
             return value;
         }

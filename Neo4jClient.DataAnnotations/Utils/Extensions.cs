@@ -334,7 +334,7 @@ namespace Neo4jClient.DataAnnotations.Utils
         {
             var specialNodeExpr = visitor.SpecialNodes[index];
 
-            return (TReturn)(specialNodeExpr.ConcreteValue ?? typeof(TReturn).GetDefaultValue());
+            return (TReturn)(specialNodeExpr.ConcreteValue ?? typeof(TReturn).GetDefaultValue());            
         }
 
         public static bool IsComplex(this Type type)
@@ -344,7 +344,9 @@ namespace Neo4jClient.DataAnnotations.Utils
 
         public static Type GetMemberType(this MemberInfo member)
         {
-            return (member as PropertyInfo)?.PropertyType ?? (member as FieldInfo)?.FieldType ?? (member as MethodInfo)?.ReturnType;
+            return (member as PropertyInfo)?.PropertyType 
+                ?? (member as FieldInfo)?.FieldType 
+                ?? (member as MethodInfo)?.ReturnType;
         }
 
         public static bool IsConstant(this Expression node)
