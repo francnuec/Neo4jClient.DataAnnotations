@@ -68,6 +68,13 @@ namespace Neo4jClient.DataAnnotations.Utils
             .Where(p => p.GetIndexParameters().Any())
             .Select(p => p.GetGetMethod()).First();
 
+        public static readonly MethodInfo DictionaryIndexerInfo =
+            DictionaryType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .Where(p => p.GetIndexParameters().Any())
+            .Select(p => p.GetGetMethod()).First();
+
+        public static readonly MethodInfo NfpMethodInfo = Utils.Utilities.GetMethodInfo(() => ObjectExtensions._<object>(null));
+
         public const string QueryBuildStrategyKey = "querypropbuildstrategy";
 
         public static readonly FieldInfo QueryWriterInfo = typeof(CypherFluentQuery).GetField("QueryWriter", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);

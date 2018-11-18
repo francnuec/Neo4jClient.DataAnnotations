@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Linq.Expressions;
 using Neo4jClient.DataAnnotations.Expressions;
 using Neo4jClient.DataAnnotations.Cypher;
+using Newtonsoft.Json.Linq;
 
 namespace Neo4jClient.DataAnnotations.Utils
 {
@@ -83,9 +84,9 @@ namespace Neo4jClient.DataAnnotations.Utils
 
         public static bool IsAnonymousType(this Type type)
         {
-            Boolean hasCompilerGeneratedAttribute = type.GetTypeInfo().GetCustomAttributes(typeof(CompilerGeneratedAttribute), false).Count() > 0;
-            Boolean nameContainsAnonymousType = type.FullName.Contains("AnonymousType");
-            Boolean isAnonymousType = hasCompilerGeneratedAttribute && nameContainsAnonymousType;
+            bool hasCompilerGeneratedAttribute = type.GetTypeInfo().GetCustomAttributes(typeof(CompilerGeneratedAttribute), false).Count() > 0;
+            bool nameContainsAnonymousType = type.FullName.Contains("AnonymousType");
+            bool isAnonymousType = hasCompilerGeneratedAttribute && nameContainsAnonymousType;
 
             return isAnonymousType;
         }
@@ -226,6 +227,29 @@ namespace Neo4jClient.DataAnnotations.Utils
             return expression;
         }
 
+        /// <summary>
+        /// Removes cast around an expression only if the cast was a boxing operation.
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <param name="castRemoved"></param>
+        /// <param name="castToRemove"></param>
+        /// <returns></returns>
+        public static Expression UncastBox(this Expression expression, out Type castRemoved, Type castToRemove = null)
+        {
+            var newExpr = Uncast(expression, out castRemoved, castToRemove);
+
+            if (castRemoved != null
+                && castRemoved != Defaults.ObjectType
+                && expression?.Type.IsGenericAssignableFrom(castRemoved) == true)
+            {
+                //we prefer an unboxing operation
+                castRemoved = null;
+                newExpr = expression;
+            }
+
+            return newExpr;
+        }
+
         public static Expression Cast(this Expression expression, out Type castAdded, Type castToAdd = null)
         {
             castAdded = null;
@@ -324,18 +348,18 @@ namespace Neo4jClient.DataAnnotations.Utils
             return Utils.Utilities.IsScalarType(type, entityService);
         }
 
-        /// <summary>
-        /// Placeholder method for predicate member values in expressions.
-        /// </summary>
-        /// <typeparam name="TReturn">The last return type of the contiguous access stretch.</typeparam>
-        /// <param name="index">The index of the value in the store.</param>
-        /// <returns>The executed expression value, or a default value of the return type.</returns>
-        internal static TReturn GetValue<TReturn>(this EntityExpressionVisitor visitor, int index)
-        {
-            var specialNodeExpr = visitor.SpecialNodes[index];
+        ///// <summary>
+        ///// Placeholder method for predicate member values in expressions.
+        ///// </summary>
+        ///// <typeparam name="TReturn">The last return type of the contiguous access stretch.</typeparam>
+        ///// <param name="index">The index of the value in the store.</param>
+        ///// <returns>The executed expression value, or a default value of the return type.</returns>
+        //internal static TReturn GetValue<TReturn>(this EntityExpressionVisitor visitor, int index)
+        //{
+        //    var specialNodeExpr = visitor.SpecialNodes[index];
 
-            return (TReturn)(specialNodeExpr.ConcreteValue ?? typeof(TReturn).GetDefaultValue());            
-        }
+        //    return (TReturn)(specialNodeExpr.ConcreteValue ?? typeof(TReturn).GetDefaultValue());            
+        //}
 
         public static bool IsComplex(this Type type)
         {
@@ -352,6 +376,27 @@ namespace Neo4jClient.DataAnnotations.Utils
         public static bool IsConstant(this Expression node)
         {
             return node is ConstantExpression;
+        }
+
+        /// <summary>
+        /// Converts a string value to its appropriate <see cref="JToken"/> or <see cref="JRaw"/>.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static JToken ToJToken(this string value)
+        {
+            JToken jVal = null;
+
+            try
+            {
+                jVal = JToken.Parse(value); //.FromObject(actualValue);
+            }
+            catch (Exception e)
+            {
+                jVal = new JRaw(value);
+            }
+
+            return jVal;
         }
     }
 }

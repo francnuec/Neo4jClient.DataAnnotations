@@ -15,513 +15,770 @@ using Neo4jClient.Serialization;
 
 namespace Neo4jClient.DataAnnotations.Cypher
 {
-    public class CypherUtilities
+    public static class CypherUtilities
     {
+        //public static JObject GetFinalProperties(
+        //    LambdaExpression lambdaExpr, QueryContext queryContext,
+        //    out bool hasFunctionsInProperties,
+        //    bool initializeComplexProperties = false)
+        //{
+        //    hasFunctionsInProperties = false;
+
+        //    //get the properties expression
+        //    if (lambdaExpr != null && queryContext.SerializeCallback != null)
+        //    {
+        //        var resolver = queryContext.Resolver;
+        //        var serializer = queryContext.SerializeCallback;
+        //        var annotationsContext = queryContext.AnnotationsContext;
+        //        var entityService = annotationsContext.EntityService;
+
+        //        //visit the expressions
+        //        var entityVisitor = new EntityExpressionVisitor(queryContext);
+
+        //        var instanceExpr = entityVisitor.Visit(lambdaExpr.Body);
+        //        var predicateExpr = entityVisitor.SetPredicateNode;
+        //        var predicateMemberAssignments = entityVisitor.SetPredicateMemberAssignments;
+        //        var predicateDictionaryAssignments = entityVisitor.SetPredicateDictionaryAssignments;
+        //        var usePredicateOnly = entityVisitor.SetUsePredicateOnly;
+
+        //        //get the instance
+        //        var instance = instanceExpr.ExecuteExpression<object>();
+
+        //        var instanceType = instance.GetType();
+        //        var instanceIsDictionary = instanceType.IsDictionaryType();
+        //        var sourceIsAnonymous = entityVisitor.Source.Type.IsAnonymousType();
+        //        var rootIsDictionary = entityVisitor.RootNode.Type.IsDictionaryType();
+
+        //        var instanceInfo = entityService.GetEntityTypeInfo(instanceType);
+
+        //        var dictMemberNames = entityVisitor.DictMemberNames;
+        //        Dictionary<MemberName, MemberInfo> jsonNamePropertyMap = null;
+        //        Dictionary<object, Expression> predicateAssignments = null;
+        //        List<ComplexAssignmentInfo> predicateComplexAssignments = null;
+        //        string instanceJson = null;
+
+        //        if (!instanceIsDictionary)
+        //        {
+        //            if (!instanceType.IsAnonymousType())
+        //                entityService.AddEntityType(instanceType); //just in case it was omitted
+
+        //            if (resolver != null)
+        //            {
+        //                instanceInfo.WithJsonResolver(resolver);
+        //            }
+        //            else
+        //            {
+        //                try
+        //                {
+        //                    if (usePredicateOnly)
+        //                    {
+        //                        //initialize complex properties in case they were omitted
+        //                        //however, avoid initilizing on behalf of the user unless it's a predicate
+        //                        Utils.Utilities.InitializeComplexTypedProperties(instance, entityService);
+        //                    }
+
+        //                    //serialize the instance to force converter to enumerate jsonNames
+        //                    instanceJson = serializer(instance);
+        //                }
+        //                catch
+        //                {
+
+        //                }
+        //            }
+
+        //            jsonNamePropertyMap = instanceInfo.JsonNamePropertyMap;
+        //        }
+        //        else if (sourceIsAnonymous)
+        //        {
+        //            //get the mapping from dictionary member names
+        //            Func<string, DictMemberInfo, string> getMemberActualName = (baseName, value) =>
+        //            {
+        //                if (value == null || value.ComplexPath == null || value.ComplexPath.Count == 0)
+        //                    return baseName ?? value.ComplexPath?.FirstOrDefault()?.Name ?? value.JsonName;
+
+        //                var aggregate = value.ComplexPath.AsEnumerable().Reverse()
+        //                .Select(c => c.Name)
+        //                .Aggregate((c1, c2) => $"{c1}{Defaults.ComplexTypeNameSeparator}{c2}");
+
+        //                if (baseName != null)
+        //                    aggregate = $"{baseName}{Defaults.ComplexTypeNameSeparator}{aggregate}";
+
+        //                return aggregate;
+        //            };
+
+        //            jsonNamePropertyMap = entityVisitor.DictMemberNames
+        //                .SelectMany(item => item.Value, (item, value) => new { baseName = item.Key, value })
+        //                .Select(tuple => new { tuple, complexActualName = getMemberActualName(tuple.baseName, tuple.value) })
+        //                .ToDictionary(item => new MemberName(item.complexActualName, item.complexActualName,
+        //                item.tuple.value.JsonName, item.tuple.value.JsonName),
+        //                item => item.tuple.value.ComplexPath.FirstOrDefault());
+        //        }
+
+        //        object predicateInstance = null;
+        //        JObject predicateJObject = null;
+
+        //        //check if it has a "set" node
+        //        if (predicateExpr != null)
+        //        {
+        //            if (!usePredicateOnly)
+        //            {
+        //                //has a separate predicate instance
+        //                predicateInstance = predicateExpr.ExecuteExpression<object>();
+        //            }
+        //            else
+        //            {
+        //                predicateInstance = instance;
+        //            }
+
+        //            if (!instanceIsDictionary)
+        //            {
+        //                //initialize complex properties in case they were omitted
+        //                Utils.Utilities.InitializeComplexTypedProperties(predicateInstance, entityService);
+        //            }
+
+        //            //serialize the predicate
+        //            var predicateJson = instanceJson != null && predicateInstance == instance ?
+        //                instanceJson : serializer(predicateInstance);
+
+        //            predicateJObject = JObject.Parse(predicateJson);
+
+        //            //filter out the predicate assignments
+        //            var filteredProps = new List<JProperty>();
+
+        //            predicateAssignments = new Dictionary<object, Expression>();
+
+        //            if (predicateMemberAssignments != null && predicateMemberAssignments.Count > 0)
+        //            {
+        //                var assignments = predicateMemberAssignments.ToDictionary(item => (object)item.Key, item => item.Value);
+
+        //                foreach (var item in assignments)
+        //                    predicateAssignments.Add(item.Key, item.Value);
+        //            }
+
+        //            if (predicateDictionaryAssignments != null && predicateDictionaryAssignments.Count > 0)
+        //            {
+        //                var assignments = predicateDictionaryAssignments.ToDictionary(item => (object)item.Key, item => item.Value);
+
+        //                foreach (var item in assignments)
+        //                    predicateAssignments.Add(item.Key, item.Value);
+        //            }
+
+        //            if (predicateAssignments.Count > 0)
+        //            {
+        //                //use member assignments
+        //                //for each member assignment, find the corresponding jsonname, and jsonproperty
+        //                filteredProps.AddRange(ResolveAssignments
+        //                    (entityService, jsonNamePropertyMap, dictMemberNames,
+        //                    predicateAssignments, predicateJObject, instanceType.Name,
+        //                    out predicateComplexAssignments));
+        //            }
+
+        //            if (filteredProps.Count > 0)
+        //            {
+        //                //create new JObject
+        //                predicateJObject = new JObject();
+
+        //                foreach (var prop in filteredProps)
+        //                {
+        //                    predicateJObject.Add(prop.Name, prop.Value);
+        //                }
+        //            }
+        //        }
+
+        //        //now resolve instance
+        //        JObject instanceJObject = predicateJObject; //we just assume this first
+
+        //        if (predicateInstance != instance)
+        //        {
+        //            instanceJson = instanceJson ?? serializer(instance);
+        //            instanceJObject = JObject.Parse(instanceJson);
+
+        //            if (predicateJObject != null)
+        //            {
+        //                if (predicateComplexAssignments != null && predicateComplexAssignments.Count > 0)
+        //                {
+        //                    //these are complex properties of the instanceType that were directly assigned in the predicate and not in the original instance
+        //                    //so remove those expanded properties found on instance but not on predicate
+        //                    //this would usually happen when the complex type assigned on instance is a derived type of the complex type assigned on predicate
+        //                    foreach (var complexAssignment in predicateComplexAssignments)
+        //                    {
+        //                        //get the baseMemberJsonName
+        //                        var itemName = complexAssignment.Properties.First().Name;
+        //                        var sepIdx = itemName.IndexOf(Defaults.ComplexTypeNameSeparator);
+        //                        var baseMemberJsonName = sepIdx > 0 ? itemName.Substring(0, sepIdx) : new string(itemName.ToCharArray());
+
+        //                        //find all jproperties on instanceJObject starting with this name
+        //                        var complexJProps = instanceJObject.Properties().Where(jp => jp.Name.StartsWith(baseMemberJsonName)).ToArray();
+
+        //                        if (complexJProps.Length > 0)
+        //                        {
+        //                            foreach (var complexJProp in complexJProps)
+        //                            {
+        //                                if (!complexAssignment.Properties.Any(jp => jp.Name == complexJProp.Name))
+        //                                {
+        //                                    //candidate for removal, but confirm it isn't an actual property complexly named first
+        //                                    bool dontRemove = jsonNamePropertyMap != null
+        //                                        && jsonNamePropertyMap.FirstOrDefault(jp => jp.Key.ComplexJson == complexJProp.Name).Value is PropertyInfo complexPropInfo //.TryGetValue(complexJProp.Name, out var complexPropInfo)
+        //                                        && instanceInfo.AllProperties.Contains(complexPropInfo);
+
+        //                                    if (!dontRemove && rootIsDictionary && dictMemberNames != null)
+        //                                    {
+        //                                        //check dictionary names
+        //                                        try
+        //                                        {
+        //                                            if (dictMemberNames.TryGetValue(complexJProp.Name, out var values))
+        //                                            {
+        //                                                //key was deliberately set by user in instance dictionary so keep the property
+        //                                                dontRemove = true;
+        //                                                break;
+        //                                            }
+        //                                        }
+        //                                        catch
+        //                                        {
+
+        //                                        }
+        //                                    }
+
+        //                                    if (!dontRemove)
+        //                                    {
+        //                                        //remove it
+        //                                        complexJProp.Remove();
+        //                                    }
+        //                                }
+        //                            }
+        //                        }
+        //                    }
+        //                }
+
+        //                //apply the predicate values to instance
+        //                foreach (var predicateProp in predicateJObject)
+        //                {
+        //                    instanceJObject[predicateProp.Key] = predicateProp.Value; //should generate exception if the key is not found
+        //                }
+        //            }
+        //        }
+
+        //        //now replace values with neo functions where appropriate
+        //        var functionNodes = entityVisitor.SpecialNodePaths.Where(pair => pair.Node.Type == SpecialNodeType.Function).ToArray();
+        //        if (functionNodes.Length > 0)
+        //        {
+        //            //for vars:
+        //            //a member is identified by the last MemberAssignment, or the first argument of an ElementInit of the first Dictionary<string, object>
+        //            //title: a.title (assigned to a member)
+        //            //roles: [a.roles[0]] (ElementInit of an assignment to a member)
+        //            //roles: [a.roles[b.index]] (This scenario is same as previous, except with recursive vars)
+        //            //in other words, direct assignment, and arrays are supported
+
+        //            var propertyKeyToVarNodes = new List<(string PropertyKey, IEnumerable<object> PathsLeft, SpecialNode Node, object ReferenceItem)>();
+
+        //            foreach (var varNode in functionNodes)
+        //            {
+        //                //object varBuiltValue = varNode.Node.ConcreteValue; //as string;
+        //                object referenceItem = null;
+        //                string propertyKey = null;
+
+        //                var paths = varNode.Path;
+
+        //                MemberAssignment assignment = null;
+        //                MemberListBinding listBinding = null;
+        //                ElementInit dictElementInit = null;
+        //                ListInitExpression dictListInit = null;
+
+
+        //                //from the top of the list, the first memberassignment or memberlistbinding is our guy
+        //                foreach (var item in paths)
+        //                {
+        //                    if ((assignment = item as MemberAssignment) != null
+        //                        || (listBinding = item as MemberListBinding) != null)
+        //                    {
+        //                        break;
+        //                    }
+
+        //                    if (dictElementInit == null)
+        //                        dictElementInit = item as ElementInit;
+
+        //                    if (dictElementInit != null
+        //                        && (dictListInit = item as ListInitExpression) != null
+        //                        && dictListInit.NewExpression.Type != EntityExpressionVisitor.DictType)
+        //                    {
+        //                        break;
+        //                    }
+        //                }
+
+        //                var memberBinding = assignment ?? (MemberBinding)listBinding;
+
+        //                referenceItem = memberBinding ?? (object)dictListInit;
+
+        //                if (referenceItem == null)
+        //                {
+        //                    throw new InvalidOperationException(string.Format(Messages.AmbiguousVarsPathError, varNode.Node.ConcreteValue /*varBuiltValue*/));
+        //                }
+
+        //                if (memberBinding != null)
+        //                {
+        //                    //find property key
+        //                    JProperty jProperty = null;
+        //                    try
+        //                    {
+        //                        jProperty = ResolveAssignments
+        //                            (entityService, jsonNamePropertyMap, dictMemberNames,
+        //                            new Dictionary<object, Expression>()
+        //                        {
+        //                            { new List<MemberInfo>{ memberBinding.Member }, assignment?.Expression }
+        //                        }, instanceJObject, instanceType.Name, out var complexAssignments).FirstOrDefault();
+        //                    }
+        //                    catch (Exception e)
+        //                    {
+        //                        throw new InvalidOperationException(string.Format(Messages.AmbiguousVarsPathError, varNode.Node.ConcreteValue /*varBuiltValue*/), e);
+        //                    }
+
+        //                    if (jProperty == null)
+        //                    {
+        //                        throw new InvalidOperationException(string.Format(Messages.AmbiguousVarsPathError, varNode.Node.ConcreteValue /*varBuiltValue*/));
+        //                    }
+
+        //                    propertyKey = jProperty.Name;
+        //                    referenceItem = memberBinding;
+        //                }
+        //                else if (dictElementInit != null && dictListInit.Initializers.Contains(dictElementInit))
+        //                {
+        //                    //for dictionaries
+        //                    propertyKey = dictElementInit.Arguments[0].ExecuteExpression<string>();
+        //                    referenceItem = dictListInit;
+        //                }
+
+        //                if (propertyKey == null
+        //                    || (varNode.Node.FoundWhileVisitingPredicate && predicateJObject[propertyKey] == null) //avoid invalid assignments
+        //                    )
+        //                {
+        //                    //trouble
+        //                    throw new InvalidOperationException(string.Format(Messages.AmbiguousVarsPathError, varNode.Node.ConcreteValue /*varBuiltValue*/));
+        //                }
+
+        //                propertyKeyToVarNodes.Add(
+        //                        (propertyKey,
+        //                        paths.Take(paths.IndexOf(referenceItem) + 1),
+        //                        varNode.Node,
+        //                        referenceItem /*varBuiltValue*/));
+        //            }
+
+        //            var funcsVisitor = new FunctionExpressionVisitor(entityVisitor.QueryContext, new FunctionVisitorContext());
+        //            var containsVisitor = new ContainsExpressionVisitor();
+        //            var replacerVisitor = new ReplacerExpressionVisitor();
+
+        //            foreach (var item in propertyKeyToVarNodes)
+        //            {
+        //                funcsVisitor.Clear();
+        //                containsVisitor.Reset();
+        //                replacerVisitor.ExpressionReplacements.Clear();
+
+        //                //find the value and replace with function where appropriate
+        //                var key = item.PropertyKey;
+        //                var pathsLeft = item.PathsLeft.ToArray();
+        //                var specialNode = item.Node;
+        //                //var varBuiltValue = item.BuiltValue;
+
+        //                var getValueExpr = pathsLeft[0] as MethodCallExpression;
+
+        //                var instanceJValue = instanceJObject[key];
+
+        //                string finalValue = null; //new JRaw(varBuiltValue);
+        //                Expression expressionToVisit = null;
+
+        //                //value should be one of two things
+        //                //array or normal literal
+        //                var enumerator = pathsLeft.GetEnumerator();
+
+        //                //test for JArray first
+        //                if (instanceJValue.Type == JTokenType.Array)
+        //                {
+        //                    var jArray = instanceJValue as JArray;
+
+        //                    //find the index of this array to set
+        //                    int index = -1;
+        //                    containsVisitor.Item = getValueExpr;
+
+        //                    while (enumerator.MoveNext())
+        //                    {
+        //                        var currentItem = enumerator.Current;
+        //                        if (currentItem == getValueExpr)
+        //                            continue;
+
+        //                        System.Collections.ObjectModel.ReadOnlyCollection<ElementInit> initializers = null;
+
+        //                        switch (currentItem)
+        //                        {
+        //                            case NewArrayExpression arrayExpr:
+        //                                {
+        //                                    for (int i = 0, l = arrayExpr.Expressions.Count; i < l; i++)
+        //                                    {
+        //                                        var expr = arrayExpr.Expressions[i];
+
+        //                                        containsVisitor.Visit(expr);
+        //                                        if (containsVisitor.IsContained)
+        //                                        {
+        //                                            index = i;
+        //                                            expressionToVisit = expr;
+        //                                            break;
+        //                                        }
+        //                                    }
+        //                                    break;
+        //                                }
+        //                            case ListInitExpression listInit:
+        //                                {
+        //                                    initializers = listInit.Initializers;
+        //                                    break;
+        //                                }
+        //                            case MemberListBinding memberList:
+        //                                {
+        //                                    initializers = memberList?.Initializers;
+        //                                    break;
+        //                                }
+        //                        }
+
+        //                        if (initializers != null)
+        //                        {
+        //                            for (int i = 0, l = initializers.Count; i < l; i++)
+        //                            {
+        //                                var initializer = initializers[i];
+
+        //                                foreach (var expr in initializer.Arguments)
+        //                                {
+        //                                    containsVisitor.Visit(expr);
+        //                                    if (containsVisitor.IsContained)
+        //                                    {
+        //                                        index = i;
+        //                                        expressionToVisit = expr;
+        //                                        break;
+        //                                    }
+        //                                }
+        //                            }
+        //                        }
+
+        //                        if (expressionToVisit != null)
+        //                            break;
+        //                    }
+
+        //                    if (index < 0 || index >= jArray.Count)
+        //                    {
+        //                        //yawa don gas :)
+        //                        throw new InvalidOperationException(string.Format(Messages.AmbiguousVarsPathError, specialNode.ConcreteValue));
+        //                    }
+
+        //                    if (expressionToVisit != null)
+        //                    {
+        //                        //replace the placeholder with the actual value
+        //                        replacerVisitor.ExpressionReplacements.Add(specialNode.Placeholder, specialNode.Node);
+        //                        expressionToVisit = replacerVisitor.Visit(expressionToVisit);
+        //                        //now visit to write out the function
+        //                        funcsVisitor.Visit(expressionToVisit);
+        //                        if (funcsVisitor.Builder.ToString() is var actualValue
+        //                            && !string.IsNullOrWhiteSpace(actualValue))
+        //                        {
+        //                            finalValue = actualValue;
+        //                        }
+        //                    }
+
+        //                    //replace the value
+        //                    jArray[index] = new JRaw(finalValue ?? specialNode.ConcreteValue);
+        //                    hasFunctionsInProperties = true;
+        //                    continue;
+        //                }
+        //                else
+        //                {
+        //                    while (enumerator.MoveNext())
+        //                    {
+        //                        var currentItem = enumerator.Current;
+        //                        if (currentItem == getValueExpr)
+        //                            continue;
+
+        //                        if (currentItem is MemberAssignment assignment)
+        //                        {
+        //                            expressionToVisit = assignment.Expression;
+        //                            break;
+        //                        }
+        //                    }
+
+        //                    if (expressionToVisit != null)
+        //                    {
+        //                        //replace the placeholder with the actual value
+        //                        replacerVisitor.ExpressionReplacements.Add(specialNode.Placeholder, specialNode.Node);
+        //                        expressionToVisit = replacerVisitor.Visit(expressionToVisit);
+        //                        //now visit to write out the function
+        //                        funcsVisitor.Visit(expressionToVisit);
+        //                        if (funcsVisitor.Builder.ToString() is var actualValue
+        //                            && !string.IsNullOrWhiteSpace(actualValue))
+        //                        {
+        //                            finalValue = actualValue;
+        //                        }
+        //                    }
+
+        //                    //assign
+        //                    instanceJObject[key] = new JRaw(finalValue ?? specialNode.ConcreteValue);
+        //                    hasFunctionsInProperties = true;
+        //                }
+        //            }
+        //        }
+
+        //        return instanceJObject;
+        //    }
+
+        //    return null;
+        //}
+
         public static JObject GetFinalProperties(
             LambdaExpression lambdaExpr, QueryContext queryContext,
-            out bool hasFunctionsInProperties,
-            bool initializeComplexProperties = false)
+            out bool hasFunctionsInProperties)
         {
             hasFunctionsInProperties = false;
 
             //get the properties expression
             if (lambdaExpr != null && queryContext.SerializeCallback != null)
             {
-                var resolver = queryContext.Resolver;
+                //var resolver = queryContext.Resolver;
                 var serializer = queryContext.SerializeCallback;
-                var annotationsContext = queryContext.AnnotationsContext;
-                var entityService = annotationsContext.EntityService;
+                //var annotationsContext = queryContext.AnnotationsContext;
+                //var entityService = annotationsContext.EntityService;
 
                 //visit the expressions
-                var entityVisitor = new EntityExpressionVisitor(queryContext);
+                var entityVisitor = new NewEntityExpressionVisitor(queryContext);
+                entityVisitor.SourceParameter = lambdaExpr.Parameters.FirstOrDefault();
 
-                var instanceExpr = entityVisitor.Visit(lambdaExpr.Body);
-                var predicateExpr = entityVisitor.SetPredicateNode;
-                var predicateMemberAssignments = entityVisitor.SetPredicateMemberAssignments;
-                var predicateDictionaryAssignments = entityVisitor.SetPredicateDictionaryAssignments;
-                var usePredicateOnly = entityVisitor.SetUsePredicateOnly;
+                var instanceExpr = entityVisitor.Visit(lambdaExpr.Body); //.UncastBox(out var typeRemoved));
 
                 //get the instance
                 var instance = instanceExpr.ExecuteExpression<object>();
 
                 var instanceType = instance.GetType();
                 var instanceIsDictionary = instanceType.IsDictionaryType();
-                var sourceIsAnonymous = entityVisitor.Source.Type.IsAnonymousType();
-                var rootIsDictionary = entityVisitor.RootNode.Type.IsDictionaryType();
 
-                var instanceInfo = entityService.GetEntityTypeInfo(instanceType);
+                //var instanceInfo = entityService.GetEntityTypeInfo(instanceType);
 
-                var dictMemberNames = entityVisitor.DictMemberNames;
-                Dictionary<MemberName, MemberInfo> jsonNamePropertyMap = null;
-                Dictionary<object, Expression> predicateAssignments = null;
-                List<ComplexAssignmentInfo> predicateComplexAssignments = null;
+                var pendingAssignments = entityVisitor.PendingAssignments;
+
                 string instanceJson = null;
 
-                if (!instanceIsDictionary)
-                {
-                    if (!instanceType.IsAnonymousType())
-                        entityService.AddEntityType(instanceType); //just in case it was omitted
+                //if (!instanceIsDictionary)
+                //{
+                //    if (!instanceType.IsAnonymousType())
+                //        entityService.AddEntityType(instanceType); //just in case it was omitted
 
-                    if (resolver != null)
-                    {
-                        instanceInfo.WithJsonResolver(resolver);
-                    }
-                    else
-                    {
-                        try
-                        {
-                            if (usePredicateOnly)
-                            {
-                                //initialize complex properties in case they were omitted
-                                //however, avoid initilizing on behalf of the user unless it's a predicate
-                                Utils.Utilities.InitializeComplexTypedProperties(instance, entityService);
-                            }
-
-                            //serialize the instance to force converter to enumerate jsonNames
-                            instanceJson = serializer(instance);
-                        }
-                        catch
-                        {
-
-                        }
-                    }
-
-                    jsonNamePropertyMap = instanceInfo.JsonNamePropertyMap;
-                }
-                else if (sourceIsAnonymous)
-                {
-                    //get the mapping from dictionary member names
-                    Func<string, DictMemberInfo, string> getMemberActualName = (baseName, value) =>
-                    {
-                        if (value == null || value.ComplexPath == null || value.ComplexPath.Count == 0)
-                            return baseName ?? value.ComplexPath?.FirstOrDefault()?.Name ?? value.JsonName;
-
-                        var aggregate = value.ComplexPath.AsEnumerable().Reverse()
-                        .Select(c => c.Name)
-                        .Aggregate((c1, c2) => $"{c1}{Defaults.ComplexTypeNameSeparator}{c2}");
-
-                        if (baseName != null)
-                            aggregate = $"{baseName}{Defaults.ComplexTypeNameSeparator}{aggregate}";
-
-                        return aggregate;
-                    };
-
-                    jsonNamePropertyMap = entityVisitor.DictMemberNames
-                        .SelectMany(item => item.Value, (item, value) => new { baseName = item.Key, value })
-                        .ToDictionary(tuple => new MemberName(getMemberActualName(tuple.baseName, tuple.value), tuple.value.JsonName),
-                        tuple => tuple.value.ComplexPath.FirstOrDefault());
-                }
-
-                object predicateInstance = null;
-                JObject predicateJObject = null;
-
-                //check if it has a "set" node
-                if (predicateExpr != null)
-                {
-                    if (!usePredicateOnly)
-                    {
-                        //has a separate predicate instance
-                        predicateInstance = predicateExpr.ExecuteExpression<object>();
-                    }
-                    else
-                    {
-                        predicateInstance = instance;
-                    }
-
-                    if (!instanceIsDictionary)
-                    {
-                        //initialize complex properties in case they were omitted
-                        Utils.Utilities.InitializeComplexTypedProperties(predicateInstance, entityService);
-                    }
-
-                    //serialize the predicate
-                    var predicateJson = instanceJson != null && predicateInstance == instance ?
-                        instanceJson : serializer(predicateInstance);
-
-                    predicateJObject = JObject.Parse(predicateJson);
-
-                    //filter out the predicate assignments
-                    var filteredProps = new List<JProperty>();
-
-                    predicateAssignments = new Dictionary<object, Expression>();
-
-                    if (predicateMemberAssignments != null && predicateMemberAssignments.Count > 0)
-                    {
-                        var assignments = predicateMemberAssignments.ToDictionary(item => (object)item.Key, item => item.Value);
-
-                        foreach (var item in assignments)
-                            predicateAssignments.Add(item.Key, item.Value);
-                    }
-
-                    if (predicateDictionaryAssignments != null && predicateDictionaryAssignments.Count > 0)
-                    {
-                        var assignments = predicateDictionaryAssignments.ToDictionary(item => (object)item.Key, item => item.Value);
-
-                        foreach (var item in assignments)
-                            predicateAssignments.Add(item.Key, item.Value);
-                    }
-
-                    if (predicateAssignments.Count > 0)
-                    {
-                        //use member assignments
-                        //for each member assignment, find the corresponding jsonname, and jsonproperty
-                        filteredProps.AddRange(ResolveAssignments
-                            (entityService, jsonNamePropertyMap, dictMemberNames,
-                            predicateAssignments, predicateJObject, instanceType.Name,
-                            out predicateComplexAssignments));
-                    }
-
-                    if (filteredProps.Count > 0)
-                    {
-                        //create new JObject
-                        predicateJObject = new JObject();
-
-                        foreach (var prop in filteredProps)
-                        {
-                            predicateJObject.Add(prop.Name, prop.Value);
-                        }
-                    }
-                }
+                //    if (resolver != null)
+                //    {
+                //        instanceInfo.WithJsonResolver(resolver);
+                //    }
+                //    else
+                //    {
+                //        //serialize the instance to force converter to enumerate jsonNames
+                //        instanceJson = serializer(instance);
+                //    }
+                //}
 
                 //now resolve instance
-                JObject instanceJObject = predicateJObject; //we just assume this first
+                instanceJson = instanceJson ?? serializer(instance);
+                JObject instanceJObject = JObject.Parse(instanceJson);
 
-                if (predicateInstance != instance)
-                {
-                    instanceJson = instanceJson ?? serializer(instance);
-                    instanceJObject = JObject.Parse(instanceJson);
-
-                    if (predicateJObject != null)
-                    {
-                        if (predicateComplexAssignments != null && predicateComplexAssignments.Count > 0)
-                        {
-                            //these are complex properties of the instanceType that were directly assigned in the predicate and not in the original instance
-                            //so remove those expanded properties found on instance but not on predicate
-                            //this would usually happen when the complex type assigned on instance is a derived type of the complex type assigned on predicate
-                            foreach (var complexAssignment in predicateComplexAssignments)
-                            {
-                                //get the baseMemberJsonName
-                                var itemName = complexAssignment.Properties.First().Name;
-                                var sepIdx = itemName.IndexOf(Defaults.ComplexTypeNameSeparator);
-                                var baseMemberJsonName = sepIdx > 0 ? itemName.Substring(0, sepIdx) : new string(itemName.ToCharArray());
-
-                                //find all jproperties on instanceJObject starting with this name
-                                var complexJProps = instanceJObject.Properties().Where(jp => jp.Name.StartsWith(baseMemberJsonName)).ToArray();
-
-                                if (complexJProps.Length > 0)
-                                {
-                                    foreach (var complexJProp in complexJProps)
-                                    {
-                                        if (!complexAssignment.Properties.Any(jp => jp.Name == complexJProp.Name))
-                                        {
-                                            //candidate for removal, but confirm it isn't an actual property complexly named first
-                                            bool dontRemove = jsonNamePropertyMap != null
-                                                && jsonNamePropertyMap.FirstOrDefault(jp => jp.Key.Json == complexJProp.Name).Value is PropertyInfo complexPropInfo //.TryGetValue(complexJProp.Name, out var complexPropInfo)
-                                                && instanceInfo.AllProperties.Contains(complexPropInfo);
-
-                                            if (!dontRemove && rootIsDictionary && dictMemberNames != null)
-                                            {
-                                                //check dictionary names
-                                                try
-                                                {
-                                                    if (dictMemberNames.TryGetValue(complexJProp.Name, out var values))
-                                                    {
-                                                        //key was deliberately set by user in instance dictionary so keep the property
-                                                        dontRemove = true;
-                                                        break;
-                                                    }
-                                                }
-                                                catch
-                                                {
-
-                                                }
-                                            }
-
-                                            if (!dontRemove)
-                                            {
-                                                //remove it
-                                                complexJProp.Remove();
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        //apply the predicate values to instance
-                        foreach (var predicateProp in predicateJObject)
-                        {
-                            instanceJObject[predicateProp.Key] = predicateProp.Value; //should generate exception if the key is not found
-                        }
-                    }
-                }
-
-                //now replace values with neo functions where appropriate
-                var functionNodes = entityVisitor.SpecialNodePaths.Where(pair => pair.Node.Type == SpecialNodeType.Function).ToArray();
-                if (functionNodes.Length > 0)
-                {
-                    //for vars:
-                    //a member is identified by the last MemberAssignment, or the first argument of an ElementInit of the first Dictionary<string, object>
-                    //title: a.title (assigned to a member)
-                    //roles: [a.roles[0]] (ElementInit of an assignment to a member)
-                    //roles: [a.roles[b.index]] (This scenario is same as previous, except with recursive vars)
-                    //in other words, direct assignment, and arrays are supported
-
-                    var propertyKeyToVarNodes = new List<(string PropertyKey, IEnumerable<object> PathsLeft, SpecialNode Node, object ReferenceItem)>();
-
-                    foreach (var varNode in functionNodes)
-                    {
-                        //object varBuiltValue = varNode.Node.ConcreteValue; //as string;
-                        object referenceItem = null;
-                        string propertyKey = null;
-
-                        var paths = varNode.Path;
-
-                        MemberAssignment assignment = null;
-                        MemberListBinding listBinding = null;
-                        ElementInit dictElementInit = null;
-                        ListInitExpression dictListInit = null;
-
-
-                        //from the top of the list, the first memberassignment or memberlistbinding is our guy
-                        foreach (var item in paths)
-                        {
-                            if ((assignment = item as MemberAssignment) != null
-                                || (listBinding = item as MemberListBinding) != null)
-                            {
-                                break;
-                            }
-
-                            if (dictElementInit == null)
-                                dictElementInit = item as ElementInit;
-
-                            if (dictElementInit != null
-                                && (dictListInit = item as ListInitExpression) != null
-                                && dictListInit.NewExpression.Type != EntityExpressionVisitor.DictType)
-                            {
-                                break;
-                            }
-                        }
-
-                        var memberBinding = assignment ?? (MemberBinding)listBinding;
-
-                        referenceItem = memberBinding ?? (object)dictListInit;
-
-                        if (referenceItem == null)
-                        {
-                            throw new InvalidOperationException(string.Format(Messages.AmbiguousVarsPathError, varNode.Node.ConcreteValue /*varBuiltValue*/));
-                        }
-
-                        if (memberBinding != null)
-                        {
-                            //find property key
-                            JProperty jProperty = null;
-                            try
-                            {
-                                jProperty = ResolveAssignments
-                                    (entityService, jsonNamePropertyMap, dictMemberNames,
-                                    new Dictionary<object, Expression>()
-                                {
-                                    { new List<MemberInfo>{ memberBinding.Member }, assignment?.Expression }
-                                }, instanceJObject, instanceType.Name, out var complexAssignments).FirstOrDefault();
-                            }
-                            catch (Exception e)
-                            {
-                                throw new InvalidOperationException(string.Format(Messages.AmbiguousVarsPathError, varNode.Node.ConcreteValue /*varBuiltValue*/), e);
-                            }
-
-                            if (jProperty == null)
-                            {
-                                throw new InvalidOperationException(string.Format(Messages.AmbiguousVarsPathError, varNode.Node.ConcreteValue /*varBuiltValue*/));
-                            }
-
-                            propertyKey = jProperty.Name;
-                            referenceItem = memberBinding;
-                        }
-                        else if (dictElementInit != null && dictListInit.Initializers.Contains(dictElementInit))
-                        {
-                            //for dictionaries
-                            propertyKey = dictElementInit.Arguments[0].ExecuteExpression<string>();
-                            referenceItem = dictListInit;
-                        }
-
-                        if (propertyKey == null
-                            || (varNode.Node.FoundWhileVisitingPredicate && predicateJObject[propertyKey] == null) //avoid invalid assignments
-                            )
-                        {
-                            //trouble
-                            throw new InvalidOperationException(string.Format(Messages.AmbiguousVarsPathError, varNode.Node.ConcreteValue /*varBuiltValue*/));
-                        }
-
-                        propertyKeyToVarNodes.Add(
-                                (propertyKey,
-                                paths.Take(paths.IndexOf(referenceItem) + 1),
-                                varNode.Node,
-                                referenceItem /*varBuiltValue*/));
-                    }
-
-                    var funcsVisitor = new FunctionExpressionVisitor(entityVisitor.QueryContext, new FunctionVisitorContext());
-                    var containsVisitor = new ContainsExpressionVisitor();
-                    var replacerVisitor = new ReplacerExpressionVisitor();
-
-                    foreach (var item in propertyKeyToVarNodes)
-                    {
-                        funcsVisitor.Clear();
-                        containsVisitor.Reset();
-                        replacerVisitor.ExpressionReplacements.Clear();
-
-                        //find the value and replace with function where appropriate
-                        var key = item.PropertyKey;
-                        var pathsLeft = item.PathsLeft.ToArray();
-                        var specialNode = item.Node;
-                        //var varBuiltValue = item.BuiltValue;
-
-                        var getValueExpr = pathsLeft[0] as MethodCallExpression;
-
-                        var instanceJValue = instanceJObject[key];
-
-                        string finalValue = null; //new JRaw(varBuiltValue);
-                        Expression expressionToVisit = null;
-
-                        //value should be one of two things
-                        //array or normal literal
-                        var enumerator = pathsLeft.GetEnumerator();
-
-                        //test for JArray first
-                        if (instanceJValue.Type == JTokenType.Array)
-                        {
-                            var jArray = instanceJValue as JArray;
-
-                            //find the index of this array to set
-                            int index = -1;
-                            containsVisitor.Item = getValueExpr;
-
-                            while (enumerator.MoveNext())
-                            {
-                                var currentItem = enumerator.Current;
-                                if (currentItem == getValueExpr)
-                                    continue;
-
-                                System.Collections.ObjectModel.ReadOnlyCollection<ElementInit> initializers = null;
-
-                                switch (currentItem)
-                                {
-                                    case NewArrayExpression arrayExpr:
-                                        {
-                                            for (int i = 0, l = arrayExpr.Expressions.Count; i < l; i++)
-                                            {
-                                                var expr = arrayExpr.Expressions[i];
-
-                                                containsVisitor.Visit(expr);
-                                                if (containsVisitor.IsContained)
-                                                {
-                                                    index = i;
-                                                    expressionToVisit = expr;
-                                                    break;
-                                                }
-                                            }
-                                            break;
-                                        }
-                                    case ListInitExpression listInit:
-                                        {
-                                            initializers = listInit.Initializers;
-                                            break;
-                                        }
-                                    case MemberListBinding memberList:
-                                        {
-                                            initializers = memberList?.Initializers;
-                                            break;
-                                        }
-                                }
-
-                                if (initializers != null)
-                                {
-                                    for (int i = 0, l = initializers.Count; i < l; i++)
-                                    {
-                                        var initializer = initializers[i];
-
-                                        foreach (var expr in initializer.Arguments)
-                                        {
-                                            containsVisitor.Visit(expr);
-                                            if (containsVisitor.IsContained)
-                                            {
-                                                index = i;
-                                                expressionToVisit = expr;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-
-                                if (expressionToVisit != null)
-                                    break;
-                            }
-
-                            if (index < 0 || index >= jArray.Count)
-                            {
-                                //yawa don gas :)
-                                throw new InvalidOperationException(string.Format(Messages.AmbiguousVarsPathError, specialNode.ConcreteValue));
-                            }
-
-                            if (expressionToVisit != null)
-                            {
-                                //replace the placeholder with the actual value
-                                replacerVisitor.ExpressionReplacements.Add(specialNode.Placeholder, specialNode.Node);
-                                expressionToVisit = replacerVisitor.Visit(expressionToVisit);
-                                //now visit to write out the function
-                                funcsVisitor.Visit(expressionToVisit);
-                                if (funcsVisitor.Builder.ToString() is var actualValue
-                                    && !string.IsNullOrWhiteSpace(actualValue))
-                                {
-                                    finalValue = actualValue;
-                                }
-                            }
-
-                            //replace the value
-                            jArray[index] = new JRaw(finalValue ?? specialNode.ConcreteValue);
-                            hasFunctionsInProperties = true;
-                            continue;
-                        }
-                        else
-                        {
-                            while (enumerator.MoveNext())
-                            {
-                                var currentItem = enumerator.Current;
-                                if (currentItem == getValueExpr)
-                                    continue;
-
-                                if (currentItem is MemberAssignment assignment)
-                                {
-                                    expressionToVisit = assignment.Expression;
-                                    break;
-                                }
-                            }
-
-                            if (expressionToVisit != null)
-                            {
-                                //replace the placeholder with the actual value
-                                replacerVisitor.ExpressionReplacements.Add(specialNode.Placeholder, specialNode.Node);
-                                expressionToVisit = replacerVisitor.Visit(expressionToVisit);
-                                //now visit to write out the function
-                                funcsVisitor.Visit(expressionToVisit);
-                                if (funcsVisitor.Builder.ToString() is var actualValue
-                                    && !string.IsNullOrWhiteSpace(actualValue))
-                                {
-                                    finalValue = actualValue;
-                                }
-                            }
-
-                            //assign
-                            instanceJObject[key] = new JRaw(finalValue ?? specialNode.ConcreteValue);
-                            hasFunctionsInProperties = true;
-                        }
-                    }
-                }
+                //now do the pending assignments
+                var funcsVisitor = new FunctionExpressionVisitor(entityVisitor.QueryContext, new FunctionVisitorContext());
+                DoPendingAssignments(funcsVisitor, instanceJObject, pendingAssignments, out hasFunctionsInProperties);
 
                 return instanceJObject;
             }
 
             return null;
+        }
+
+        private static void DoPendingAssignments(
+            FunctionExpressionVisitor funcsVisitor,
+            JObject instanceJObject,
+            Dictionary<EntityMemberInfo, object> pendingAssignments,
+            out bool hasFunctionsInProperties)
+        {
+            hasFunctionsInProperties = false;
+
+            if (pendingAssignments?.Count > 0)
+            {
+                foreach (var pendingAssignment in pendingAssignments)
+                {
+                    var key = pendingAssignment.Key;
+                    var value = pendingAssignment.Value;
+
+                    var token = instanceJObject[key.ComplexJsonName];
+
+                    if (value != null)
+                    {
+                        try
+                        {
+                            JToken result = null;
+
+                            IEnumerable<Expression> arrayExpressions = null;
+
+                            switch (value)
+                            {
+                                case MemberAssignment memberAssignment:
+                                    {
+                                        result = GetJValueFromExpression(funcsVisitor, memberAssignment.Expression, out var memHasFunctionsInProperties);
+                                        hasFunctionsInProperties = hasFunctionsInProperties || memHasFunctionsInProperties;
+                                        break;
+                                    }
+                                case MemberListBinding memberListBinding:
+                                    {
+                                        arrayExpressions = memberListBinding.Initializers.SelectMany(i => i.Arguments);
+                                        break;
+                                    }
+                                case NewArrayExpression newArrayExpression:
+                                    {
+                                        arrayExpressions = newArrayExpression.Expressions;
+                                        break;
+                                    }
+                                case ListInitExpression listInitExpression when (!listInitExpression.Type.IsDictionaryType()):
+                                    {
+                                        arrayExpressions = listInitExpression.Initializers.SelectMany(i => i.Arguments);
+                                        break;
+                                    }
+                                case Expression expression:
+                                    {
+                                        result = GetJValueFromExpression(funcsVisitor, expression, out var exprHasFunctionsInProperties);
+                                        hasFunctionsInProperties = hasFunctionsInProperties || exprHasFunctionsInProperties;
+                                        break;
+                                    }
+                                default:
+                                    {
+                                        //this is an error
+                                        throw new InvalidOperationException(string.Format(Messages.AmbiguousExpressionError, value));
+                                    }
+                            }
+
+                            if (arrayExpressions != null)
+                            {
+                                var array = new JArray();
+                                foreach (var expr in arrayExpressions)
+                                {
+                                    var exprResult = GetJValueFromExpression(funcsVisitor, expr, out var exprHasFunctionsInProperties);
+                                    hasFunctionsInProperties = hasFunctionsInProperties || exprHasFunctionsInProperties;
+
+                                    array.Add(exprResult);
+                                }
+
+                                if (array.Count > 0)
+                                {
+                                    if (token is JArray tokenArray)
+                                    {
+                                        //append the values to the existing token
+                                        foreach (var item in array)
+                                        {
+                                            tokenArray.Add(item);
+                                        }
+
+                                        array = tokenArray;
+                                    }
+                                }
+
+                                result = array;
+                            }
+
+                            if (result is JObject resultJObject)
+                            {
+                                //try to get the exact value
+                                var allPossibleNames = key.GetAllPossibleComplexJsonNames();
+                                var resultJProps = resultJObject.Properties();
+
+                                var matchingProps = allPossibleNames.Select(n => resultJProps.FirstOrDefault(p => p.Name == n));
+                                var actualProp = matchingProps.FirstOrDefault();
+                                if (actualProp != null && actualProp.Type == JTokenType.Property)
+                                {
+                                    result = actualProp.Value;
+                                }
+                            }
+
+                            token = result;
+                        }
+                        catch (Exception e)
+                        {
+                            throw new InvalidOperationException(string.Format(Messages.MemberAssignmentError, key.Name, key.ComplexJsonName), e);
+                        }
+                    }
+
+                    hasFunctionsInProperties = hasFunctionsInProperties || token is JRaw;
+                    instanceJObject[key.ComplexJsonName] = token;
+                }
+            }
+        }
+
+        private static JToken GetJValueFromExpression(
+            FunctionExpressionVisitor funcsVisitor,
+            Expression expression,
+            out bool hasFunctionsInProperties)
+        {
+            hasFunctionsInProperties = false;
+
+            if (expression == null)
+                return JValue.CreateNull();
+
+            Exception exception = null;
+
+            if (ExpressionUtilities.IsSpecialNode(funcsVisitor, expression, out var executedValue,
+                out var hasVars, out bool hasFunctions, out var hasDummy)
+                && !(executedValue is JValue))
+            {
+                //try functions visitor
+                try
+                {
+                    funcsVisitor.Clear();
+                    funcsVisitor.Visit(expression);
+                    if (funcsVisitor.Builder.ToString() is var actualValue
+                        && !string.IsNullOrWhiteSpace(actualValue))
+                    {
+                        var val = actualValue.ToJToken();
+                        hasFunctionsInProperties = val is JRaw;
+                        return val;
+                    }
+                }
+                catch (Exception e)
+                {
+                    exception = e;
+                }
+            }
+            else
+            {
+                try
+                {
+                    if (!(executedValue is JToken jtoken))
+                    {
+                        var serializedValue = funcsVisitor.Serializer(executedValue);
+                        jtoken = serializedValue.ToJToken();
+                    }
+
+                    hasFunctionsInProperties = jtoken is JRaw;
+                    return jtoken;
+                }
+                catch (Exception e)
+                {
+                    exception = e;
+                }
+            }
+
+            //we are still here
+            ////try one last trick before throwing exceptions
+            //var retrieved = ExpressionUtilities.GetSimpleMemberAccessStretch(funcsVisitor.EntityService, expression, out var entityExpr);
+
+            //if (entityExpr != null)
+            //{
+            //    if (entityExpr.NodeType == ExpressionType.MemberInit
+            //        || entityExpr.NodeType == ExpressionType.New
+            //        || (entityExpr.NodeType == ExpressionType.ListInit && entityExpr.Type.IsDictionaryType()))
+            //    {
+            //        //recursively get the items
+            //        var lambdaExpr = Expression.Lambda(entityExpr);
+            //        var result = GetNewFinalProperties(lambdaExpr, funcsVisitor.QueryContext, out var _hasFunctionsInProperties);
+            //        hasFunctionsInProperties = hasFunctionsInProperties || _hasFunctionsInProperties;
+
+            //        return result;
+            //    }
+            //}
+
+            //there is a problem
+            throw exception ?? new InvalidOperationException(string.Format(Messages.AmbiguousExpressionError, expression));
         }
 
         internal static Dictionary<string, List<DictMemberInfo>> FilterDictionaryMap
@@ -593,14 +850,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
             {
                 //filter for only the ones that have the base json name
                 return _jsonNamePropertyMap
-                    .Where(jm => jm.Key.Actual.StartsWith(_baseActualName) || jm.Key.Json.StartsWith(_baseJsonName))
+                    .Where(jm => jm.Key.ComplexActual.StartsWith(_baseActualName) || jm.Key.ComplexJson.StartsWith(_baseJsonName))
                     .ToDictionary(jm => jm.Key, jm => jm.Value);
             }
 
             return null;
         }
 
-        internal static string GetMemberJsonName
+        internal static string GetMemberComplexJsonName
             (Dictionary<MemberName, MemberInfo> jsonNamePropertyMap,
             Dictionary<string, List<DictMemberInfo>> dictMemberNames,
             MemberInfo rootMemberInfo, string rootMemberName,
@@ -615,7 +872,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 .FirstOrDefault();
 
                 if (memberJsonNameMap.Value != null)
-                    memberJsonName = memberJsonNameMap.Key?.Json;
+                    memberJsonName = memberJsonNameMap.Key?.ComplexJson;
             }
 
             if (dictMemberNames != null && string.IsNullOrWhiteSpace(memberJsonName))
@@ -656,7 +913,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             JObject jObject, MemberInfo assignmentInfo, string assignmentName,
             MemberInfo actual, string actualName, string instanceTypeName)
         {
-            string memberJsonName = GetMemberJsonName(jsonNamePropertyMap,
+            string memberJsonName = GetMemberComplexJsonName(jsonNamePropertyMap,
                 dictMemberNames, assignmentInfo, assignmentName, actual, actualName);
 
             if (memberJsonName == null)
@@ -717,7 +974,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                         assignmentKeyName = info.Name;
 
                         //get base json name
-                        var jsonName = GetMemberJsonName
+                        var jsonName = GetMemberComplexJsonName
                             (assignmentJsonNamePropertyMap, assignmentDictMemberNames,
                             assignmentKeyInfo, assignmentKeyName,
                             assignmentKeyInfo, assignmentKeyName);
@@ -747,7 +1004,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                     var complexProps = new List<JProperty>();
 
                     //get base json name
-                    var baseJsonName = GetMemberJsonName
+                    var baseJsonName = GetMemberComplexJsonName
                         (assignmentJsonNamePropertyMap, assignmentDictMemberNames,
                         assignmentKeyInfo, assignmentKeyName,
                         assignmentKeyInfo, assignmentKeyName) ?? assignmentKeyName;
@@ -960,11 +1217,13 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 }
             }
 
-            var setMethod = Utils.Utilities.GetGenericMethodInfo(Utils.Utilities.GetMethodInfo(() => ObjectExtensions._Set<object>(null, null, true)), type);
+            return constraints;
 
-            return Expression.Lambda(Expression.Call(setMethod, Expression.Constant(type.GetDefaultValue(), type),
-                constraints, Expression.Constant(true) //i.e, usePredicateOnly: true
-                ));
+            //var setMethod = Utils.Utilities.GetGenericMethodInfo(Utils.Utilities.GetMethodInfo(() => ObjectExtensions._Set<object>(null, null, true)), type);
+
+            //return Expression.Lambda(Expression.Call(setMethod, Expression.Constant(type.GetDefaultValue(), type),
+            //    constraints, Expression.Constant(true) //i.e, usePredicateOnly: true
+            //    ));
         }
 
         internal static string BuildWithParamsForValues(JObject finalProperties, Func<object, string> serializer,
@@ -1041,6 +1300,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
             out JObject newFinalProperties,
             out bool finalPropsHasFunctions,
             string separator = ": ",
+            string parameterSeed = null,
+            bool useVariableMemberAccessAsKey = false,
             bool useVariableAsParameter = false,
             bool wrapValueInJsonObjectNotation = false)
         {
@@ -1066,7 +1327,10 @@ namespace Neo4jClient.DataAnnotations.Cypher
             {
                 return GetFinalProperties(properties, queryContext, out _finalPropsHasFunctions);
             }, () => _finalPropsHasFunctions, ref buildStrategy, out parameter, out newFinalProperties,
-            separator: separator, useVariableAsParameter: useVariableAsParameter);
+            separator: separator, parameterSeed: parameterSeed,
+            useVariableMemberAccessAsKey: useVariableMemberAccessAsKey,
+            useVariableAsValueParameter: useVariableAsParameter,
+            wrapValueInJsonObjectNotation: wrapValueInJsonObjectNotation);
 
             finalPropsHasFunctions = _finalPropsHasFunctions;
 
@@ -1075,7 +1339,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         internal static string BuildFinalProperties
             (QueryContext queryContext,
-            string variable, 
+            string variable,
             Func<object> finalObjectGetter,
             Func<JObject> finalPropertiesGetter,
             Func<bool> finalPropsHasFuncsGetter,
@@ -1083,7 +1347,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
             out string parameter,
             out JObject newFinalProperties,
             string separator = ": ",
-            bool useVariableAsParameter = false,
+            string parameterSeed = null,
+            bool useVariableMemberAccessAsKey = false,
+            bool useVariableAsValueParameter = false,
             bool wrapValueInJsonObjectNotation = false)
         {
             newFinalProperties = null;
@@ -1092,7 +1358,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 (finalObjectGetter, finalPropertiesGetter, finalPropsHasFuncsGetter,
                 ref buildStrategy, out var finalObject, out var finalProperties);
 
-            string param = !useVariableAsParameter ? Utils.Utilities.GetRandomVariableFor(variable) : variable;
+            string param = !useVariableAsValueParameter ? Utils.Utilities.GetRandomVariableFor(parameterSeed ?? variable) : variable;
             parameter = param;
 
             string value = null;
@@ -1108,10 +1374,11 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
                             value = "$" + param;
 
-                            if (buildStrategy == PropertiesBuildStrategy.WithParamsForValues)
+                            if (buildStrategy == PropertiesBuildStrategy.WithParamsForValues || useVariableMemberAccessAsKey)
                             {
                                 value = BuildWithParamsForValues(finalProperties, queryContext.SerializeCallback,
-                                    getKey: (propertyName) => propertyName, separator: separator,
+                                    getKey: (propertyName) => useVariableMemberAccessAsKey ? $"{variable}.{propertyName}" : propertyName,
+                                    separator: separator,
                                     getValue: (propertyName) => $"${param}.{propertyName}",
                                     hasRaw: out var hasRaw, newFinalProperties: out newFinalProperties);
 
@@ -1125,7 +1392,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                     case PropertiesBuildStrategy.NoParams:
                         {
                             value = finalProperties.Properties()
-                                    .Select(jp => $"{jp.Name}{separator}{queryContext.SerializeCallback(jp.Value)}")
+                                    .Select(jp => $"{(useVariableMemberAccessAsKey ? $"{variable}.{jp.Name}" : jp.Name)}{separator}{queryContext.SerializeCallback(jp.Value)}")
                                     .Aggregate((first, second) => $"{first}, {second}");
                             break;
                         }

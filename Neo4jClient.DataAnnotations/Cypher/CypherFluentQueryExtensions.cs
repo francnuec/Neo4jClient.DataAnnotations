@@ -570,9 +570,11 @@ namespace Neo4jClient.DataAnnotations.Cypher
             var buildStrategy = queryContext.CurrentBuildStrategy ?? defaultBuildStrategy;
 
             var serializedValue = CypherUtilities.BuildFinalProperties
-                (queryContext, $"{variable}_set", properties,
+                (queryContext, variable, properties,
                 ref buildStrategy, out setParameter, out var newProperties,
                 out var finalPropsHasFunctions, separator: ": ",
+                parameterSeed: $"{variable}_set",
+                useVariableMemberAccessAsKey: false,
                 useVariableAsParameter: false,
                 wrapValueInJsonObjectNotation: true);
 
@@ -621,9 +623,11 @@ namespace Neo4jClient.DataAnnotations.Cypher
             var properties = CypherUtilities.GetConstraintsAsPropertiesLambda(predicate, typeof(T));
 
             var value = CypherUtilities.BuildFinalProperties
-                (queryContext, $"{variable}_set", properties,
+                (queryContext, variable, properties,
                 ref buildStrategy, out setParameter, out var newProperties,
                 out var finalPropsHasFunctions, separator: " = ",
+                parameterSeed: $"{variable}_set",
+                useVariableMemberAccessAsKey: true,
                 useVariableAsParameter: false,
                 wrapValueInJsonObjectNotation: false);
 

@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Neo4jClient.DataAnnotations.Serialization
 {
-    public class SerializationUtilities
+    public static class SerializationUtilities
     {
         public static string SerializeMetadata(Metadata metadata)
         {

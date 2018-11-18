@@ -33,7 +33,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 "actor.Roles[2]" },
 
             new object[] { (Expression<Func<Location>>)(() => (Vars.Get<ActorNode>("actor").Address as AddressWithComplexType).Location),
-                "actor.NewAddressName.Location" },
+                "actor.NewAddressName_Location" },
 
             new object[] { (Expression<Func<double>>)(() => (Vars.Get<ActorNode>("actor").Address as AddressWithComplexType).Location.Latitude),
                 "actor.NewAddressName_Location_Latitude" },
@@ -254,6 +254,25 @@ namespace Neo4jClient.DataAnnotations.Tests
             new object[] {
                 new Dictionary<string, dynamic>()
                 {
+                    { "Name", "\"Ellen Pompeo\"" },
+                    { "Born", "1969.0" },
+                    { "NewAddressName_AddressLine", "null" },
+                    { "NewAddressName_City", "\"Los Angeles\"" },
+                    { "NewAddressName_State", "\"California\"" },
+                    { "NewAddressName_Country", "\"US\"" },
+                    { "NewAddressName_Location_Latitude", "34.0522" },
+                    { "NewAddressName_Location_Longitude", "-118.2437" },
+                },
+                (Expression<Func<object>>)(() => new Dictionary<string, object>()
+                {
+                    { "Name", TestUtilities.Actor.Name },
+                    { "Born", Convert.ToSingle(TestUtilities.Actor.Born) },
+                    { "Address", TestUtilities.Actor.Address }
+                }),
+            },
+            new object[] {
+                new Dictionary<string, dynamic>()
+                {
                     { "Name", "\"Shonda Rhimes\"" },
                     { "Born", "1671" },
                     { "NewAddressName_AddressLine", "ellenPompeo.NewAddressName_AddressLine" },
@@ -261,84 +280,119 @@ namespace Neo4jClient.DataAnnotations.Tests
                     { "NewAddressName_State", "ellenPompeo.NewAddressName_State" },
                     { "NewAddressName_Country", "ellenPompeo.NewAddressName_Country" },
                 },
-                (Expression<Func<object>>)(() => new Dictionary<string, object>()
-                {
-                    { "Name", TestUtilities.Actor.Name },
-                    { "Born", Convert.ToSingle(TestUtilities.Actor.Born) },
-                    { "Address", TestUtilities.Actor.Address }
-                }._Set(a => a["Address"] == Vars.Get<ActorNode>("ellenPompeo").Address
-                    && (int)a["Born"] == 1671 && a["Name"] == "Shonda Rhimes")),
+                (Expression<Func<Dictionary<string, object>, bool>>)(a => a["Address"] == Vars.Get<ActorNode>("ellenPompeo").Address
+                    && (int)a["Born"] == 1671 && a["Name"] == "Shonda Rhimes"),
             },
             new object[] {
                 new Dictionary<string, dynamic>()
                 {
-                    { "Name", "\"Shonda Rhimes\"" },
+                    { "Name", "\"Ellen Pompeo\"" },
                     { "Born", "1969" },
-                    { "NewAddressName_AddressLine", "shondaRhimes.NewAddressName_AddressLine" },
-                    { "NewAddressName_City", "null" },
-                    { "NewAddressName_State", "null" },
-                    { "NewAddressName_Country", "null" },
-                    { "NewAddressName_Location_Latitude", "4.0" },
-                    { "NewAddressName_Location_Longitude", "ellenPompeo.NewAddressName_Location_Longitude" },
+                    { "NewAddressName_AddressLine", "null" },
+                    { "NewAddressName_City", "\"Los Angeles\"" },
+                    { "NewAddressName_State", "\"California\"" },
+                    { "NewAddressName_Country", "\"US\"" },
                 },
-                (Expression<Func<object>>)(() => new { TestUtilities.NormalAddressActor.Name, TestUtilities.NormalAddressActor.Born, TestUtilities.NormalAddressActor.Address }
-                ._Set(a => a.Address == new AddressWithComplexType()
-                {   //Use this style only if you're sure all the properties here are assigned, 
-                    //because this address object would replace the instance address property entirely.
-                    //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
-                    //This was done mainly for testing. 
-                    //Use a => a.Address.Location.Longitude == (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
-
-                    AddressLine = Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine,
-                    Location = new Location()
-                    {
-                        Latitude = 4.0,
-                        Longitude = (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
-                    }
-                } && a.Name == "Shonda Rhimes"))
+                (Expression<Func<object>>)(() => new {
+                    TestUtilities.NormalAddressActor.Name,
+                    TestUtilities.NormalAddressActor.Born,
+                    Address = TestUtilities.NormalAddressActor.Address
+                })
             },
             new object[] {
                 new Dictionary<string, dynamic>()
                 {
-                    { "Name", "\"Shonda Rhimes\"" },
+                    { "Name", "\"Ellen Pompeo\"" },
                     { "Born", "1969" },
-                    { "NewAddressName_AddressLine", "shondaRhimes.NewAddressName_AddressLine" },
-                    { "NewAddressName_City", "null" },
-                    { "NewAddressName_State", "null" },
-                    { "NewAddressName_Country", "null" },
-                    { "NewAddressName_Location_Latitude", "4.0" },
-                    { "NewAddressName_Location_Longitude", "ellenPompeo.NewAddressName_Location_Longitude" },
+                    { "Address_AddressLine", "shondaRhimes.NewAddressName_AddressLine" },
+                    { "Address_City", "null" },
+                    { "Address_State", "null" },
+                    { "Address_Country", "null" },
+                    { "Address_Location_Latitude", "4.0" },
+                    { "Address_Location_Longitude", "ellenPompeo.NewAddressName_Location_Longitude" },
                 },
-                (Expression<Func<object>>)(() => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, Address = TestUtilities.Actor.Address }
-                ._Set(a => a.Address == new AddressWithComplexType()
-                {   //Use this style only if you're sure all the properties here are assigned, 
-                    //because this address object would replace the instance address property entirely.
-                    //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
-                    //This was done mainly for testing. 
-                    //Use a => a.Address.Location.Longitude == (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
+                (Expression<Func<object>>)(() => new {
+                    TestUtilities.NormalAddressActor.Name,
+                    TestUtilities.NormalAddressActor.Born,
+                    Address =  new AddressWithComplexType()
+                    {   //Use this style only if you're sure all the properties here are assigned, 
+                        //because this address object would replace the instance address property entirely.
+                        //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
+                        //This was done mainly for testing. 
+                        //Use a => a.Address.Location.Longitude == (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
 
-                    AddressLine = Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine,
-                    Location = new Location()
-                    {
-                        Latitude = 4.0,
-                        Longitude = (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
+                        AddressLine = Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine,
+                        Location = new Location()
+                        {
+                            Latitude = 4.0,
+                            Longitude = (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
+                        }
                     }
-                } && a.Name == "Shonda Rhimes"))
+                })
             },
             new object[] {
                 new Dictionary<string, dynamic>()
                 {
-                    { "Name", "\"Shonda Rhimes\"" },
+                    { "Name", "\"Ellen Pompeo\"" },
                     { "Born", "1969" },
                     { "NewAddressName_AddressLine", "null" },
                     { "NewAddressName_City", "\"Los Angeles\"" },
                     { "NewAddressName_State", "\"California\"" },
                     { "NewAddressName_Country", "\"US\"" },
                     { "NewAddressName_Location_Latitude", "34.0522" },
+                    { "NewAddressName_Location_Longitude", "-118.2437" },
+                },
+                (Expression<Func<object>>)(() => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, Address = TestUtilities.Actor.Address })
+            },
+            new object[] {
+                new Dictionary<string, dynamic>()
+                {
+                    { "Name", "\"Ellen Pompeo\"" },
+                    { "Born", "1969" },
+                    { "Address_AddressLine", "null" },
+                    { "Address_City", "\"Los Angeles\"" },
+                    { "Address_State", "\"California\"" },
+                    { "Address_Country", "\"US\"" },
+                    { "Address_Location_Latitude", "34.0522" },
+                    { "Address_Location_Longitude", "-118.2437" },
+                },
+                (Expression<Func<object>>)(() => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born,
+                    Address = TestUtilities.Actor.Address._() /*name escape should keep the name as it is and not attempt inferring it from reflection.*/ })
+            },
+            new object[] {
+                new Dictionary<string, dynamic>()
+                {
+                    { "Name", "\"Shonda Rhimes\"" },
+                    { "NewAddressName_AddressLine", "shondaRhimes.NewAddressName_AddressLine" },
+                    { "NewAddressName_City", "null" },
+                    { "NewAddressName_State", "null" },
+                    { "NewAddressName_Country", "null" },
+                    { "NewAddressName_Location_Latitude", "4.0" },
+                    { "NewAddressName_Location_Longitude", "ellenPompeo.NewAddressName_Location_Longitude" },
+                    { "TestForeignKeyId", 5 },
+                },
+                (Expression<Func<ActorNode<int>, bool>>)(a => a.Address == new AddressWithComplexType()
+                {   //Use this style only if you're sure all the properties here are assigned, 
+                    //because this address object would replace the instance address property entirely.
+                    //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
+                    //This was done mainly for testing. 
+                    //Use a => a.Address.Location.Longitude == (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
+
+                    AddressLine = Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine,
+                    Location = new Location()
+                    {
+                        Latitude = 4.0,
+                        Longitude = (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
+                    }
+                } && a.Name == "Shonda Rhimes" && a.TestForeignKeyId == 5)
+            },
+            new object[] {
+                new Dictionary<string, dynamic>()
+                {
+                    { "Name", "\"Shonda Rhimes\"" },
                     { "NewAddressName_Location_Longitude", "ellenPompeo.NewAddressName_Location_Longitude" },
                 },
-                (Expression<Func<object>>)(() => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, Address = TestUtilities.Actor.Address as AddressWithComplexType }
-                ._Set(a => a.Address.Location.Longitude == new AddressWithComplexType()
+                (Expression<Func<ActorNode, bool>>)(a => (a.Address as AddressWithComplexType).Location.Longitude == new AddressWithComplexType()
                 {   //Using this style, variables set inline of a member access may or may not make it to the generated pattern, or even throw an exception.
                     //This is because this MemberInit may be taken as an object value, since it was accessed, and then used directly.
                     //This was done mainly for testing. 
@@ -350,14 +404,13 @@ namespace Neo4jClient.DataAnnotations.Tests
                         Latitude = 4.0,
                         Longitude = (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
                     }
-                }.Location.Longitude && a.Name == "Shonda Rhimes")),
-                typeof(InvalidOperationException), string.Format(Messages.AmbiguousVarsPathError, "shondaRhimes.NewAddressName_AddressLine")
+                }.Location.Longitude && a.Name == "Shonda Rhimes"),
+                //typeof(InvalidOperationException), string.Format(Messages.AmbiguousVarsPathError, "shondaRhimes.NewAddressName_AddressLine")
             },
             new object[] {
                 new Dictionary<string, dynamic>()
                 {
                     { "Name", "\"Shonda Rhimes\"" },
-                    { "Born", "1969" },
                     { "NewAddressName_AddressLine", "shondaRhimes.NewAddressName_AddressLine" },
                     { "NewAddressName_City", "null" },
                     { "NewAddressName_State", "null" },
@@ -365,8 +418,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                     { "NewAddressName_Location_Latitude", "4.0" },
                     { "NewAddressName_Location_Longitude", "ellenPompeo.NewAddressName_Location_Longitude" },
                 },
-                (Expression<Func<object>>)(() => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, Address = TestUtilities.Actor.Address as AddressWithComplexType }
-                ._Set(a => a.Address == new AddressWithComplexType()
+                (Expression<Func<ActorNode, bool>>)(a => a.Address == new AddressWithComplexType()
                 {   //Use this style only if you're sure all the properties here are assigned, 
                     //because this address object would replace the instance address property entirely.
                     //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
@@ -379,43 +431,23 @@ namespace Neo4jClient.DataAnnotations.Tests
                         Latitude = 4.0,
                         Longitude = (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
                     }
-                } && a.Name == "Shonda Rhimes"))
+                } && a.Name == "Shonda Rhimes")
             },
             new object[] {
                 new Dictionary<string, dynamic>()
                 {
                     { "Name", "\"Shonda Rhimes\"" },
-                    { "Born", "1969" },
                     { "NewAddressName_AddressLine", "shondaRhimes.NewAddressName_AddressLine" },
-                    { "NewAddressName_City", "\"Los Angeles\"" },
-                    { "NewAddressName_State", "\"California\"" },
-                    { "NewAddressName_Country", "\"US\"" },
-                    { "NewAddressName_Location_Latitude", "34.0522" },
-                    { "NewAddressName_Location_Longitude", "-118.2437" },
                 },
-                (Expression<Func<object>>)(() => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, TestUtilities.Actor.Address }
-                ._Set(a => (a.Address as AddressWithComplexType).AddressLine == Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes"))
+                (Expression<Func<ActorNode, bool>>)(a =>
+                    (a.Address as AddressWithComplexType).AddressLine == Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine
+                    && a.Name == "Shonda Rhimes")
             },
             new object[] {
                 new Dictionary<string, dynamic>()
                 {
-                    { "Name", "\"Shonda Rhimes\"" },
+                    { "Name", "\"Ellen Pompeo\"" },
                     { "Born", "1969" },
-                    { "NewAddressName_AddressLine", "shondaRhimes.NewAddressName_AddressLine" },
-                    { "NewAddressName_City", "\"Los Angeles\"" },
-                    { "NewAddressName_State", "\"California\"" },
-                    { "NewAddressName_Country", "\"US\"" },
-                    { "NewAddressName_Location_Latitude", "34.0522" },
-                    { "NewAddressName_Location_Longitude", "-118.2437" },
-                },
-                (Expression<Func<object>>)(() => new { TestUtilities.Actor.Name, TestUtilities.Actor.Born, TestUtilities.Actor.Address }
-                ._Set(a => a.Address.AddressLine == Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine && a.Name == "Shonda Rhimes"))
-            },
-            new object[] {
-                new Dictionary<string, dynamic>()
-                {
-                    { "Name", "\"Shonda Rhimes\"" },
-                    { "Born", "ellenPompeo.Born" },
                     { "Roles", "null"},
                     { "NewAddressName_AddressLine", "null" },
                     { "NewAddressName_City", "\"Los Angeles\"" },
@@ -427,12 +459,25 @@ namespace Neo4jClient.DataAnnotations.Tests
                     { "TestMarkedFK", "0" },
                     { "TestGenericForeignKeyId", "null" },
                 },
-                (Expression<Func<object>>)(() => TestUtilities.Actor._Set(a => a.Born == Vars.Get<ActorNode>("ellenPompeo").Born && a.Name == "Shonda Rhimes"))
+                (Expression<Func<object>>)(() => TestUtilities.Actor)
             },
             new object[] {
                 new Dictionary<string, dynamic>()
                 {
-                    { "Address", TestUtilities.Actor.Address },
+                    { "Name", "\"Shonda Rhimes\"" },
+                    { "Born", "ellenPompeo.Born" },
+                },
+                (Expression<Func<ActorNode, bool>>)(a => a.Born == Vars.Get<ActorNode>("ellenPompeo").Born && a.Name == "Shonda Rhimes")
+            },
+            new object[] {
+                new Dictionary<string, dynamic>()
+                {
+                    { "Address_AddressLine", "null" },
+                    { "Address_City", "\"Los Angeles\"" },
+                    { "Address_State", "\"California\"" },
+                    { "Address_Country", "\"US\"" },
+                    { "Address_Location_Latitude", "34.0522" },
+                    { "Address_Location_Longitude", "-118.2437" },
                     { "Coordinates", $"[{(TestUtilities.Actor.Address as AddressWithComplexType).Location.Latitude},shondaRhimes.NewAddressName_Location_Longitude]" }
                 },
                 (Expression<Func<object>>)(() => new
@@ -462,7 +507,8 @@ namespace Neo4jClient.DataAnnotations.Tests
                             Longitude = 56.90
                         }
                     }.Location
-                }), typeof(InvalidOperationException), string.Format(Messages.AmbiguousVarsPathError, "A.AddressLine")
+                }),
+                //typeof(InvalidOperationException), string.Format(Messages.AmbiguousVarsPathError, "A.AddressLine")
             },
             new object[] {
                 new Dictionary<string, dynamic>()
@@ -493,7 +539,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 (Expression<Func<object>>)(() =>
                 new
                 {
-                    Name = "Ellen Pompeo"._AsRaw(),
+                    Name = new JRaw("Ellen Pompeo"), //._AsRaw(),
                     Born = Convert.ToBoolean(Vars.Get<ActorNode>("shondaRhimes").Born),
                     Roles = new string[] { "Meredith Grey".Distinct() },
                     Age = 47.ToString()
@@ -542,14 +588,12 @@ namespace Neo4jClient.DataAnnotations.Tests
         public void FinalPropertiesResolutionWithConverter(Dictionary<string, dynamic> expected, LambdaExpression expression,
             Type expectedExceptionType = null, string expectedExceptionMessage = null)
         {
-            //var reducer = new ReducerExpressionVisitor();
-            //Expression<Func<object>> expr = () => new AddressWithComplexType()
-            //{
-            //    Location = { Longitude = 34.9 }
-            //};
-            //var reduced = reducer.Visit(expr);
+            //expression = (((expression.Body as MethodCallExpression)?
+            //    .Arguments.LastOrDefault() as UnaryExpression)?.Operand as LambdaExpression) ?? expression;
 
             var testContext = new ConverterTestContext();
+
+            //var result = CypherUtilities.GetFinalProperties(expression, testContext.QueryContext, out var hasFuncsInProps);
 
             Func<JObject> action = () => CypherUtilities.GetFinalProperties
                     (expression, testContext.QueryContext, out var hasFuncs);

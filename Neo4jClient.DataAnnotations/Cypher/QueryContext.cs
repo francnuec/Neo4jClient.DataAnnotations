@@ -6,6 +6,8 @@ using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using System.Linq.Expressions;
+using Newtonsoft.Json.Linq;
 
 namespace Neo4jClient.DataAnnotations.Cypher
 {
@@ -65,5 +67,13 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
             return null;
         };
+
+        private Dictionary<Expression, (Expression NewNode, string Build)> funcsCachedBuilds;
+        public Dictionary<Expression, (Expression NewNode, string Build)> FuncsCachedBuilds => 
+            funcsCachedBuilds ?? (funcsCachedBuilds = new Dictionary<Expression, (Expression NewNode, string Build)>());
+
+        private Dictionary<Expression, JToken> funcsCachedJTokens;
+        public Dictionary<Expression, JToken> FuncsCachedJTokens =>
+            funcsCachedJTokens ?? (funcsCachedJTokens = new Dictionary<Expression, JToken>());
     }
 }

@@ -46,8 +46,11 @@ namespace Neo4jClient.DataAnnotations.Serialization
             Writable = existingProp.Writable;
 
             ComplexUnderlyingName = (existingProp as EntityJsonProperty)?.ComplexUnderlyingName;
+            SimplePropertyName = (existingProp as EntityJsonProperty)?.SimplePropertyName;
         }
 
         public string ComplexUnderlyingName { get; set; }
+
+        public string SimplePropertyName { get; set; }
     }
 }

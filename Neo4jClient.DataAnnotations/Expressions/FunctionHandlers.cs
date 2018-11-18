@@ -16,10 +16,10 @@ namespace Neo4jClient.DataAnnotations.Expressions
             var expr = context.Continuation();
 
             //write the index
-            context.Visitor.Builder.Append("[");
+            context.Visitor.Builder.Append("[", context.Expression);
             context.Visitor.Allow(indexExpr);
-            context.Visitor.WriteArgument(indexExpr);
-            context.Visitor.Builder.Append("]");
+            context.Visitor.WriteArgument(indexExpr, context.Expression);
+            context.Visitor.Builder.Append("]", context.Expression);
 
             return expr;
         }
@@ -33,10 +33,33 @@ namespace Neo4jClient.DataAnnotations.Expressions
             (string cypherMethod, TExpr TExpression, FunctionHandlerContext context, Func<TExpr, FunctionHandlerContext, Expression> bodyHandler)
             where TExpr : Expression
         {
-            context.Visitor.Builder.Append($"{cypherMethod}(");
+            context.Visitor.Builder.Append($"{cypherMethod}(", context.Expression);
             var ret = bodyHandler(TExpression, context);
-            context.Visitor.Builder.Append(")");
+            context.Visitor.Builder.Append(")", context.Expression);
             return ret;
+        }
+
+        public static Expression HandleArray(IEnumerable<Expression> valueExprs, FunctionHandlerContext context)
+        {
+            //write the array
+            context.Visitor.Builder.Append("[", context.Expression);
+
+            bool isFirst = true;
+
+            foreach (var valueExpr in valueExprs)
+            {
+                if (!isFirst)
+                {
+                    context.Visitor.Builder.Append(", ", context.Expression);
+                }
+                else isFirst = false;
+
+                context.Visitor.WriteArgument(valueExpr, context.Expression);
+            }
+
+            context.Visitor.Builder.Append("]", context.Expression);
+
+            return context.Expression;
         }
 
         #region Misc
@@ -124,7 +147,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
             {
                 return () =>
                 {
-                    context.Visitor.WriteArgument(context.Expression);
+                    context.Visitor.WriteArgument(context.Expression, node);
                     return context.Expression;
                 };
             }
@@ -220,7 +243,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
             {
                 return () =>
                 {
-                    context.Visitor.WriteOperation("^", methodCallExpr.Arguments[0], methodCallExpr, methodCallExpr.Arguments[1]);
+                    context.Visitor.WriteOperation("^", methodCallExpr.Arguments[0], methodCallExpr, methodCallExpr.Arguments[1], methodCallExpr);
                     return context.Expression;
                 };
             }
@@ -244,7 +267,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 return () =>
                 {
                     var sourceExpr = methodCallExpr.Arguments[0];
-                    context.Visitor.WriteOperation("IS NULL", sourceExpr, methodCallExpr, null);
+                    context.Visitor.WriteOperation("IS NULL", sourceExpr, methodCallExpr, null, methodCallExpr);
                     return methodCallExpr;
                 };
             }
@@ -268,7 +291,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 return () =>
                 {
                     var sourceExpr = methodCallExpr.Arguments[0];
-                    context.Visitor.WriteOperation("IS NOT NULL", sourceExpr, methodCallExpr, null);
+                    context.Visitor.WriteOperation("IS NOT NULL", sourceExpr, methodCallExpr, null, methodCallExpr);
                     return methodCallExpr;
                 };
             }
@@ -288,7 +311,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 {
                     //output raw value
                     var sourceExpr = methodCallExpr.Arguments[0];
-                    context.Visitor.WriteArgument(sourceExpr, isRawValue: true);
+                    context.Visitor.WriteArgument(sourceExpr, methodCallExpr, isRawValue: true);
                     return context.Expression;
                 };
             }
@@ -311,7 +334,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 return () =>
                 {
                     //write the operation
-                    context.Visitor.WriteOperation(neo4jOperator, node.Left, node, node.Right);
+                    context.Visitor.WriteOperation(neo4jOperator, node.Left, node, node.Right, node);
 
                     return context.Expression;
                 };
@@ -340,14 +363,85 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     //write the operation
                     if (leftOperator != null)
                     {
-                        context.Visitor.WriteOperation(leftOperator, null, node, node.Operand);
+                        context.Visitor.WriteOperation(leftOperator, null, node, node.Operand, node);
                     }
                     else
                     {
-                        context.Visitor.WriteOperation(rightOperator, node.Operand, false, node, false, null);
+                        context.Visitor.WriteOperation(rightOperator, node.Operand, false, node, false, null, node);
                     }
 
                     return context.Expression;
+                };
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Treats a <see cref="MemberInitExpression"/>, dictionary <see cref="ListInitExpression"/>, or a generic <see cref="NewExpression"/> as a constant, or nothing, as may be appropriate.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public static Func<Expression> New_Dictionary_MemberInitType(FunctionHandlerContext context)
+        {
+            if (context.VisitorContext.WriteConstants
+                && context.Expression is Expression node
+                && (node.NodeType == ExpressionType.MemberInit
+                || (node.NodeType == ExpressionType.ListInit && node.Type.IsDictionaryType())
+                || node.NodeType == ExpressionType.New))
+            {
+                return () =>
+                {
+                    //normally, we shouldn't even encounter this node here
+                    //but process anyway
+                    //process the unhandled nodes now and don't go any deeper (i.e., no continuation)
+                    context.Visitor.ProcessUnhandledSimpleVars(node, considerInits: true);
+                    return context.Expression;
+                };
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Writes a <see cref="NewArrayExpression"/> as a neo4j array.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public static Func<Expression> NewArrayType(FunctionHandlerContext context)
+        {
+            if (context.VisitorContext.WriteConstants 
+                && context.Expression is NewArrayExpression node
+                && node.Type != Defaults.StringType)
+            {
+                return () =>
+                {
+                    return HandleArray(node.Expressions, context);
+                };
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Skips the No-Further-Processing method (<see cref="ObjectExtensions._{T}(T)"/>) in an expression.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public static Func<Expression> NoFurtherProcessing(FunctionHandlerContext context)
+        {
+            if (context.Expression is MethodCallExpression methodCallExpr
+                && methodCallExpr.Method is var methodInfo
+                && methodInfo.Name == "_"
+                && methodInfo.DeclaringType == Defaults.ObjectExtensionsType
+                && methodInfo.IsExtensionMethod())
+            {
+                return () =>
+                {
+                    //this npf method is useless here so just skip
+                    context.Visitor.Ignore(methodCallExpr);
+                    var expr = context.Continuation();
+                    return expr;
                 };
             }
 
@@ -400,14 +494,14 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     try
                     {
                         var value = methodCallExpr.ExecuteExpression<string>();
-                        context.Visitor.Builder.Append(value);
+                        context.Visitor.Builder.Append(value, methodCallExpr);
                     }
                     catch
                     {
                         HandleGenericMethodBody("toString", methodCallExpr, context, (m, c) =>
                         {
                             //write the argument
-                            context.Visitor.WriteArgument(m.Object);
+                            context.Visitor.WriteArgument(m.Object, methodCallExpr);
                             return m;
                         });
                     }
@@ -433,14 +527,14 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     try
                     {
                         var value = memberExpr.ExecuteExpression<string>();
-                        context.Visitor.Builder.Append(value);
+                        context.Visitor.Builder.Append(value, memberExpr);
                     }
                     catch
                     {
                         HandleGenericMethodBody("size", memberExpr, context, (m, c) =>
                         {
                             //write the argument
-                            context.Visitor.WriteArgument(m.Expression);
+                            context.Visitor.WriteArgument(m.Expression, memberExpr);
                             return m;
                         });
                     }
@@ -476,7 +570,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                         var value = methodCallExpr.ExecuteExpression<object>();
                         if(value != null)
                         {
-                            context.Visitor.Builder.Append(value);
+                            context.Visitor.Builder.Append(value, methodCallExpr);
                             return context.Expression;
                         }
                     }
@@ -502,19 +596,19 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 context.Visitor.Ignore(arg);
 
             var newExpr = context.Continuation();
-            context.Visitor.Builder.Append(", ");
+            context.Visitor.Builder.Append(", ", context.Expression);
 
             //write search term
             var searchTermExpr = expr.Arguments[0];
             context.Visitor.Allow(searchTermExpr);
-            context.Visitor.WriteArgument(searchTermExpr);
+            context.Visitor.WriteArgument(searchTermExpr, context.Expression);
 
-            context.Visitor.Builder.Append(", ");
+            context.Visitor.Builder.Append(", ", context.Expression);
 
             //write replacement
             var replacementExpr = expr.Arguments[1];
             context.Visitor.Allow(replacementExpr);
-            context.Visitor.WriteArgument(replacementExpr);
+            context.Visitor.WriteArgument(replacementExpr, context.Expression);
 
             return newExpr;
         }
@@ -525,21 +619,21 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 context.Visitor.Ignore(arg);
 
             var newExpr = context.Continuation();
-            context.Visitor.Builder.Append(", ");
+            context.Visitor.Builder.Append(", ", context.Expression);
 
             //write start
             var startExpr = expr.Arguments[0];
             context.Visitor.Allow(startExpr);
-            context.Visitor.WriteArgument(startExpr);
+            context.Visitor.WriteArgument(startExpr, context.Expression);
 
             if (expr.Arguments.Count > 1)
             {
-                context.Visitor.Builder.Append(", ");
+                context.Visitor.Builder.Append(", ", context.Expression);
 
                 //write length
                 var lengthExpr = expr.Arguments[1];
                 context.Visitor.Allow(lengthExpr);
-                context.Visitor.WriteArgument(lengthExpr);
+                context.Visitor.WriteArgument(lengthExpr, context.Expression);
             }
 
             return newExpr;
@@ -551,7 +645,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 context.Visitor.Ignore(arg);
 
             var newExpr = context.Continuation();
-            context.Visitor.Builder.Append(", ");
+            context.Visitor.Builder.Append(", ", context.Expression);
 
             var separatorExpr = expr.Arguments[0];
 
@@ -581,7 +675,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
             //write separator
             context.Visitor.Allow(separatorExpr);
-            context.Visitor.WriteArgument(separatorExpr);
+            context.Visitor.WriteArgument(separatorExpr, context.Expression);
 
             return newExpr;
         }
@@ -625,10 +719,10 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     context.Visitor.Ignore(argumentExpr);
                     var newExpr = context.Continuation();
 
-                    context.Visitor.Builder.Append($" {cypherMethod} ");
+                    context.Visitor.Builder.Append($" {cypherMethod} ", methodCallExpr);
 
                     context.Visitor.Allow(argumentExpr);
-                    context.Visitor.WriteArgument(argumentExpr);
+                    context.Visitor.WriteArgument(argumentExpr, methodCallExpr);
                     return newExpr;
                 };
             }
@@ -694,15 +788,15 @@ namespace Neo4jClient.DataAnnotations.Expressions
             {
 
                 //just write it directly
-                context.Visitor.Builder.Append(parameter.Name);
+                context.Visitor.Builder.Append(parameter.Name, context.Expression);
             }
             else
             {
                 context.Visitor.Allow(variableExpr);
-                context.Visitor.WriteArgument(variableExpr);
+                context.Visitor.WriteArgument(variableExpr, context.Expression);
             }
 
-            context.Visitor.Builder.Append(" IN ");
+            context.Visitor.Builder.Append(" IN ", context.Expression);
 
             //add all to handled nodes so they aren't processed
             context.Visitor.Ignore(variableExpr);
@@ -715,7 +809,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
             if (predicateExpr != null)
             {
-                context.Visitor.Builder.Append(" WHERE ");
+                context.Visitor.Builder.Append(" WHERE ", context.Expression);
                 //write the predicate
                 context.Visitor.Visit(predicateExpr.Body);
             }
@@ -723,7 +817,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
             if (selectorExpr != null)
             {
-                context.Visitor.Builder.Append(" | ");
+                context.Visitor.Builder.Append(" | ", context.Expression);
                 //write the predicate
                 context.Visitor.Visit(selectorExpr.Body);
             }
@@ -852,10 +946,10 @@ namespace Neo4jClient.DataAnnotations.Expressions
                         accumulatorExpr.Type);
 
                         //write the initial value
-                        ctx.Visitor.Builder.Append($"{accumulatorExpr.Name} = ");
-                        ctx.Visitor.WriteArgument(initialExpr);
+                        ctx.Visitor.Builder.Append($"{accumulatorExpr.Name} = ", methodCallExpr);
+                        ctx.Visitor.WriteArgument(initialExpr, methodCallExpr);
 
-                        ctx.Visitor.Builder.Append(", ");
+                        ctx.Visitor.Builder.Append(", ", methodCallExpr);
 
                         ctx.Visitor.Ignore(initialExpr);
                         return CypherListComprehensionBody(variableExpr, null, operationExpr, context);
@@ -883,7 +977,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 {
                     //Concat(source, arg)
                     //would be: source + arg
-                    context.Visitor.WriteOperation("+", methodCallExpr.Arguments[0], methodCallExpr, methodCallExpr.Arguments[1]);
+                    context.Visitor.WriteOperation("+", methodCallExpr.Arguments[0], methodCallExpr, methodCallExpr.Arguments[1], methodCallExpr);
                     return context.Expression;
                 };
             }
@@ -1026,7 +1120,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     //Distinct(source)
                     //would be: DISTINCT source
                     var sourceExpr = methodCallExpr.Arguments[0];
-                    context.Visitor.WriteOperation("DISTINCT", null, methodCallExpr, sourceExpr);
+                    context.Visitor.WriteOperation("DISTINCT", null, methodCallExpr, sourceExpr, methodCallExpr);
                     return context.Expression;
                 };
             }
@@ -1058,11 +1152,11 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 foreach (var arg in e.Arguments)
                 {
                     if (!isFirstArg)
-                        context.Visitor.Builder.Append(", ");
+                        context.Visitor.Builder.Append(", ", context.Expression);
                     else
                         isFirstArg = false;
 
-                    context.Visitor.WriteArgument(arg);
+                    context.Visitor.WriteArgument(arg, context.Expression);
                 }
 
                 return e;
@@ -1111,12 +1205,12 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     return HandleGenericMethodBody("coalesce", node, context, (b, c) =>
                     {
                         //write left
-                        context.Visitor.WriteArgument(node.Left);
+                        context.Visitor.WriteArgument(node.Left, context.Expression);
 
-                        context.Visitor.Builder.Append(", ");
+                        context.Visitor.Builder.Append(", ", context.Expression);
 
                         //write right
-                        context.Visitor.WriteArgument(node.Right);
+                        context.Visitor.WriteArgument(node.Right, context.Expression);
 
                         return b;
                     });
@@ -1187,7 +1281,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     return HandleGenericMethodBody(cypherMethod, methodCallExpr, context, ((expr, ctx) =>
                     {
                         //write the argument
-                        ctx.Visitor.WriteArgument(expr.Arguments[0]);
+                        ctx.Visitor.WriteArgument(expr.Arguments[0], methodCallExpr);
                         return expr;
                     }));
                 };
@@ -1280,11 +1374,11 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 foreach(var arg in e.Arguments)
                 {
                     if (!isFirstArg)
-                        context.Visitor.Builder.Append(", ");
+                        context.Visitor.Builder.Append(", ", context.Expression);
                     else
                         isFirstArg = false;
 
-                    context.Visitor.WriteArgument(arg);
+                    context.Visitor.WriteArgument(arg, context.Expression);
                 }
 
                 return e;
@@ -1311,7 +1405,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                         var value = methodCallExpr.ExecuteExpression<object>();
                         if (value != null)
                         {
-                            context.Visitor.Builder.Append(value);
+                            context.Visitor.Builder.Append(value, methodCallExpr);
                             return context.Expression;
                         }
                     }

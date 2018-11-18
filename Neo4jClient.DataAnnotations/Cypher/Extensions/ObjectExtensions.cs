@@ -102,35 +102,35 @@ namespace Neo4jClient.DataAnnotations.Cypher.Extensions
             //return ret;
         }
 
-        /// <summary>
-        /// Returns this string as a raw value, and not a string value. So instead of outputing a value with quotation marks, it outputs the value directly.
-        /// </summary>
-        /// <returns></returns>
-        public static JRaw _AsRaw(this string value)
-        {
-            throw new NotImplementedException(Messages.DummyMethodInvokeError); //return new JRaw(value);
-        }
+        ///// <summary>
+        ///// Returns this string as a raw value, and not a string value. So instead of outputing a value with quotation marks, it outputs the value directly.
+        ///// </summary>
+        ///// <returns></returns>
+        //public static JRaw _AsRaw(this string value)
+        //{
+        //    throw new NotImplementedException(Messages.DummyMethodInvokeError); //return new JRaw(value);
+        //}
 
-        /// <summary>
-        /// Allows you to expressively assign new values (especially <see cref="Vars"/>) to select properties of an existing instance without cloning or modifying the original instance.
-        /// These new values would be used in place of the old ones on the instance.
-        /// E.g. () =&gt; ellenPompeo._Set(actor =&gt; actor.Born == Vars.Get&lt;Actor&gt;("shondaRhimes").Born);
-        /// NOTE: THIS IS NOT CYPHER SET CLAUSE. EXPECTED USE IS WITHIN A PATTERN EXPRESSION. The member selection must always be on the left, and new values on the right of a logical equal-to ('==') operation. Use '&amp;&amp;' for more properties.
-        /// Also note that this method does not modify this instance, but overrides its final properties written to cypher.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="instance"></param>
-        /// <param name="predicate"></param>
-        /// <returns></returns>
-        public static T _Set<T>(this T instance, Expression<Func<T, bool>> predicate)
-        {
-            return _Set(instance, predicate, usePredicateOnly: false);
-        }
+        ///// <summary>
+        ///// Allows you to expressively assign new values (especially <see cref="Vars"/>) to select properties of an existing instance without cloning or modifying the original instance.
+        ///// These new values would be used in place of the old ones on the instance.
+        ///// E.g. () =&gt; ellenPompeo._Set(actor =&gt; actor.Born == Vars.Get&lt;Actor&gt;("shondaRhimes").Born);
+        ///// NOTE: THIS IS NOT CYPHER SET CLAUSE. EXPECTED USE IS WITHIN A PATTERN EXPRESSION. The member selection must always be on the left, and new values on the right of a logical equal-to ('==') operation. Use '&amp;&amp;' for more properties.
+        ///// Also note that this method does not modify this instance, but overrides its final properties written to cypher.
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="instance"></param>
+        ///// <param name="predicate"></param>
+        ///// <returns></returns>
+        //public static T _Set<T>(this T instance, Expression<Func<T, bool>> predicate)
+        //{
+        //    return _Set(instance, predicate, usePredicateOnly: false);
+        //}
 
-        internal static T _Set<T>(this T instance, Expression<Func<T, bool>> predicate, bool usePredicateOnly)
-        {
-            return instance;
-        }
+        //internal static T _Set<T>(this T instance, Expression<Func<T, bool>> predicate, bool usePredicateOnly)
+        //{
+        //    return instance;
+        //}
 
         /// <summary>
         /// The neo4j <code>IS NULL</code> function

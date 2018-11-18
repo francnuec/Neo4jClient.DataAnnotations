@@ -22,7 +22,8 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 { Utils.Utilities.GetMethodInfo(() => Math.Pow(0, 0)), FunctionHandlers.MathPower },
                 { Utils.Utilities.GetMethodInfo(() => ObjectExtensions.IsNull<object>(null)), FunctionHandlers.IsNull },
                 { Utils.Utilities.GetMethodInfo(() => ObjectExtensions.IsNotNull<object>(null)), FunctionHandlers.IsNotNull },
-                { Utils.Utilities.GetMethodInfo(() => ObjectExtensions._AsRaw(null)), FunctionHandlers._AsRaw },
+                //{ Utils.Utilities.GetMethodInfo(() => ObjectExtensions._AsRaw(null)), FunctionHandlers._AsRaw },
+                { Defaults.NfpMethodInfo, FunctionHandlers.NoFurtherProcessing },
 
                 #region ICypherResultItem Functions
                 { Utils.Utilities.GetMethodInfo(() => (null as ICypherResultItem).As<object>()), (c) => FunctionHandlers.ICypherResultItemMethod(c, "As", "", (m, cc) =>
@@ -40,7 +41,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 { Utils.Utilities.GetMethodInfo(() => (null as ICypherResultItem).CollectAsDistinct<object>()),
                     (c) => FunctionHandlers.ICypherResultItemMethod(c, "CollectAsDistinct", "collect", (m, cc) =>
                     {
-                        cc.Visitor.Builder.Append("DISTINCT ");
+                        cc.Visitor.Builder.Append("DISTINCT ", m);
                         cc.Continuation();
 
                         return cc.Expression;
@@ -49,7 +50,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 { Utils.Utilities.GetMethodInfo(() => (null as ICypherResultItem).CountDistinct()),
                     (c) => FunctionHandlers.ICypherResultItemMethod(c, "CountDistinct", "count", (m, cc) =>
                     {
-                        cc.Visitor.Builder.Append("DISTINCT ");
+                        cc.Visitor.Builder.Append("DISTINCT ", m);
                         cc.Continuation();
 
                         return cc.Expression;
@@ -229,6 +230,9 @@ namespace Neo4jClient.DataAnnotations.Expressions
             DefaultNodeTypeHandlers = new Dictionary<ExpressionType,
                 List<Func<FunctionHandlerContext, Func<Expression>>>>()
             {
+                { ExpressionType.MemberInit, new List<Func<FunctionHandlerContext, Func<Expression>>>() { FunctionHandlers.New_Dictionary_MemberInitType } },
+                { ExpressionType.ListInit, new List<Func<FunctionHandlerContext, Func<Expression>>>() { FunctionHandlers.New_Dictionary_MemberInitType } },
+                { ExpressionType.New, new List<Func<FunctionHandlerContext, Func<Expression>>>() { FunctionHandlers.New_Dictionary_MemberInitType } },
                 { ExpressionType.Constant, new List<Func<FunctionHandlerContext, Func<Expression>>>() { FunctionHandlers.ConstantNodeType } },
                 { ExpressionType.Parameter, new List<Func<FunctionHandlerContext, Func<Expression>>>() { FunctionHandlers.ParameterNodeType } },
                 { ExpressionType.Coalesce, new List<Func<FunctionHandlerContext, Func<Expression>>>() { FunctionHandlers.CoalesceNodeType } },
@@ -243,6 +247,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
             {
                 { typeof(UnaryExpression), new List<Func<FunctionHandlerContext, Func<Expression>>>() { FunctionHandlers.UnaryType } },
                 { typeof(BinaryExpression), new List<Func<FunctionHandlerContext, Func<Expression>>>() { FunctionHandlers.BinaryType } },
+                { typeof(NewArrayExpression), new List<Func<FunctionHandlerContext, Func<Expression>>>() { FunctionHandlers.NewArrayType } },
             };
 
         /// <summary>

@@ -380,7 +380,11 @@ namespace Neo4jClient.DataAnnotations
                         .Where(m => m.IsEquivalentTo(p.UnderlyingName, p.DeclaringType, p.PropertyType)).FirstOrDefault()
                     })
                     .Where(np => np.MemberInfo != null)
-                    .ToDictionary(np => new MemberName(np.JsonProperty.GetComplexOrActualUnderlyingName(), np.JsonProperty.PropertyName), np => np.MemberInfo);
+                    .ToDictionary(np => new MemberName(
+                        np.JsonProperty.UnderlyingName,
+                        np.JsonProperty.GetComplexOrSimpleUnderlyingName(),
+                        np.JsonProperty.GetSimpleOrComplexPropertyName(),
+                        np.JsonProperty.PropertyName), np => np.MemberInfo);
         }
 
         internal void IgnoreJsonProperties()

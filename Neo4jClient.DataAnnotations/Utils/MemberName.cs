@@ -5,15 +5,20 @@ namespace Neo4jClient.DataAnnotations.Utils
 {
     internal class MemberName : IEquatable<MemberName>
     {
-        public static MemberName Empty { get; set; } = new MemberName("", "");
+        public static MemberName Empty { get; set; } = new MemberName("", "", "", "");
 
         public string Actual { get; }
-        public string Json { get; }
+        public string ComplexActual { get; }
 
-        public MemberName(string actual, string json)
+        public string Json { get; }
+        public string ComplexJson { get; }
+
+        public MemberName(string actual, string complexActual, string json, string complexJson)
         {
             Actual = actual;
+            ComplexActual = complexActual;
             Json = json;
+            ComplexJson = complexJson;
         }
 
         public bool Equals(MemberName other)
@@ -21,14 +26,14 @@ namespace Neo4jClient.DataAnnotations.Utils
             if (ReferenceEquals(this, other))
                 return true;
 
-            return Actual == other?.Actual && Json == other?.Json;
+            return ComplexActual == other?.ComplexActual && ComplexJson == other?.ComplexJson;
         }
 
         public override string ToString()
         {
             try
             {
-                return $"({Actual}, {Json})";
+                return $"({ComplexActual}, {ComplexJson})";
             }
             catch
             {

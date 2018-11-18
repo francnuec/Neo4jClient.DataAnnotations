@@ -189,7 +189,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 {
                     //determine is the property is scalar.
                     //if not scalar, remove.
-                    if (entityInfo.JsonNamePropertyMap.FirstOrDefault(p => p.Key.Json == child.Name).Value is MemberInfo memberInfo) //TryGetValue(child.Name, out var memberInfo))
+                    if (entityInfo.JsonNamePropertyMap.FirstOrDefault(p => p.Key.ComplexJson == child.Name).Value is MemberInfo memberInfo) //TryGetValue(child.Name, out var memberInfo))
                     {
                         var propInfo = memberInfo as PropertyInfo;
                         if (!Utils.Utilities.IsScalarType(propInfo?.PropertyType, entityInfo.EntityService))
@@ -222,7 +222,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
             {
                 var propValueType = prop.PropertyType;
 
-                MemberName propJsonName = new MemberName(prop.Name, prop.Name);
+                MemberName propJsonName = new MemberName(prop.Name, prop.Name, prop.Name, prop.Name);
 
                 foreach (var propJsonNameMap in entityInfo.JsonNamePropertyMap)
                 {
@@ -233,9 +233,9 @@ namespace Neo4jClient.DataAnnotations.Serialization
                     }
                 }
 
-                var childProps = valueJObject.Properties().Where(jp => jp.Name.StartsWith(propJsonName.Json)
+                var childProps = valueJObject.Properties().Where(jp => jp.Name.StartsWith(propJsonName.ComplexJson)
                 //an actual complex type property should not be found on the entity
-                && !entityInfo.JsonNamePropertyMap.Any(map => map.Key.Json == jp.Name
+                && !entityInfo.JsonNamePropertyMap.Any(map => map.Key.ComplexJson == jp.Name
                 && entityInfo.AllProperties.Contains(map.Value))
                 ).ToArray();
 
@@ -244,7 +244,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
                 foreach (var childProp in childProps)
                 {
-                    propValueJObject.Add(childProp.Name.Remove(0, propJsonName.Json.Length + 1), childProp.Value);
+                    propValueJObject.Add(childProp.Name.Remove(0, propJsonName.ComplexJson.Length + 1), childProp.Value);
                 }
 
                 //first ascertain we handle this type
@@ -259,9 +259,9 @@ namespace Neo4jClient.DataAnnotations.Serialization
                     InitializeEntityInfo(derivedInfo, serializer);
 
                     var sepIndex = -1;
-                    if (propValueJObject.Properties().All(jp => derivedInfo.JsonNamePropertyMap.Any(p => p.Key.Json == jp.Name)//.ContainsKey(jp.Name)
+                    if (propValueJObject.Properties().All(jp => derivedInfo.JsonNamePropertyMap.Any(p => p.Key.ComplexJson == jp.Name)//.ContainsKey(jp.Name)
                     || ((sepIndex = jp.Name.IndexOf(Defaults.ComplexTypeNameSeparator)) > 0
-                    && derivedInfo.JsonNamePropertyMap.Any(p => p.Key.Json == jp.Name.Substring(0, sepIndex))))) //.ContainsKey(jp.Name.Substring(0, sepIndex)))))
+                    && derivedInfo.JsonNamePropertyMap.Any(p => p.Key.ComplexJson == jp.Name.Substring(0, sepIndex))))) //.ContainsKey(jp.Name.Substring(0, sepIndex)))))
                     {
                         //found it
                         propValueInfo = derivedInfo;
@@ -301,8 +301,13 @@ namespace Neo4jClient.DataAnnotations.Serialization
                     }
 
                     //add to the jsonmap first
-                    var childNamePair = propValueInfo.JsonNamePropertyMap.FirstOrDefault(pair => pair.Key.Json == childProp.Name.Substring(propJsonName.Json.Length + 1));
-                    var newChildName = new MemberName($"{propJsonName.Actual}{Defaults.ComplexTypeNameSeparator}{childNamePair.Key.Actual}", childProp.Name);
+                    var childNamePair = propValueInfo.JsonNamePropertyMap.FirstOrDefault(pair => pair.Key.ComplexJson == childProp.Name.Substring(propJsonName.ComplexJson.Length + 1));
+                    var newChildName = new MemberName(childNamePair.Key.Actual,
+                        $"{propJsonName.ComplexActual}{Defaults.ComplexTypeNameSeparator}{childNamePair.Key.Actual}",
+                        childProp.Name.StartsWith(propJsonName.ComplexJson + Defaults.ComplexTypeNameSeparator)? 
+                            childProp.Name.Substring(propJsonName.ComplexJson.Length + Defaults.ComplexTypeNameSeparator.Length) : 
+                            null,
+                        childProp.Name);
                     entityInfo.JsonNamePropertyMap[newChildName] = childNamePair.Value; //propValueInfo.JsonNamePropertyMap[childProp.Name.Substring(propJsonName.Json.Length + 1)];
 
                     childProp.Remove();
@@ -329,7 +334,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 var propValueType = propValue.GetType();
 
                 JProperty propBefore = null;
-                MemberName propJsonName = new MemberName(prop.Name, prop.Name);
+                MemberName propJsonName = new MemberName(prop.Name, prop.Name, prop.Name, prop.Name);
 
                 foreach (var propJsonNameMap in entityInfo.JsonNamePropertyMap)
                 {
@@ -339,7 +344,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
                         break;
                     }
 
-                    propBefore = valueJObject.Property(propJsonNameMap.Key?.Json) ?? propBefore;
+                    propBefore = valueJObject.Property(propJsonNameMap.Key?.ComplexJson) ?? propBefore;
                 }
 
                 JProperty currentProp = propBefore, temp = null;
@@ -375,11 +380,14 @@ namespace Neo4jClient.DataAnnotations.Serialization
                     }
 
                     //add to the parent object itself.
-                    var propNamePair = propValueInfo.JsonNamePropertyMap.FirstOrDefault(pair => pair.Key.Json == propChild.Name);
-                    var newPropName = new MemberName($"{propJsonName.Actual}{Defaults.ComplexTypeNameSeparator}{propNamePair.Key.Actual}",
-                        $"{propJsonName.Json}{Defaults.ComplexTypeNameSeparator}{propChild.Name}");
+                    var propNamePair = propValueInfo.JsonNamePropertyMap.FirstOrDefault(pair => pair.Key.ComplexJson == propChild.Name);
 
-                    var newProp = new JProperty(newPropName.Json, //propJsonName.Json + Defaults.ComplexTypeNameSeparator + propChild.Name,
+                    var newPropName = new MemberName(propNamePair.Key.Actual,
+                        $"{propJsonName.ComplexActual}{Defaults.ComplexTypeNameSeparator}{propNamePair.Key.Actual}",
+                        propChild.Name,
+                        $"{propJsonName.ComplexJson}{Defaults.ComplexTypeNameSeparator}{propChild.Name}");
+
+                    var newProp = new JProperty(newPropName.ComplexJson, //propJsonName.Json + Defaults.ComplexTypeNameSeparator + propChild.Name,
                         propChild.Value);
                     currentProp.AddAfterSelf(newProp);
                     currentProp = newProp;

@@ -1119,7 +1119,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
             var value = CypherUtilities.BuildFinalProperties(queryContext,
                 Variable, finalObjectGetter, finalPropertiesGetter, finalPropsHasFuncsGetter,
                 ref buildStrategy, out var param, out var newProperties,
-                separator: ": ", useVariableAsParameter: true, wrapValueInJsonObjectNotation: true);
+                separator: ": ", parameterSeed: null, useVariableMemberAccessAsKey: false,
+                useVariableAsValueParameter: true, wrapValueInJsonObjectNotation: true);
 
             //CypherUtilities.ResolveFinalObjectProperties(finalObjectGetter, finalPropertiesGetter, finalPropsHasFuncsGetter,
             //    ref buildStrategy, out var finalObject, out var finalProperties);

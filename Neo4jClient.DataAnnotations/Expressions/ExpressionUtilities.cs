@@ -13,7 +13,7 @@ using System.Text;
 
 namespace Neo4jClient.DataAnnotations.Expressions
 {
-    public class ExpressionUtilities
+    public static class ExpressionUtilities
     {
         /// <summary>
         /// Expecting:
@@ -182,7 +182,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 //the original key/member names set are important to the deserialization method (and to the rest of the user code)
                 //hence why a change here won't be appropriate and we need to block such changes
                 //as a result, all complex property member accesses must ne made to the last property in projection queries.
-                var nfpInfo = Utils.Utilities.GetMethodInfo(() => ObjectExtensions._<object>(null));
+                var nfpInfo = Defaults.NfpMethodInfo;
                 if (bodyExpr is NewExpression newExpr)
                 {
                     int i = -1;
@@ -256,7 +256,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 //i.e., () => bodyExpr
                 expression = Expression.Lambda(bodyExpr);
 
-                var finalProperties = CypherUtilities.GetFinalProperties(expression, queryContext, out bool hasFunctions, initializeComplexProperties: true);
+                var finalProperties = CypherUtilities.GetFinalProperties(expression, queryContext, out bool hasFunctions);
                 if (finalProperties == null)
                     //trouble
                     throw new InvalidOperationException(Messages.InvalidICypherResultItemExpressionError);
@@ -270,10 +270,10 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
                 result = finalProperties.Properties().Select(jp =>
                 {
-                    var value = jp.Value; //serializer(jp.Value);
+                    var jToken = jp.Value; //serializer(jp.Value);
 
                     //the asterisk wild-card cannot have a name associated with it, and should ideally be the first parameter
-                    if (value.Type == JTokenType.String && (string)value == asterisk)
+                    if (jToken.Type == JTokenType.Raw && ((JRaw)jToken).Value.ToString() == asterisk)
                         return asterisk;
 
                     if (hasComplexTypeMembers
@@ -291,9 +291,11 @@ namespace Neo4jClient.DataAnnotations.Expressions
                         var properties = CypherUtilities.GetConstraintsAsPropertiesLambda(predicateExpr, param.Type);
 
                         var newValue = CypherUtilities.BuildFinalProperties
-                            (queryContext, $"{jp.Name}_prj", properties, 
+                            (queryContext, jp.Name, properties, 
                             ref buildStrategy, out var parameter, out var newProperties,
                             out var finalPropsHasFunctions, separator: ": ",
+                            parameterSeed: $"{jp.Name}_prj",
+                            useVariableMemberAccessAsKey: false,
                             useVariableAsParameter: false,
                             wrapValueInJsonObjectNotation: true);
 
@@ -310,14 +312,14 @@ namespace Neo4jClient.DataAnnotations.Expressions
                             case PropertiesBuildStrategy.WithParamsForValues:
                                 {
                                     //use a parameter to reference the value
-                                    value = queryContext.CurrentQueryWriter.CreateParameter(value);
-                                    value = Utils.Utilities.GetNewNeo4jParameterSyntax((string)value);
+                                    jToken = queryContext.CurrentQueryWriter.CreateParameter(jToken);
+                                    jToken = Utils.Utilities.GetNewNeo4jParameterSyntax((string)jToken);
                                     break;
                                 }
                         }
                     }
 
-                    return $"{value} AS {jp.Name}";
+                    return $"{jToken} AS {jp.Name}";
 
                 }).Aggregate((first, second) => $"{first}, {second}");
 
@@ -342,7 +344,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         internal static void TraverseEntityPath
             (IEntityService entityService,
-            object entity, List<Expression> pathExpressions,
+            object entity, Type entityType, List<Expression> pathExpressions,
             ref int index, out Type lastType,
             out Dictionary<EntityMemberInfo, int> pathTraversed, //Dictionary<EntityMemberInfo, (int PathIndex, Type LastType)> pathTraversed,
             bool buildPath)
@@ -380,7 +382,9 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     case ExpressionType.MemberAccess:
                         {
                             var memberAccessExpr = expr as MemberExpression;
-                            memberInfo = new EntityMemberInfo(memberAccessExpr.Member, lastType?.IsComplex() == true ? memberInfo : null, lastType);
+                            memberInfo = new EntityMemberInfo
+                                (entityService, memberAccessExpr.Member, 
+                                lastType?.IsComplex() == true ? memberInfo : null, lastType ?? entityType);
                             propInfo = memberInfo.MemberInfo as PropertyInfo;
                             fieldInfo = memberInfo.MemberInfo as FieldInfo;
 
@@ -468,13 +472,192 @@ namespace Neo4jClient.DataAnnotations.Expressions
             }
         }
 
+        //internal static string[] GetEntityPathNames
+        //    (IEntityService entityService,
+        //    ref object entity, ref Type entityType,
+        //    List<Expression> expressions,
+        //    ref int currentIndex, EntityResolver resolver, Func<object, string> serializer,
+        //    out Dictionary<EntityMemberInfo, int> members, //Dictionary<List<MemberInfo>, (int Item1, Type Item2)> members,
+        //    out Type lastType, bool useResolvedJsonName = true)
+        //{
+        //    string[] memberNames = new string[0];
+
+        //    entityType = entity?.GetType() ?? entityType;
+        //    var entityInfo = entityService.GetEntityTypeInfo(entityType);
+
+        //    //do this to avoid create instances every time we call this method for a particular type
+        //    bool buildPath = useResolvedJsonName && resolver == null && entityInfo.JsonNamePropertyMap.Count == 0;
+
+        //    int index = currentIndex; //store this index incase of a repeat
+
+        //    repeatBuild:
+        //    if (buildPath && entity == null)
+        //    {
+        //        //most likely using the EntityConverter
+        //        //create new instance
+        //        entity = Utils.Utilities.CreateInstance(entityType);
+        //    }
+
+        //    currentIndex = index;
+
+        //    TraverseEntityPath(entityService, entity, entityType, expressions, ref currentIndex, out lastType,
+        //        out members, buildPath: buildPath);
+
+        //    if (members.Count > 0)
+        //    {
+        //        if (buildPath)
+        //        {
+        //            //take care of the entity's complex properties and those of its children
+        //            Utils.Utilities.InitializeComplexTypedProperties(entity, entityService);
+
+        //            bool entityTypeAutoAdded = false;
+
+        //            if (entityTypeAutoAdded = !entityService.EntityTypes.Contains(entityType))
+        //            {
+        //                entityService.AddEntityType(entityType); //just in case it wasn't already added.
+        //            }
+
+        //            //serialize the entity so the jsonnames would be set
+        //            var serializedEntity = serializer(entity);
+
+        //            if (entityTypeAutoAdded)
+        //            {
+        //                //remove it
+        //                entityService.RemoveEntityType(entityType);
+        //            }
+        //        }
+
+        //        if (resolver != null)
+        //        {
+        //            //force the propertymap to be set
+        //            entityInfo.WithJsonResolver(resolver);
+        //        }
+
+        //        //first get the members that are not complex typed.
+        //        //this is because their child members would be the actual member of interest
+        //        //if none found, or name returns empty, try all members then.
+
+        //        var membersToUse = members
+        //            //.Where(m => ((m.Key.Last() as PropertyInfo)?.PropertyType ?? (m.Key.Last() as FieldInfo)?.FieldType)?.IsComplex() != true)
+        //            .Where(m => m.Key.MemberFinalType.IsComplex() != true)
+        //            .OrderBy(m => m.Value) //.Item1)
+        //            .ToList();
+
+        //        bool repeatedMemberNames = false;
+
+        //        repeatMemberNames:
+        //        bool gotoRepeatBuild = false;
+
+
+
+        //        memberNames = membersToUse.Select((m, idx) =>
+        //        {
+        //            string complexJsonName = null;
+        //            string nonJsonComplexName = m.Key.ComplexName; //.Select(_m => _m.Name).Aggregate((x, y) => $"{x}{Defaults.ComplexTypeNameSeparator}{y}");
+        //            //bool isComplex = m.Key.IsComplex; //.Count > 1;
+
+        //            if (useResolvedJsonName)
+        //            {
+        //                Type parentType = null;
+
+        //                //try the entityInfo first
+        //                var jsonPropMap = CypherUtilities.FilterPropertyMap(nonJsonComplexName, null, entityInfo.JsonNamePropertyMap);
+        //                complexJsonName = CypherUtilities.GetMemberComplexJsonName(jsonPropMap, null, 
+        //                    m.Key.ComplexRoot.MemberInfo, m.Key.ComplexRoot.MemberInfo.Name,
+        //                    m.Key.MemberInfo, m.Key.MemberInfo.Name);
+        //                //name = CypherUtilities.GetMemberJsonName(jsonPropMap, null, m.Key.First(), m.Key.First().Name, m.Key.Last(), m.Key.Last().Name);
+        //                //name = entityInfo.JsonNamePropertyMap.FirstOrDefault(pm => pm.Value.IsEquivalentTo(m.Key)).Key?.Json;
+
+        //                if (string.IsNullOrWhiteSpace(complexJsonName))
+        //                {
+        //                    //try to get name from entity info
+        //                    if (idx >= 1)
+        //                    {
+        //                        parentType = membersToUse[idx - 1].Key.MemberFinalType; //.Value.Item2;
+        //                    }
+
+        //                    parentType = parentType ?? //m.Value?.Item2?.DeclaringType ?? 
+        //                        m.Key.MemberFinalType.DeclaringType ??
+        //                        m.Key.ComplexParent?.MemberFinalType; //Last().DeclaringType;
+
+        //                    //we do this because MemberInfo.ReflectedType is not public yet in the .NET Core API.
+        //                    var infos = entityService.GetDerivedEntityTypeInfos(parentType);
+
+        //                    if (resolver != null)
+        //                    {
+        //                        foreach (var info in infos)
+        //                        {
+        //                            info.WithJsonResolver(resolver);
+        //                        }
+        //                    }
+
+        //                    jsonPropMap = CypherUtilities.FilterPropertyMap(nonJsonComplexName, null, infos.SelectMany(info => info.JsonNamePropertyMap));
+        //                    complexJsonName = CypherUtilities.GetMemberComplexJsonName(jsonPropMap, null,
+        //                        m.Key.ComplexRoot.MemberInfo, m.Key.ComplexRoot.MemberInfo.Name,
+        //                        m.Key.MemberInfo, m.Key.MemberInfo.Name);
+        //                    //name = CypherUtilities.GetMemberJsonName(jsonPropMap, null, m.Key.First(), m.Key.First().Name, m.Key.Last(), m.Key.Last().Name);
+
+        //                    //var result = infos.SelectMany(info => info.JsonNamePropertyMap)
+        //                    //.ExactOrEquivalentMember((pair) => pair.Value, new KeyValuePair<MemberName, MemberInfo>(MemberName.Empty, m.Key))
+        //                    //.FirstOrDefault();
+
+        //                    //name = result.Key?.Json;
+        //                }
+
+        //                if (!buildPath
+        //                && resolver == null //don't doubt the result if the EntityResolver was present
+        //                && (string.IsNullOrWhiteSpace(complexJsonName)
+        //                || (complexJsonName == nonJsonComplexName //m.Key.Name
+        //                    && (parentType?.IsComplex() == true
+        //                    || m.Key.DeclaringType.IsComplex() //Last().DeclaringType.IsComplex()
+        //                    || m.Key.MemberFinalType.IsComplex() //Value.Item2.IsComplex()
+        //                    )))
+        //                )
+        //                {
+        //                    //maybe we were wrong and the jsonMaps are empty
+        //                    //or just to be sure we have the actual name,
+        //                    //repeat with a fully built path and serialization
+        //                    buildPath = true;
+        //                    gotoRepeatBuild = true;
+        //                }
+        //                else if (string.IsNullOrWhiteSpace(complexJsonName))
+        //                {
+        //                    //fallback for when name couldn't be resolved in all attempts
+        //                    complexJsonName = nonJsonComplexName;
+        //                }
+        //            }
+        //            else
+        //            {
+        //                complexJsonName = nonJsonComplexName;
+        //            }
+
+        //            return complexJsonName;
+        //        }).Where(n => !string.IsNullOrWhiteSpace(n)).ToArray();
+
+        //        if (gotoRepeatBuild)
+        //        {
+        //            goto repeatBuild;
+        //        }
+
+        //        if (!repeatedMemberNames && memberNames.Length == 0)
+        //        {
+        //            //repeat with all members
+        //            membersToUse = members.OrderBy(m => m.Value).ToList(); //.Item1).ToList();
+        //            repeatedMemberNames = true;
+        //            goto repeatMemberNames;
+        //        }
+        //    }
+
+        //    return memberNames;
+        //}
+
         internal static string[] GetEntityPathNames
-            (IEntityService entityService,
-            ref object entity, ref Type entityType,
-            List<Expression> expressions,
-            ref int currentIndex, EntityResolver resolver, Func<object, string> serializer,
-            out Dictionary<EntityMemberInfo, int> members, //Dictionary<List<MemberInfo>, (int Item1, Type Item2)> members,
-            out Type lastType, bool useResolvedJsonName = true)
+        (IEntityService entityService,
+        ref object entity, ref Type entityType,
+        List<Expression> expressions,
+        ref int currentIndex, EntityResolver resolver, Func<object, string> serializer,
+        out Dictionary<EntityMemberInfo, int> members, //Dictionary<List<MemberInfo>, (int Item1, Type Item2)> members,
+        out Type lastType, bool useResolvedJsonName = true)
         {
             string[] memberNames = new string[0];
 
@@ -496,7 +679,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
             currentIndex = index;
 
-            TraverseEntityPath(entityService, entity, expressions, ref currentIndex, out lastType,
+            TraverseEntityPath(entityService, entity, entityType, expressions, ref currentIndex, out lastType,
                 out members, buildPath: buildPath);
 
             if (members.Count > 0)
@@ -529,105 +712,41 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     entityInfo.WithJsonResolver(resolver);
                 }
 
-                //first get the members that are not complex typed.
-                //this is because their child members would be the actual member of interest
+                var membersToUse = members.OrderBy(m => m.Value).ToArray();
+                var membersLength = membersToUse.Length;
+
+                //for complex typed members, we are actually interested in their own members
+                //hence, check their complex parents here and remove by filter any complex parent that already has a child in the list
                 //if none found, or name returns empty, try all members then.
 
-                var membersToUse = members
-                    //.Where(m => ((m.Key.Last() as PropertyInfo)?.PropertyType ?? (m.Key.Last() as FieldInfo)?.FieldType)?.IsComplex() != true)
-                    .Where(m => m.Key.MemberFinalType.IsComplex() != true)
-                    .OrderBy(m => m.Value) //.Item1)
-                    .ToList();
+                membersToUse = membersToUse
+                    .Where((m, i) => (i + 1) < membersLength ? membersToUse[i + 1].Key.ComplexParent != m.Key : true) //!m.Key.MemberFinalType.IsComplex())
+                    .ToArray();
 
                 bool repeatedMemberNames = false;
 
                 repeatMemberNames:
                 bool gotoRepeatBuild = false;
 
-                
+
 
                 memberNames = membersToUse.Select((m, idx) =>
                 {
-                    string name = null;
-                    string nonJsonName = m.Key.ComplexName; //.Select(_m => _m.Name).Aggregate((x, y) => $"{x}{Defaults.ComplexTypeNameSeparator}{y}");
-                    //bool isComplex = m.Key.IsComplex; //.Count > 1;
+                    string complexJsonName = null;
+                    string nonJsonComplexName = m.Key.ComplexName;
 
                     if (useResolvedJsonName)
                     {
-                        Type parentType = null;
-
-                        //try the entityInfo first
-                        var jsonPropMap = CypherUtilities.FilterPropertyMap(nonJsonName, null, entityInfo.JsonNamePropertyMap);
-                        name = CypherUtilities.GetMemberJsonName(jsonPropMap, null, 
-                            m.Key.ComplexRoot.MemberInfo, m.Key.ComplexRoot.MemberInfo.Name,
-                            m.Key.MemberInfo, m.Key.MemberInfo.Name);
-                        //name = CypherUtilities.GetMemberJsonName(jsonPropMap, null, m.Key.First(), m.Key.First().Name, m.Key.Last(), m.Key.Last().Name);
-                        //name = entityInfo.JsonNamePropertyMap.FirstOrDefault(pm => pm.Value.IsEquivalentTo(m.Key)).Key?.Json;
-
-                        if (string.IsNullOrWhiteSpace(name))
-                        {
-                            //try to get name from entity info
-                            if (idx >= 1)
-                            {
-                                parentType = membersToUse[idx - 1].Key.MemberFinalType; //.Value.Item2;
-                            }
-
-                            parentType = parentType ?? //m.Value?.Item2?.DeclaringType ?? 
-                                m.Key.MemberFinalType.DeclaringType ??
-                                m.Key.ComplexParent?.MemberFinalType; //Last().DeclaringType;
-
-                            //we do this because MemberInfo.ReflectedType is not public yet in the .NET Core API.
-                            var infos = entityService.GetDerivedEntityTypeInfos(parentType);
-
-                            if (resolver != null)
-                            {
-                                foreach (var info in infos)
-                                {
-                                    info.WithJsonResolver(resolver);
-                                }
-                            }
-
-                            jsonPropMap = CypherUtilities.FilterPropertyMap(nonJsonName, null, infos.SelectMany(info => info.JsonNamePropertyMap));
-                            name = CypherUtilities.GetMemberJsonName(jsonPropMap, null,
-                                m.Key.ComplexRoot.MemberInfo, m.Key.ComplexRoot.MemberInfo.Name,
-                                m.Key.MemberInfo, m.Key.MemberInfo.Name);
-                            //name = CypherUtilities.GetMemberJsonName(jsonPropMap, null, m.Key.First(), m.Key.First().Name, m.Key.Last(), m.Key.Last().Name);
-
-                            //var result = infos.SelectMany(info => info.JsonNamePropertyMap)
-                            //.ExactOrEquivalentMember((pair) => pair.Value, new KeyValuePair<MemberName, MemberInfo>(MemberName.Empty, m.Key))
-                            //.FirstOrDefault();
-
-                            //name = result.Key?.Json;
-                        }
-
-                        if (!buildPath
-                        && resolver == null //don't doubt the result if the EntityResolver was present
-                        && (string.IsNullOrWhiteSpace(name)
-                        || (name == nonJsonName //m.Key.Name
-                            && (parentType?.IsComplex() == true
-                            || m.Key.DeclaringType.IsComplex() //Last().DeclaringType.IsComplex()
-                            || m.Key.MemberFinalType.IsComplex() //Value.Item2.IsComplex()
-                            )))
-                        )
-                        {
-                            //maybe we were wrong and the jsonMaps are empty
-                            //or just to be sure we have the actual name,
-                            //repeat with a fully built path and serialization
-                            buildPath = true;
-                            gotoRepeatBuild = true;
-                        }
-                        else if (string.IsNullOrWhiteSpace(name))
-                        {
-                            //fallback for when name couldn't be resolved in all attempts
-                            name = nonJsonName;
-                        }
+                        m.Key.ResolveNames(resolver, serializer);
+                        //Type parentType = m.Key.ReflectedType;
+                        complexJsonName = m.Key.ComplexJsonName;
                     }
                     else
                     {
-                        name = nonJsonName;
+                        complexJsonName = nonJsonComplexName;
                     }
 
-                    return name;
+                    return complexJsonName;
                 }).Where(n => !string.IsNullOrWhiteSpace(n)).ToArray();
 
                 if (gotoRepeatBuild)
@@ -638,7 +757,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 if (!repeatedMemberNames && memberNames.Length == 0)
                 {
                     //repeat with all members
-                    membersToUse = members.OrderBy(m => m.Value).ToList(); //.Item1).ToList();
+                    membersToUse = members.OrderBy(m => m.Value).ToArray(); //.Item1).ToList();
                     repeatedMemberNames = true;
                     goto repeatMemberNames;
                 }
@@ -675,6 +794,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
             if (shouldTryCast && exprNotNull)
             {
+                //this allows us use the runtime type of the executed expression
                 try
                 {
                     expression = expression.Cast(out var newType);
@@ -690,6 +810,9 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 return new List<Expression>();
 
             var result = new List<Expression>();
+
+            //add it to entity types
+            entityService.AddEntityType(type);
 
             var info = entityService.GetEntityTypeInfo(type);
 
@@ -716,7 +839,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
             return result;
         }
 
-        public static string BuildSimpleVars(List<Expression> expressions, QueryContext queryContext, bool? useResolvedJsonName = null)
+        public static string BuildSimpleVarsCall(List<Expression> expressions, QueryContext queryContext, bool? useResolvedJsonName = null)
         {
             //typeReturned = null;
             if (!Utils.Utilities.HasVars(expressions, out var methodExpr))
@@ -943,6 +1066,94 @@ namespace Neo4jClient.DataAnnotations.Expressions
         {
             firstAccessExpr = exprs.SkipWhile(a => a == entityVal || a.NodeType != ExpressionType.MemberAccess).FirstOrDefault();
             return exprs.IndexOf(firstAccessExpr);
+        }
+
+        internal static bool IsSpecialNode(FunctionExpressionVisitor funcsVisitor, Expression node, 
+            out object value, out bool hasVars, out bool hasFunctions, out bool hasDummyMethod,
+            bool isFuncsExprVisitorCalling = false)
+        {
+            value = null;
+            hasVars = false; hasFunctions = false; hasDummyMethod = false;
+
+            if (node == null)
+                return false;
+
+            bool isSpecialNode = false;
+
+            //first see if we can successfully execute the expression
+            try
+            {
+                value = node.ExecuteExpression<object>();
+            }
+            catch (Exception e)
+            {
+                while (e != null)
+                {
+                    if (e is NotImplementedException ne)
+                    {
+                        switch (e.Message)
+                        {
+                            case Messages.VarsGetError:
+                                {
+                                    hasVars = true;
+                                    break;
+                                }
+                            case Messages.FunctionsInvokeError:
+                                {
+                                    hasFunctions = true;
+                                    break;
+                                }
+                            case Messages.DummyMethodInvokeError:
+                                {
+                                    hasDummyMethod = true;
+                                    break;
+                                }
+                        }
+
+                        isSpecialNode = hasVars || hasFunctions || hasDummyMethod;
+
+                        if (isSpecialNode)
+                            break;
+                    }
+
+                    e = e.InnerException;
+                }
+            }
+
+            if (!isSpecialNode && value?.GetType() == Defaults.JRawType)
+            {
+                //never directly delegate jraw to the serializer. use the functions visitor for it instead
+                isSpecialNode = true;
+                hasFunctions = true;
+            }
+
+            if (!isSpecialNode && value == null)
+            {
+                //try a full search then
+                List<Expression> filtered = ExpressionUtilities.GetSimpleMemberAccessStretch(funcsVisitor.EntityService, node, out var filteredVal, out var isContinuous);
+                var referenceNode = filtered.LastOrDefault();
+
+                //if (Utils.Utilities.HasVars(filtered))
+                //{
+                //    //found a special node.
+                //    isSpecialNode = true;
+                //}
+                //else 
+                if (referenceNode?.Type == Defaults.JRawType) //never directly delegate jraw to the serializer. use the functions visitor for it instead
+                {
+                    hasFunctions = true;
+                    isSpecialNode = true;
+                }
+                else if (!isFuncsExprVisitorCalling && isContinuous && filtered.Count > 0 //maybe one of our functions //check if it can be handled
+                    && funcsVisitor.CanHandle(referenceNode, out var handler)) // && referenceNode?.NodeType == ExpressionType.Call)
+                {
+                    //found a special node
+                    hasFunctions = true;
+                    isSpecialNode = true;
+                }
+            }
+
+            return isSpecialNode;
         }
     }
 }

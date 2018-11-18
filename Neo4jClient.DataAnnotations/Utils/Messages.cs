@@ -37,7 +37,7 @@ namespace Neo4jClient.DataAnnotations.Utils
 
         public const string JsonPropertyNotFoundError = "Json Property '{0}' not found for Type '{1}'";
 
-        public const string AmbiguousVarsPathError = "Expression path to Neo4j variable is ambiguous, and cannot be translated. Vars: {0}.";
+        public const string AmbiguousVarsPathError = "Expression path to Neo4j variable is ambiguous and cannot be translated. Vars: {0}.";
 
         public const string NoResolverOrConverterError = "You must enable either the EntityResolver or EntityConverter for Neo4jClient.DataAnnotations to work.";
 
@@ -52,5 +52,9 @@ namespace Neo4jClient.DataAnnotations.Utils
         public const string NoValidConstructorError = "Could not create an instance of Type '{0}' from the constructors available on that type.";
 
         public const string InvalidProjectionError = "Only member assignments are permitted when projecting to a result. Member: {0}";
+
+        public const string AmbiguousExpressionError = "Expression is ambiguous and cannot be translated. Expression: {0}.";
+
+        public const string MemberAssignmentError = "Could not successfully assign member. Member: {0}, Json Name: {1}.";
     }
 }

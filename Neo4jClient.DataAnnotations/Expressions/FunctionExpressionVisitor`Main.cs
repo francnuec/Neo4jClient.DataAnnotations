@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.ComponentModel;
+using Newtonsoft.Json.Linq;
 
 namespace Neo4jClient.DataAnnotations.Expressions
 {
@@ -24,7 +25,21 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         public IAnnotationsContext AnnotationsContext => QueryContext.AnnotationsContext;
 
-        public StringBuilder Builder { get; } = new StringBuilder();
+        //public StringBuilder Builder { get; } = new StringBuilder();
+
+        private FunctionsVisitorBuilder mBuilder;
+        public FunctionsVisitorBuilder Builder
+        {
+            get
+            {
+                if (mBuilder == null)
+                {
+                    mBuilder = new FunctionsVisitorBuilder(this);
+                }
+
+                return mBuilder;
+            }
+        }
 
         public QueryContext QueryContext { get; internal set; }
 
@@ -78,15 +93,18 @@ namespace Neo4jClient.DataAnnotations.Expressions
             IgnoredNodes.Clear();
             UnhandledNodes.Clear();
             Builder.Clear();
+            Builder.Monitors.Clear();
         }
 
         /// <summary>
         /// Don't call this method directly unless you wan't to force this process
         /// </summary>
-        public virtual void ProcessUnhandledSimpleVars(Expression currentNode)
+        public virtual void ProcessUnhandledSimpleVars(Expression currentNode, bool considerInits = false)
         {
             if (UnhandledNodes.Count == 0)
                 return;
+
+            Expression initExpression = null;
 
             //filter the nodes for only the onces of interest to us
             Func<Expression, bool> filter = (n) =>
@@ -99,18 +117,35 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     case ExpressionType.ConvertChecked:
                     case ExpressionType.Unbox:
                     case ExpressionType.Call when (n is MethodCallExpression callExpr
-                    && ((callExpr.Method.Name.StartsWith("_As") 
-                    && callExpr.Method.DeclaringType == Defaults.ObjectExtensionsType) //_As and _AsList()
+                    && (
+                    (callExpr.Method.Name.StartsWith("_As") && callExpr.Method.DeclaringType == Defaults.ObjectExtensionsType) //._As and ._AsList()
                     || (callExpr.Method.Name == "Get" && callExpr.Method.DeclaringType == Defaults.VarsType) //Vars.Get()
                     || callExpr.Method.IsEquivalentTo(Defaults.CypherObjectIndexerInfo) //Vars.Get("")[""]
-                    )):
+                    //|| (callExpr.Method.Name == "_" && callExpr.Method.DeclaringType == Defaults.ObjectExtensionsType) //._()
+                    )
+                    ):
                         {
                             return true;
+                        }
+                    case ExpressionType.MemberInit:
+                    case ExpressionType.New:
+                    case ExpressionType.ListInit when (n.Type.IsDictionaryType()):
+                        {
+                            if (considerInits && initExpression == null)
+                            {
+                                //we only need one type init
+                                initExpression = n;
+                                return true;
+                            }
+
+                            return false;
                         }
                 }
 
                 return false;
             };
+
+            //repeatFilter:
 
             List<Expression> _unhandledNodes = UnhandledNodes
                 .AsEnumerable()
@@ -119,45 +154,139 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 .ToList();
 
             if (_unhandledNodes.Count == 0)
+            {
                 return;
-
-            bool removeVariable = false;
-
-            if (!Utils.Utilities.HasVars(_unhandledNodes))
-            {
-                if (!_unhandledNodes.Any(n => n.NodeType == ExpressionType.MemberAccess))
-                    return; //we need at least one memberaccess for this to work
-
-                //it doesn't have a vars get call, so add one
-                var randomVar = "_fev_" + Utils.Utilities.GetRandomVariableFor("fevr");
-
-                //create a Vars.Get call for this variable
-                var varsGetCallExpr = ExpressionUtilities.GetVarsGetExpressionFor(randomVar, currentNode.Type);
-
-                _unhandledNodes.Insert(0, varsGetCallExpr); //this is just going to be the header
-
-                removeVariable = true;
             }
 
-            var value = ExpressionUtilities.BuildSimpleVars(_unhandledNodes, QueryContext, useResolvedJsonName: Context.UseResolvedJsonName);
+            bool hasMemberAccess = _unhandledNodes.Any(n => n.NodeType == ExpressionType.MemberAccess);
 
-            if (string.IsNullOrWhiteSpace(value))
+            JObject initJObject = null;
+            JToken initJValue = null;
+
+            int initExprIdx = -1;
+
+            string builtValue = null;
+
+            if (considerInits && initExpression != null)
             {
-                //error
-                throw new InvalidOperationException(
-                    string.Format(Messages.InvalidVariableExpressionError,
-                    _unhandledNodes.Last().ToString(), value ?? ""));
+                //remove it from the list
+                initExprIdx = _unhandledNodes.IndexOf(initExpression);
+                if (initExprIdx >= 0)
+                    _unhandledNodes.Remove(initExpression);
+
+                if (!hasMemberAccess)
+                {
+                    try
+                    {
+                        var executedValue = initExpression.ExecuteExpression<object>();
+                        if (executedValue is JToken token)
+                        {
+                            initJValue = token;
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+                }
             }
 
-            if (removeVariable)
+            if (initJValue == null)
             {
-                var dotIdx = value.IndexOf(".");
-                dotIdx = dotIdx > 0 ? dotIdx : value.Length;
-                if (dotIdx > 0)
-                    value = value.Remove(0, dotIdx);
+                bool removeVariable = false;
+
+                if (!Utils.Utilities.HasVars(_unhandledNodes))
+                {
+                    if (!hasMemberAccess) //!_unhandledNodes.Any(n => n.NodeType == ExpressionType.MemberAccess))
+                        return; //we need at least one memberaccess for this to work
+
+                    //it doesn't have a vars get call, so add one
+                    var randomVar = "_fev_" + Utils.Utilities.GetRandomVariableFor("fevr");
+
+                    //create a Vars.Get call for this variable
+                    var varsGetCallExpr = ExpressionUtilities.GetVarsGetExpressionFor(randomVar, currentNode.Type);
+
+                    _unhandledNodes.Insert(0, varsGetCallExpr); //this is just going to be the header
+
+                    removeVariable = true;
+                }
+
+                builtValue = ExpressionUtilities.BuildSimpleVarsCall(_unhandledNodes, QueryContext, useResolvedJsonName: Context.UseResolvedJsonName);
+
+                if (string.IsNullOrWhiteSpace(builtValue))
+                {
+                    //error
+                    throw new InvalidOperationException(
+                        string.Format(Messages.InvalidVariableExpressionError,
+                        _unhandledNodes.Last().ToString(), builtValue ?? ""));
+                }
+
+                if (removeVariable)
+                {
+                    var dotIdx = builtValue.IndexOf(".");
+                    dotIdx = dotIdx > 0 ? dotIdx : builtValue.Length;
+                    if (dotIdx > 0)
+                        builtValue = builtValue.Remove(0, dotIdx);
+
+                    //remove the dummy vars get node added earlier
+                    _unhandledNodes.RemoveAt(0);
+                }
+
+                if (considerInits && initExpression != null && initJObject == null && initJValue == null)
+                {
+                    //build the init independently
+                    //but first check if we have a cached value already
+                    if (!QueryContext.FuncsCachedJTokens.TryGetValue(initExpression, out var existingJToken)
+                        || !(existingJToken is JObject existingJObject))
+                    {
+                        initJObject = CypherUtilities.GetFinalProperties
+                            (Expression.Lambda(initExpression), QueryContext, out var hasFuncsInProps);
+
+                        if (existingJToken == null)
+                        {
+                            //cache this for later use in same query
+                            QueryContext.FuncsCachedJTokens[initExpression] = initJObject;
+                        }
+                    }
+                    else
+                    {
+                        initJObject = existingJObject;
+                    }
+                }
+
+                if (initJObject != null && initJObject.Count > 0)
+                {
+                    try
+                    {
+                        initJValue = initJObject.SelectToken($"$.{builtValue.Trim().TrimStart('.')}");
+                    }
+                    catch (Exception e)
+                    {
+
+                    }
+                }
             }
 
-            Builder.Append(value);
+            if (considerInits && initJValue == null)
+            {
+                //we didn't get what we came here for
+                return;
+            }
+
+            if (considerInits && initExprIdx >= 0)
+            {
+                //replace it
+                _unhandledNodes.Insert(initExprIdx, initExpression);
+            }
+
+            if (initJValue != null)
+            {
+                WriteArgument(Expression.Constant(initJValue, initJValue.GetType()), _unhandledNodes.LastOrDefault());
+            }
+            else
+            {
+                Builder.Append(builtValue, _unhandledNodes.LastOrDefault());
+            }
 
             foreach (var node in _unhandledNodes)
             {
@@ -265,7 +394,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
             return newNode;
         }
 
-        public virtual bool WriteArgument(Expression argExpr, bool isRawValue = false, bool writeOnlySimpleValue = false)
+        public virtual bool WriteArgument(Expression argExpr, Expression callerNode, bool isRawValue = false, bool writeOnlySimpleValue = false)
         {
             bool isContinuous = false, hasSimpleValue = false;
             object argumentObj = null;
@@ -313,7 +442,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
             if (!isContinuous)
                 //cover it in brackets
-                Builder.Append("(");
+                Builder.Append("(", callerNode ?? argExpr);
 
             if (hasSimpleValue)
             {
@@ -336,7 +465,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                         argument = serializedArgumentGetter();
                 }
 
-                Builder.Append(argument);
+                Builder.Append(argument, callerNode ?? argExpr);
                 Handled(argExpr);
             }
             else
@@ -345,37 +474,41 @@ namespace Neo4jClient.DataAnnotations.Expressions
             }
 
             if (!isContinuous)
-                Builder.Append(")");
+                Builder.Append(")", callerNode ?? argExpr);
 
             return true;
         }
 
-        public virtual void WriteOperation(string neo4jOperator, Expression left, Expression operatorNode, Expression right)
+        public virtual void WriteOperation(string neo4jOperator, Expression left, 
+            Expression operatorNode, Expression right, Expression callerNode)
         {
-            WriteOperation(neo4jOperator, left, true, operatorNode, true, right);
+            WriteOperation(neo4jOperator, left, true, operatorNode, true, right, callerNode);
         }
 
         public virtual void WriteOperation(string neo4jOperator, 
-            Expression left, bool leftSpace, Expression operatorNode, bool rightSpace, Expression right)
+            Expression left, bool leftSpace, 
+            Expression operatorNode, 
+            bool rightSpace, Expression right,
+            Expression callerNode)
         {
             Handled(operatorNode);
 
             if (left != null)
             {
-                WriteArgument(left);
+                WriteArgument(left, callerNode);
 
                 if (leftSpace)
-                    Builder.Append(" ");
+                    Builder.Append(" ", callerNode);
             }
 
-            Builder.Append(neo4jOperator);
+            Builder.Append(neo4jOperator, callerNode);
 
             if (right != null)
             {
                 if (rightSpace)
-                    Builder.Append(" ");
+                    Builder.Append(" ", callerNode);
 
-                WriteArgument(right);
+                WriteArgument(right, callerNode);
             }
         }
 
@@ -389,6 +522,33 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     IgnoredNodes.Remove(node);
                     return node;
                 }
+
+                if (QueryContext.FuncsCachedBuilds.TryGetValue(node, out var visitResult) 
+                    && !string.IsNullOrEmpty(visitResult.Build))
+                {
+                    //this has been executed before so don't do it again
+                    Builder.Append(visitResult.Build, node);
+                    return visitResult.NewNode;
+                }
+
+                var nodeBuilder = new StringBuilder();
+                var nodeMonitor = new FunctionsVisitorBuilder.Monitor()
+                {
+                    Node = node,
+                    DidAppend = (builder, caller, value) =>
+                    {
+                        if (value is null)
+                            nodeBuilder.Append((object)null);
+                        else
+                            nodeBuilder.Append(value);
+                    },
+                    DidClearAll = (builder) =>
+                    {
+                        nodeBuilder.Clear();
+                    }
+                };
+
+                Builder.Monitors.Add(nodeMonitor);
 
                 NotHandled(node);
 
@@ -413,7 +573,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                         case ExpressionType.Call:
                             {
                                 //try to see if it can be executed to write a simple value first & write this value is all okay
-                                if (WriteArgument(node, writeOnlySimpleValue: true))
+                                if (WriteArgument(node, node, writeOnlySimpleValue: true))
                                 {
                                     break;
                                 }
@@ -429,6 +589,20 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 }
 
                 Handled(node);
+
+                //remove the monitor and cache results
+                Builder.Monitors.Remove(nodeMonitor);
+
+                //cache the results for this query
+                var nodeBuild = nodeBuilder.ToString();
+                if (!string.IsNullOrEmpty(nodeBuild))
+                {
+                    lock (QueryContext.FuncsCachedBuilds)
+                    {
+                        QueryContext.FuncsCachedBuilds[node] = (newNode, nodeBuild);
+                    }
+                }
+
                 ProcessUnhandledSimpleVars(node);
 
                 return newNode;

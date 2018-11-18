@@ -19,7 +19,7 @@ using System.Runtime.CompilerServices;
 
 namespace Neo4jClient.DataAnnotations.Utils
 {
-    public class Utilities
+    public static class Utilities
     {
         private static readonly Random variableRandom = new Random();
 

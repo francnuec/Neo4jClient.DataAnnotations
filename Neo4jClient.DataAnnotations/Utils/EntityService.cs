@@ -157,10 +157,10 @@ namespace Neo4jClient.DataAnnotations.Utils
             if (baseType == null)
                 throw new ArgumentNullException(nameof(baseType));
 
-            lock(this)
+            lock (this)
             {
                 var existing = entityTypeInfos.Where(pair => baseType.IsAssignableFrom(pair.Key)
-            || baseType.IsGenericAssignableFrom(pair.Key)).ToDictionary(pair => pair.Key, pair => pair.Value);
+                || baseType.IsGenericAssignableFrom(pair.Key)).ToDictionary(pair => pair.Key, pair => pair.Value);
 
                 existing = existing ?? new Dictionary<Type, EntityTypeInfo>();
 

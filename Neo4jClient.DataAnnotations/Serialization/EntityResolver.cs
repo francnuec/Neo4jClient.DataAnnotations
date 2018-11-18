@@ -187,8 +187,9 @@ namespace Neo4jClient.DataAnnotations.Serialization
             var newChild = GetJsonPropertyDuplicate(child);
 
             //set complex name
+            newChild.SimplePropertyName = child.PropertyName;
             newChild.PropertyName = $"{complexTypedProperty.PropertyName}{Defaults.ComplexTypeNameSeparator}{child.PropertyName}";
-            newChild.ComplexUnderlyingName = $"{complexTypedProperty.GetComplexOrActualUnderlyingName()}{Defaults.ComplexTypeNameSeparator}{child.UnderlyingName}";
+            newChild.ComplexUnderlyingName = $"{complexTypedProperty.GetComplexOrSimpleUnderlyingName()}{Defaults.ComplexTypeNameSeparator}{child.UnderlyingName}";
 
             //set new value provider
             newChild.ValueProvider = new ComplexTypedPropertyValueProvider
