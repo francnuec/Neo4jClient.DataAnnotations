@@ -42,6 +42,7 @@ namespace Neo4jClient.DataAnnotations.Utils
         public static readonly Type ICypherResultItemType = typeof(ICypherResultItem);
         public static readonly Type EntitySetType = typeof(EntitySet<>);
         public static readonly Type ConcreteEntitySetType = typeof(ConcreteEntitySet<>);
+        public static readonly Type DictStringObjectType = typeof(Dictionary<string, object>);
         #endregion
 
         public const BindingFlags MemberSearchBindingFlags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
@@ -72,6 +73,9 @@ namespace Neo4jClient.DataAnnotations.Utils
             DictionaryType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
             .Where(p => p.GetIndexParameters().Any())
             .Select(p => p.GetGetMethod()).First();
+
+        public static readonly MethodInfo DictStringObjectAddMethod = Utils.Utilities.GetMethodInfo
+            (() => new Dictionary<string, object>().Add(null, null));
 
         public static readonly MethodInfo NfpMethodInfo = Utils.Utilities.GetMethodInfo(() => ObjectExtensions._<object>(null));
 

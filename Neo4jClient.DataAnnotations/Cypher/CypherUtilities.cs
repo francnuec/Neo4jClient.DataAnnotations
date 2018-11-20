@@ -535,47 +535,21 @@ namespace Neo4jClient.DataAnnotations.Cypher
             //get the properties expression
             if (lambdaExpr != null && queryContext.SerializeCallback != null)
             {
-                //var resolver = queryContext.Resolver;
                 var serializer = queryContext.SerializeCallback;
-                //var annotationsContext = queryContext.AnnotationsContext;
-                //var entityService = annotationsContext.EntityService;
 
                 //visit the expressions
-                var entityVisitor = new NewEntityExpressionVisitor(queryContext);
-                entityVisitor.SourceParameter = lambdaExpr.Parameters.FirstOrDefault();
+                var entityVisitor = new EntityExpressionVisitor
+                    (queryContext, sourceParameter: lambdaExpr.Parameters.FirstOrDefault());
 
-                var instanceExpr = entityVisitor.Visit(lambdaExpr.Body); //.UncastBox(out var typeRemoved));
+                var instanceExpr = entityVisitor.Visit(lambdaExpr.Body.UncastBox(out var typeRemoved));
 
                 //get the instance
                 var instance = instanceExpr.ExecuteExpression<object>();
 
-                var instanceType = instance.GetType();
-                var instanceIsDictionary = instanceType.IsDictionaryType();
-
-                //var instanceInfo = entityService.GetEntityTypeInfo(instanceType);
-
                 var pendingAssignments = entityVisitor.PendingAssignments;
 
-                string instanceJson = null;
-
-                //if (!instanceIsDictionary)
-                //{
-                //    if (!instanceType.IsAnonymousType())
-                //        entityService.AddEntityType(instanceType); //just in case it was omitted
-
-                //    if (resolver != null)
-                //    {
-                //        instanceInfo.WithJsonResolver(resolver);
-                //    }
-                //    else
-                //    {
-                //        //serialize the instance to force converter to enumerate jsonNames
-                //        instanceJson = serializer(instance);
-                //    }
-                //}
-
                 //now resolve instance
-                instanceJson = instanceJson ?? serializer(instance);
+                var instanceJson = serializer(instance);
                 JObject instanceJObject = JObject.Parse(instanceJson);
 
                 //now do the pending assignments
@@ -758,83 +732,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 }
             }
 
-            //we are still here
-            ////try one last trick before throwing exceptions
-            //var retrieved = ExpressionUtilities.GetSimpleMemberAccessStretch(funcsVisitor.EntityService, expression, out var entityExpr);
-
-            //if (entityExpr != null)
-            //{
-            //    if (entityExpr.NodeType == ExpressionType.MemberInit
-            //        || entityExpr.NodeType == ExpressionType.New
-            //        || (entityExpr.NodeType == ExpressionType.ListInit && entityExpr.Type.IsDictionaryType()))
-            //    {
-            //        //recursively get the items
-            //        var lambdaExpr = Expression.Lambda(entityExpr);
-            //        var result = GetNewFinalProperties(lambdaExpr, funcsVisitor.QueryContext, out var _hasFunctionsInProperties);
-            //        hasFunctionsInProperties = hasFunctionsInProperties || _hasFunctionsInProperties;
-
-            //        return result;
-            //    }
-            //}
-
             //there is a problem
             throw exception ?? new InvalidOperationException(string.Format(Messages.AmbiguousExpressionError, expression));
-        }
-
-        internal static Dictionary<string, List<DictMemberInfo>> FilterDictionaryMap
-            (string _baseActualName, string _baseJsonName,
-            IEnumerable<KeyValuePair<string, List<DictMemberInfo>>> _dictMemberNames)
-        {
-            _baseActualName = _baseActualName ?? _baseJsonName;
-            _baseJsonName = _baseJsonName ?? _baseActualName;
-
-            if (_dictMemberNames != null
-                && !string.IsNullOrWhiteSpace(_baseActualName)
-                && !string.IsNullOrWhiteSpace(_baseJsonName))
-            {
-                //filter for only the ones that have the base json name
-                var _baseDictMemberNames = new Dictionary<string, List<DictMemberInfo>>();
-
-                foreach (var item in _dictMemberNames)
-                {
-                    if (item.Key.StartsWith(_baseActualName))
-                    {
-                        _baseDictMemberNames[item.Key] = item.Value;
-
-                        //if (item.Value?.Count > 0)
-                        //{
-                        //    foreach (var v in item.Value)
-                        //    {
-                        //        if (v.ComplexPath?.Count > 0)
-                        //        {
-                        //            //add each complex path to the main path for the sake of our resolution methods
-                        //            var paths = new List<MemberInfo>(v.ComplexPath);
-                        //            paths.Reverse();
-
-                        //            var baseName = item.Key;
-                        //            var baseJsonName = v.JsonName;
-
-                        //            foreach (var c in v.ComplexPath)
-                        //            {
-                        //                baseName = $"{baseName}{Defaults.ComplexTypeNameSeparator}{c.Name}";
-                        //                baseJsonName = $"{baseName}{Defaults.ComplexTypeSeparator}"
-                        //                    _baseDictMemberNames[baseName] = new List<DictMemberInfo>() { };
-                        //            }
-                        //        }
-                        //    }
-                        //}
-                    }
-                    else if (item.Value?.Where(v => v.JsonName.StartsWith(_baseJsonName)).ToList() is var filteredValues
-                        && filteredValues?.Count > 0)
-                    {
-                        _baseDictMemberNames[item.Key] = filteredValues;
-                    }
-                }
-
-                return _baseDictMemberNames.Count > 0 ? _baseDictMemberNames : null;
-            }
-
-            return null;
         }
 
         internal static Dictionary<MemberName, MemberInfo> FilterPropertyMap
@@ -857,255 +756,311 @@ namespace Neo4jClient.DataAnnotations.Cypher
             return null;
         }
 
-        internal static string GetMemberComplexJsonName
-            (Dictionary<MemberName, MemberInfo> jsonNamePropertyMap,
-            Dictionary<string, List<DictMemberInfo>> dictMemberNames,
-            MemberInfo rootMemberInfo, string rootMemberName,
-            MemberInfo targetMemberInfo, string targetMemberName)
-        {
-            string memberJsonName = null;
+        //internal static Dictionary<string, List<DictMemberInfo>> FilterDictionaryMap
+        //    (string _baseActualName, string _baseJsonName,
+        //    IEnumerable<KeyValuePair<string, List<DictMemberInfo>>> _dictMemberNames)
+        //{
+        //    _baseActualName = _baseActualName ?? _baseJsonName;
+        //    _baseJsonName = _baseJsonName ?? _baseActualName;
 
-            if (jsonNamePropertyMap != null)
-            {
-                var memberJsonNameMap = jsonNamePropertyMap
-                .Where(item => item.Value.IsEquivalentTo(targetMemberInfo))
-                .FirstOrDefault();
+        //    if (_dictMemberNames != null
+        //        && !string.IsNullOrWhiteSpace(_baseActualName)
+        //        && !string.IsNullOrWhiteSpace(_baseJsonName))
+        //    {
+        //        //filter for only the ones that have the base json name
+        //        var _baseDictMemberNames = new Dictionary<string, List<DictMemberInfo>>();
 
-                if (memberJsonNameMap.Value != null)
-                    memberJsonName = memberJsonNameMap.Key?.ComplexJson;
-            }
+        //        foreach (var item in _dictMemberNames)
+        //        {
+        //            if (item.Key.StartsWith(_baseActualName))
+        //            {
+        //                _baseDictMemberNames[item.Key] = item.Value;
 
-            if (dictMemberNames != null && string.IsNullOrWhiteSpace(memberJsonName))
-            {
-                //try dictmembernames
-                if (targetMemberInfo != null)
-                {
-                    var tuple = dictMemberNames.SelectMany(item => item.Value)
-                        .FirstOrDefault(item => item.ComplexPath?.FirstOrDefault()?.IsEquivalentTo(targetMemberInfo) == true);
+        //                //if (item.Value?.Count > 0)
+        //                //{
+        //                //    foreach (var v in item.Value)
+        //                //    {
+        //                //        if (v.ComplexPath?.Count > 0)
+        //                //        {
+        //                //            //add each complex path to the main path for the sake of our resolution methods
+        //                //            var paths = new List<MemberInfo>(v.ComplexPath);
+        //                //            paths.Reverse();
 
-                    if (tuple != null)
-                    {
-                        memberJsonName = tuple.JsonName;
-                    }
-                }
+        //                //            var baseName = item.Key;
+        //                //            var baseJsonName = v.JsonName;
 
-                if (string.IsNullOrWhiteSpace(memberJsonName))
-                {
-                    //still empty
-                    //use the name to search dict keys
-                    targetMemberName = targetMemberName ?? targetMemberInfo?.Name;
+        //                //            foreach (var c in v.ComplexPath)
+        //                //            {
+        //                //                baseName = $"{baseName}{Defaults.ComplexTypeNameSeparator}{c.Name}";
+        //                //                baseJsonName = $"{baseName}{Defaults.ComplexTypeSeparator}"
+        //                //                    _baseDictMemberNames[baseName] = new List<DictMemberInfo>() { };
+        //                //            }
+        //                //        }
+        //                //    }
+        //                //}
+        //            }
+        //            else if (item.Value?.Where(v => v.JsonName.StartsWith(_baseJsonName)).ToList() is var filteredValues
+        //                && filteredValues?.Count > 0)
+        //            {
+        //                _baseDictMemberNames[item.Key] = filteredValues;
+        //            }
+        //        }
 
-                    if (dictMemberNames.TryGetValue(targetMemberName, out var values)
-                        || ((rootMemberName = rootMemberName ?? rootMemberInfo?.Name) != null
-                        && dictMemberNames.TryGetValue(rootMemberName, out values)))
-                    {
-                        memberJsonName = values?.FirstOrDefault(v => v.JsonName == targetMemberName)?.JsonName ?? (values?.Count == 1 ? values[0].JsonName : null);
-                    }
-                }
-            }
+        //        return _baseDictMemberNames.Count > 0 ? _baseDictMemberNames : null;
+        //    }
 
-            return memberJsonName;
-        }
+        //    return null;
+        //}
 
-        private static JProperty ResolveJPropertyFromAssignment
-            (Dictionary<MemberName, MemberInfo> jsonNamePropertyMap,
-            Dictionary<string, List<DictMemberInfo>> dictMemberNames,
-            JObject jObject, MemberInfo assignmentInfo, string assignmentName,
-            MemberInfo actual, string actualName, string instanceTypeName)
-        {
-            string memberJsonName = GetMemberComplexJsonName(jsonNamePropertyMap,
-                dictMemberNames, assignmentInfo, assignmentName, actual, actualName);
+        //internal static string GetMemberComplexJsonName
+        //    (Dictionary<MemberName, MemberInfo> jsonNamePropertyMap,
+        //    Dictionary<string, List<DictMemberInfo>> dictMemberNames,
+        //    MemberInfo rootMemberInfo, string rootMemberName,
+        //    MemberInfo targetMemberInfo, string targetMemberName)
+        //{
+        //    string memberJsonName = null;
 
-            if (memberJsonName == null)
-            {
-                //we have a problem
-                throw new Exception(string.Format(Messages.InvalidMemberAssignmentError, assignmentInfo?.Name ?? assignmentName));
-            }
+        //    if (jsonNamePropertyMap != null)
+        //    {
+        //        var memberJsonNameMap = jsonNamePropertyMap
+        //        .Where(item => item.Value.IsEquivalentTo(targetMemberInfo))
+        //        .FirstOrDefault();
 
-            //get the jproperty
-            return ResolveJPropertyFromJsonName(jObject, memberJsonName, instanceTypeName);
-        }
+        //        if (memberJsonNameMap.Value != null)
+        //            memberJsonName = memberJsonNameMap.Key?.ComplexJson;
+        //    }
 
-        private static JProperty ResolveJPropertyFromJsonName
-            (JObject jObject, string memberJsonName, string instanceTypeName)
-        {
-            //get the jproperty
-            var jProp = jObject.Properties().FirstOrDefault(jp => jp.Name == memberJsonName);
+        //    if (dictMemberNames != null && string.IsNullOrWhiteSpace(memberJsonName))
+        //    {
+        //        //try dictmembernames
+        //        if (targetMemberInfo != null)
+        //        {
+        //            var tuple = dictMemberNames.SelectMany(item => item.Value)
+        //                .FirstOrDefault(item => item.ComplexPath?.FirstOrDefault()?.IsEquivalentTo(targetMemberInfo) == true);
 
-            if (jProp == null)
-            {
-                //another problem
-                throw new Exception(string.Format(Messages.JsonPropertyNotFoundError, memberJsonName, instanceTypeName));
-            }
+        //            if (tuple != null)
+        //            {
+        //                memberJsonName = tuple.JsonName;
+        //            }
+        //        }
 
-            return jProp;
-        }
+        //        if (string.IsNullOrWhiteSpace(memberJsonName))
+        //        {
+        //            //still empty
+        //            //use the name to search dict keys
+        //            targetMemberName = targetMemberName ?? targetMemberInfo?.Name;
 
-        private static List<JProperty> ResolveAssignments
-            (IEntityService entityService,
-            Dictionary<MemberName, MemberInfo> jsonNamePropertyMap,
-            Dictionary<string, List<DictMemberInfo>> dictMemberNames,
-            Dictionary<object, Expression> assignments, JObject jObject, string instanceTypeName,
-            out List<ComplexAssignmentInfo> complexAssignments)
-        {
-            var filteredProps = new List<JProperty>();
-            complexAssignments = null;
+        //            if (dictMemberNames.TryGetValue(targetMemberName, out var values)
+        //                || ((rootMemberName = rootMemberName ?? rootMemberInfo?.Name) != null
+        //                && dictMemberNames.TryGetValue(rootMemberName, out values)))
+        //            {
+        //                memberJsonName = values?.FirstOrDefault(v => v.JsonName == targetMemberName)?.JsonName ?? (values?.Count == 1 ? values[0].JsonName : null);
+        //            }
+        //        }
+        //    }
 
-            foreach (var assignment in assignments)
-            {
-                var assignmentJsonNamePropertyMap = jsonNamePropertyMap;
-                var assignmentDictMemberNames = dictMemberNames;
+        //    return memberJsonName;
+        //}
 
-                var assignmentKey = assignment.Key;
-                string assignmentKeyName = assignmentKey as string;// ?? assignmentKeyInfo?.Name;
-                var assignmentKeyInfos = assignmentKey as List<MemberInfo>;
+        //private static JProperty ResolveJPropertyFromAssignment
+        //    (Dictionary<MemberName, MemberInfo> jsonNamePropertyMap,
+        //    Dictionary<string, List<DictMemberInfo>> dictMemberNames,
+        //    JObject jObject, MemberInfo assignmentInfo, string assignmentName,
+        //    MemberInfo actual, string actualName, string instanceTypeName)
+        //{
+        //    string memberJsonName = GetMemberComplexJsonName(jsonNamePropertyMap,
+        //        dictMemberNames, assignmentInfo, assignmentName, actual, actualName);
 
-                MemberInfo assignmentKeyInfo = null; //assignmentKeyInfos?.FirstOrDefault(); //assume it's only one member in the list at first. this should be more than one if it is a complex assignment
+        //    if (memberJsonName == null)
+        //    {
+        //        //we have a problem
+        //        throw new Exception(string.Format(Messages.InvalidMemberAssignmentError, assignmentInfo?.Name ?? assignmentName));
+        //    }
+
+        //    //get the jproperty
+        //    return ResolveJPropertyFromJsonName(jObject, memberJsonName, instanceTypeName);
+        //}
+
+        //private static JProperty ResolveJPropertyFromJsonName
+        //    (JObject jObject, string memberJsonName, string instanceTypeName)
+        //{
+        //    //get the jproperty
+        //    var jProp = jObject.Properties().FirstOrDefault(jp => jp.Name == memberJsonName);
+
+        //    if (jProp == null)
+        //    {
+        //        //another problem
+        //        throw new Exception(string.Format(Messages.JsonPropertyNotFoundError, memberJsonName, instanceTypeName));
+        //    }
+
+        //    return jProp;
+        //}
+
+        //private static List<JProperty> ResolveAssignments
+        //    (IEntityService entityService,
+        //    Dictionary<MemberName, MemberInfo> jsonNamePropertyMap,
+        //    Dictionary<string, List<DictMemberInfo>> dictMemberNames,
+        //    Dictionary<object, Expression> assignments, JObject jObject, string instanceTypeName,
+        //    out List<ComplexAssignmentInfo> complexAssignments)
+        //{
+        //    var filteredProps = new List<JProperty>();
+        //    complexAssignments = null;
+
+        //    foreach (var assignment in assignments)
+        //    {
+        //        var assignmentJsonNamePropertyMap = jsonNamePropertyMap;
+        //        var assignmentDictMemberNames = dictMemberNames;
+
+        //        var assignmentKey = assignment.Key;
+        //        string assignmentKeyName = assignmentKey as string;// ?? assignmentKeyInfo?.Name;
+        //        var assignmentKeyInfos = assignmentKey as List<MemberInfo>;
+
+        //        MemberInfo assignmentKeyInfo = null; //assignmentKeyInfos?.FirstOrDefault(); //assume it's only one member in the list at first. this should be more than one if it is a complex assignment
                 
-                if (assignmentKeyInfos?.Count > 0)
-                {
-                    string lastJsonName = null;
-                    string lastActualName = null;
+        //        if (assignmentKeyInfos?.Count > 0)
+        //        {
+        //            string lastJsonName = null;
+        //            string lastActualName = null;
 
-                    //find the right set of property map first
-                    foreach (var info in assignmentKeyInfos)
-                    {
-                        assignmentKeyInfo = info;
-                        assignmentKeyName = info.Name;
+        //            //find the right set of property map first
+        //            foreach (var info in assignmentKeyInfos)
+        //            {
+        //                assignmentKeyInfo = info;
+        //                assignmentKeyName = info.Name;
 
-                        //get base json name
-                        var jsonName = GetMemberComplexJsonName
-                            (assignmentJsonNamePropertyMap, assignmentDictMemberNames,
-                            assignmentKeyInfo, assignmentKeyName,
-                            assignmentKeyInfo, assignmentKeyName);
+        //                //get base json name
+        //                var jsonName = GetMemberComplexJsonName
+        //                    (assignmentJsonNamePropertyMap, assignmentDictMemberNames,
+        //                    assignmentKeyInfo, assignmentKeyName,
+        //                    assignmentKeyInfo, assignmentKeyName);
 
-                        if (lastActualName != null)
-                            lastActualName = $"{lastActualName}{Defaults.ComplexTypeNameSeparator}{info.Name}";
-                        else
-                            lastActualName = info.Name;
+        //                if (lastActualName != null)
+        //                    lastActualName = $"{lastActualName}{Defaults.ComplexTypeNameSeparator}{info.Name}";
+        //                else
+        //                    lastActualName = info.Name;
 
-                        if (lastJsonName != null)
-                            lastJsonName = jsonName ?? $"{lastJsonName}{Defaults.ComplexTypeNameSeparator}{info.Name}";
-                        else
-                            lastJsonName = jsonName ?? info.Name;
+        //                if (lastJsonName != null)
+        //                    lastJsonName = jsonName ?? $"{lastJsonName}{Defaults.ComplexTypeNameSeparator}{info.Name}";
+        //                else
+        //                    lastJsonName = jsonName ?? info.Name;
 
-                        assignmentJsonNamePropertyMap = FilterPropertyMap(lastActualName, lastJsonName, assignmentJsonNamePropertyMap);
-                        assignmentDictMemberNames = FilterDictionaryMap(lastActualName, lastJsonName, assignmentDictMemberNames);
-                    }
-                }
+        //                assignmentJsonNamePropertyMap = FilterPropertyMap(lastActualName, lastJsonName, assignmentJsonNamePropertyMap);
+        //                assignmentDictMemberNames = FilterDictionaryMap(lastActualName, lastJsonName, assignmentDictMemberNames);
+        //            }
+        //        }
 
-                var assignmentValue = assignment.Value;
-                var type = (assignmentKeyInfo as PropertyInfo)?.PropertyType
-                    ?? (assignmentKeyInfo as FieldInfo)?.FieldType
-                    ?? assignmentValue?.Type;
+        //        var assignmentValue = assignment.Value;
+        //        var type = (assignmentKeyInfo as PropertyInfo)?.PropertyType
+        //            ?? (assignmentKeyInfo as FieldInfo)?.FieldType
+        //            ?? assignmentValue?.Type;
 
-                if (type.IsComplex() && (assignmentValue == null || !Utils.Utilities.HasNfpEscape(assignmentValue)))
-                {
-                    var complexProps = new List<JProperty>();
+        //        if (type.IsComplex() && (assignmentValue == null || !Utils.Utilities.HasNfpEscape(assignmentValue)))
+        //        {
+        //            var complexProps = new List<JProperty>();
 
-                    //get base json name
-                    var baseJsonName = GetMemberComplexJsonName
-                        (assignmentJsonNamePropertyMap, assignmentDictMemberNames,
-                        assignmentKeyInfo, assignmentKeyName,
-                        assignmentKeyInfo, assignmentKeyName) ?? assignmentKeyName;
+        //            //get base json name
+        //            var baseJsonName = GetMemberComplexJsonName
+        //                (assignmentJsonNamePropertyMap, assignmentDictMemberNames,
+        //                assignmentKeyInfo, assignmentKeyName,
+        //                assignmentKeyInfo, assignmentKeyName) ?? assignmentKeyName;
 
-                    var baseJsonPropMap = FilterPropertyMap(assignmentKeyName, baseJsonName, assignmentJsonNamePropertyMap);
-                    var baseDictMemberNames = FilterDictionaryMap(assignmentKeyName, baseJsonName, assignmentDictMemberNames);
-                    var baseAllDictMembers = baseDictMemberNames?.SelectMany(p => p.Value).ToArray();
+        //            var baseJsonPropMap = FilterPropertyMap(assignmentKeyName, baseJsonName, assignmentJsonNamePropertyMap);
+        //            var baseDictMemberNames = FilterDictionaryMap(assignmentKeyName, baseJsonName, assignmentDictMemberNames);
+        //            var baseAllDictMembers = baseDictMemberNames?.SelectMany(p => p.Value).ToArray();
 
-                    //is complex type
-                    //find the edges
-                    ExpressionUtilities.ExplodeComplexTypeAndMemberAccess
-                        (entityService, ref assignmentValue, type, out var inversePaths, shouldTryCast: true);
+        //            //is complex type
+        //            //find the edges
+        //            ExpressionUtilities.ExplodeComplexTypeAndMemberAccess
+        //                (entityService, ref assignmentValue, type, out var inversePaths, shouldTryCast: true);
 
-                    foreach (var inversePath in inversePaths)
-                    {
-                        JProperty resolvedProp = null;
+        //            foreach (var inversePath in inversePaths)
+        //            {
+        //                JProperty resolvedProp = null;
 
-                        if (baseJsonPropMap != null)
-                        {
-                            inversePath.Reverse(); //don't make it inverse again
+        //                if (baseJsonPropMap != null)
+        //                {
+        //                    inversePath.Reverse(); //don't make it inverse again
 
-                            string lastActualName = assignmentKeyName;
-                            string lastJsonName = baseJsonName;
-                            var lastJsonPropMap = baseJsonPropMap;
-                            //var lastDictMemberNames = baseDictMemberNames;
+        //                    string lastActualName = assignmentKeyName;
+        //                    string lastJsonName = baseJsonName;
+        //                    var lastJsonPropMap = baseJsonPropMap;
+        //                    //var lastDictMemberNames = baseDictMemberNames;
 
-                            //start from the top
-                            foreach (var actualMember in inversePath)
-                            {
-                                try
-                                {
-                                    resolvedProp = ResolveJPropertyFromAssignment
-                                        (lastJsonPropMap, null, jObject, assignmentKeyInfo, assignmentKeyName,
-                                        actualMember, actualMember.Name, instanceTypeName);
-                                }
-                                catch
-                                {
-                                }
+        //                    //start from the top
+        //                    foreach (var actualMember in inversePath)
+        //                    {
+        //                        try
+        //                        {
+        //                            resolvedProp = ResolveJPropertyFromAssignment
+        //                                (lastJsonPropMap, null, jObject, assignmentKeyInfo, assignmentKeyName,
+        //                                actualMember, actualMember.Name, instanceTypeName);
+        //                        }
+        //                        catch
+        //                        {
+        //                        }
 
-                                lastActualName = $"{lastActualName}{Defaults.ComplexTypeNameSeparator}{actualMember.Name}";
-                                lastJsonName = resolvedProp?.Name ?? $"{lastJsonName}{Defaults.ComplexTypeNameSeparator}{actualMember.Name}";
-                                lastJsonPropMap = FilterPropertyMap(lastActualName, lastJsonName, lastJsonPropMap);
-                                //lastDictMemberNames = filterDictionaryMap(lastJsonName, lastDictMemberNames);
-                            }
+        //                        lastActualName = $"{lastActualName}{Defaults.ComplexTypeNameSeparator}{actualMember.Name}";
+        //                        lastJsonName = resolvedProp?.Name ?? $"{lastJsonName}{Defaults.ComplexTypeNameSeparator}{actualMember.Name}";
+        //                        lastJsonPropMap = FilterPropertyMap(lastActualName, lastJsonName, lastJsonPropMap);
+        //                        //lastDictMemberNames = filterDictionaryMap(lastJsonName, lastDictMemberNames);
+        //                    }
 
-                            inversePath.Reverse(); //make it inverse again
-                        }
+        //                    inversePath.Reverse(); //make it inverse again
+        //                }
 
-                        if (resolvedProp == null && baseAllDictMembers != null)
-                        {
-                            //for dictionaries, find the one whose members matches this inversePath exactly
-                            var inversePathCount = inversePath.Count;
+        //                if (resolvedProp == null && baseAllDictMembers != null)
+        //                {
+        //                    //for dictionaries, find the one whose members matches this inversePath exactly
+        //                    var inversePathCount = inversePath.Count;
 
-                            var pathJsonName = baseAllDictMembers.FirstOrDefault(v => v.ComplexPath == inversePath)?.JsonName;
+        //                    var pathJsonName = baseAllDictMembers.FirstOrDefault(v => v.ComplexPath == inversePath)?.JsonName;
 
-                            //var pathJsonName = baseAllDictMembers.FirstOrDefault(v =>
-                            //{
-                            //    if (v.ComplexPath == null)
-                            //        return false;
+        //                    //var pathJsonName = baseAllDictMembers.FirstOrDefault(v =>
+        //                    //{
+        //                    //    if (v.ComplexPath == null)
+        //                    //        return false;
 
-                            //    if (v.ComplexPath.Count != inversePathCount)
-                            //        return false;
+        //                    //    if (v.ComplexPath.Count != inversePathCount)
+        //                    //        return false;
 
-                            //    for (int i = 0; i < inversePathCount; i++)
-                            //    {
-                            //        if (v.ComplexPath[i]?.IsEquivalentTo(inversePath[i]) != true)
-                            //            return false;
-                            //    }
+        //                    //    for (int i = 0; i < inversePathCount; i++)
+        //                    //    {
+        //                    //        if (v.ComplexPath[i]?.IsEquivalentTo(inversePath[i]) != true)
+        //                    //            return false;
+        //                    //    }
 
-                            //    return true;
-                            //})?.JsonName;
+        //                    //    return true;
+        //                    //})?.JsonName;
 
-                            if (pathJsonName != null)
-                            {
-                                resolvedProp = ResolveJPropertyFromJsonName(jObject, pathJsonName, instanceTypeName);
-                            }
-                        }
+        //                    if (pathJsonName != null)
+        //                    {
+        //                        resolvedProp = ResolveJPropertyFromJsonName(jObject, pathJsonName, instanceTypeName);
+        //                    }
+        //                }
 
-                        if (resolvedProp != null)
-                            complexProps.Add(resolvedProp);
-                    }
+        //                if (resolvedProp != null)
+        //                    complexProps.Add(resolvedProp);
+        //            }
 
-                    filteredProps.AddRange(complexProps);
+        //            filteredProps.AddRange(complexProps);
 
-                    if (complexAssignments == null)
-                        complexAssignments = new List<ComplexAssignmentInfo>();
+        //            if (complexAssignments == null)
+        //                complexAssignments = new List<ComplexAssignmentInfo>();
 
-                    complexAssignments.Add(new ComplexAssignmentInfo
-                        ((object)assignmentKeyInfo ?? assignmentKeyName, assignmentValue, assignmentValue?.Type ?? type, complexProps));
-                }
-                else
-                {
-                    filteredProps.Add(ResolveJPropertyFromAssignment
-                        (assignmentJsonNamePropertyMap, assignmentDictMemberNames, jObject,
-                        assignmentKeyInfo, assignmentKeyName,
-                        assignmentKeyInfo, assignmentKeyName, instanceTypeName));
-                }
-            }
+        //            complexAssignments.Add(new ComplexAssignmentInfo
+        //                ((object)assignmentKeyInfo ?? assignmentKeyName, assignmentValue, assignmentValue?.Type ?? type, complexProps));
+        //        }
+        //        else
+        //        {
+        //            filteredProps.Add(ResolveJPropertyFromAssignment
+        //                (assignmentJsonNamePropertyMap, assignmentDictMemberNames, jObject,
+        //                assignmentKeyInfo, assignmentKeyName,
+        //                assignmentKeyInfo, assignmentKeyName, instanceTypeName));
+        //        }
+        //    }
 
-            return filteredProps;
-        }
+        //    return filteredProps;
+        //}
 
         public static string BuildPaths(ref ICypherFluentQuery query,
             IEnumerable<Expression<Func<IPathBuilder, IPathExtent>>> pathBuildExpressions,

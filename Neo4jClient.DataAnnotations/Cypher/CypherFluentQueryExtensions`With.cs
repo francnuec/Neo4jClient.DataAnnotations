@@ -11,12 +11,15 @@ namespace Neo4jClient.DataAnnotations.Cypher
     public static partial class CypherFluentQueryExtensions
     {
         internal static ICypherFluentQuery<TResult> SharedProjectionQuery<TResult>
-            (this ICypherFluentQuery query, LambdaExpression expression, string clause, bool applyResultMode = true, bool applyResultFormat = true)
+            (this ICypherFluentQuery query, LambdaExpression expression, string clause,
+            bool isOutputQuery,
+            bool applyResultMode = true, bool applyResultFormat = true)
         {
             var queryContext = CypherUtilities.GetQueryContext(query);
             queryContext.CurrentBuildStrategy = queryContext.CurrentBuildStrategy ?? PropertiesBuildStrategy.WithParams;
             var funcVisitor = new FunctionExpressionVisitor(queryContext);
-            var result = ExpressionUtilities.BuildProjectionQueryExpression(expression, queryContext, funcVisitor, out var mode, out var format);
+            var result = ExpressionUtilities.BuildProjectionQueryExpression
+                (expression, queryContext, funcVisitor, isOutputQuery, out var mode, out var format);
 
             return Mutate<TResult>(query, w =>
             {
@@ -33,7 +36,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         #region With
         internal static ICypherFluentQuery SharedWith(this ICypherFluentQuery query, LambdaExpression expression)
         {
-            return SharedProjectionQuery<object>(query, expression, "WITH", applyResultFormat: false);
+            return SharedProjectionQuery<object>(query, expression, "WITH", isOutputQuery: false, applyResultFormat: false);
         }
 
         public static ICypherFluentQuery With(this ICypherFluentQuery query, Expression<Func<object>> expression)

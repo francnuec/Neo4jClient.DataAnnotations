@@ -234,7 +234,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                         //take care of the entity's complex properties and those of its children
                         Utils.Utilities.InitializeComplexTypedProperties(entity, EntityService);
 
-                            if (!EntityService.EntityTypes.Contains(entityType))
+                        if (!EntityService.EntityTypes.Contains(entityType))
                         {
                             EntityService.AddEntityType(entityType); //just in case it wasn't already added.
                         }

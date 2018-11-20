@@ -556,7 +556,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var retrievedMembers = ExpressionUtilities.GetSimpleMemberAccessStretch
                 (testContext.AnnotationsContext.EntityService, expression.Body, out var val);
 
-            Assert.Equal(true, Utils.Utilities.HasVars(retrievedMembers));
+            Assert.True(Utils.Utilities.HasVars(retrievedMembers));
 
             var expressionVisitor = new FunctionExpressionVisitor(testContext.QueryContext);
             expressionVisitor.Visit(expression.Body);
@@ -574,7 +574,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var retrievedMembers = ExpressionUtilities.GetSimpleMemberAccessStretch
                 (testContext.AnnotationsContext.EntityService, expression.Body, out var val);
 
-            Assert.Equal(true, Utils.Utilities.HasVars(retrievedMembers));
+            Assert.True(Utils.Utilities.HasVars(retrievedMembers));
 
             var expressionVisitor = new FunctionExpressionVisitor(testContext.QueryContext);
             expressionVisitor.Visit(expression.Body);

@@ -143,201 +143,427 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         internal static string BuildProjectionQueryExpression(LambdaExpression expression,
             QueryContext queryContext, FunctionExpressionVisitor functionVisitor,
+            bool isOutputQuery,
             out CypherResultMode resultMode, out CypherResultFormat resultFormat)
         {
             //expecting:
             //u => u //parameter
-            //u => u.Name //memberaccess
+            //u => u.Name //memberaccess if complextype, should return object
             //(u,v) => new { u, v } //new anonymous expression
             //(u, v) => new User(){ Name = u.Id() } //member init
 
             resultFormat = CypherResultFormat.DependsOnEnvironment;
 
+            var originalExpression = expression;
+
             var bodyExpr = expression.Body.Uncast(out var bodyCast, castToRemove: Defaults.ObjectType);
+
+            //use final properties method
+            //we have to convert all expressions to dictionary, theen process it that way
+
+            //but first replace all parameters with vars.get call
+            var replacements = new Dictionary<Expression, Expression>();
+            var replacerVisitor = new ReplacerExpressionVisitor(replacements);
+            if (expression.Parameters?.Count > 0)
+            {
+                foreach (var p in expression.Parameters)
+                {
+                    replacements.Add(p, GetVarsGetExpressionFor(p.Name, p.Type));
+                }
+                //make parameter replacements now
+                bodyExpr = replacerVisitor.Visit(bodyExpr);
+                replacements.Clear();
+            }
+
+            var nfpInfo = Defaults.NfpMethodInfo;
+
+            List<ElementInit> dictItems = new List<ElementInit>();
+            List<string> members = new List<string>();
+
+            Dictionary<string, Expression> complexTypeMembers = null;
+
+            Action<string, Expression> AddDictItem = (member, argument) =>
+            {
+                if (argument.Type.IsComplex())
+                {
+                    complexTypeMembers = complexTypeMembers ?? new Dictionary<string, Expression>();
+                    complexTypeMembers[member] = argument;
+                }
+
+                //add the name escape method
+                argument = Expression.Call(Utils.Utilities.GetGenericMethodInfo(nfpInfo, argument.Type), argument);
+
+                dictItems.Add(Expression.ElementInit
+                    (Defaults.DictStringObjectAddMethod, Expression.Constant(member),
+                    argument.Type != Defaults.ObjectType ?
+                    Expression.Convert(argument, Defaults.ObjectType) :
+                    argument));
+
+                members.Add(member);
+            };
+
+            bool isProjection = false;
+
+            switch (bodyExpr)
+            {
+                case MemberExpression memberExpression:
+                    {
+                        //u => u.Name //memberaccess if complextype, should return object
+                        AddDictItem(memberExpression.Member.Name, memberExpression);
+                        isProjection = false;
+
+                        break;
+                    }
+                case MemberInitExpression memberInitExpression:
+                    {
+                        //(u, v) => new User(){ Name = u.Id() } //member init
+
+                        //only the declared members matter
+                        foreach (var binding in memberInitExpression.Bindings)
+                        {
+                            switch (binding)
+                            {
+                                case MemberAssignment assignment:
+                                    {
+                                        AddDictItem(assignment.Member.Name, assignment.Expression);
+                                        break;
+                                    }
+                                default:
+                                    {
+                                        throw new InvalidOperationException(string.Format(Messages.InvalidProjectionError, binding.Member.Name));
+                                    }
+                            }
+                        }
+
+                        isProjection = true;
+
+                        break;
+                    }
+                case NewExpression newExpression when (bodyExpr.Type.IsAnonymousType()):
+                    {
+                        //(u,v) => new { u, v } //new anonymous expression
+                        for (int i = 0; i < newExpression.Arguments.Count; i++)
+                        {
+                            //generate the expression entry
+                            var argument = newExpression.Arguments[i];
+                            var member = newExpression.Members[i].Name;
+
+                            if (argument != null && member != null)
+                            {
+                                AddDictItem(member, argument);
+                            }
+                        }
+
+                        isProjection = true;
+
+                        break;
+                    }
+                default:
+                    {
+                        //use a generic member name
+                        AddDictItem("projection", bodyExpr);
+                        isProjection = false;
+
+                        break;
+                    }
+            }
+            
+            expression = Expression.Lambda(Expression.ListInit(Expression.New(Defaults.DictStringObjectType), dictItems));
 
             string result = null;
 
-            if (bodyExpr.NodeType == ExpressionType.MemberInit
-                || bodyExpr.NodeType == ExpressionType.New)
+            var finalProperties = CypherUtilities.GetFinalProperties(expression, queryContext, out bool hasFunctions);
+            if (finalProperties == null)
+                //trouble
+                throw new InvalidOperationException(Messages.InvalidICypherResultItemExpressionError);
+
+            var serializer = queryContext.SerializeCallback;
+            var buildStrategy = queryContext.CurrentBuildStrategy ?? PropertiesBuildStrategy.WithParams;
+            var hasQueryWriter = queryContext.CurrentQueryWriter != null;
+
+            Func<JToken, JToken> getProcessedJToken = (jToken) =>
             {
-                //use final properties method in this case
-
-                //but first replace all parameters with vars.get call
-                var replacements = new Dictionary<Expression, Expression>();
-                var replacerVisitor = new ReplacerExpressionVisitor(replacements);
-                if (expression.Parameters?.Count > 0)
+                if (hasQueryWriter && jToken.Type != JTokenType.Raw)
                 {
-                    foreach (var p in expression.Parameters)
+                    //i.e. a constant/literal
+                    //we don't just write constants directly to the stream
+                    //so consider the build strategy here
+                    switch (buildStrategy)
                     {
-                        replacements.Add(p, GetVarsGetExpressionFor(p.Name, p.Type));
-                    }
-                    //make parameter replacements now
-                    bodyExpr = replacerVisitor.Visit(bodyExpr);
-                    replacements.Clear();
-                }
-
-                Dictionary<MemberInfo, Expression> complexTypeMembers = new Dictionary<MemberInfo, Expression>();
-
-                //then we need to seal all assignments with the nfp method ("_") so that they don't affect the final properties key names.
-                //the original key/member names set are important to the deserialization method (and to the rest of the user code)
-                //hence why a change here won't be appropriate and we need to block such changes
-                //as a result, all complex property member accesses must ne made to the last property in projection queries.
-                var nfpInfo = Defaults.NfpMethodInfo;
-                if (bodyExpr is NewExpression newExpr)
-                {
-                    int i = -1;
-
-                    foreach (var arg in newExpr.Arguments)
-                    {
-                        var newArg = arg;
-
-                        i++;
-
-                        if (arg.Type.IsComplex())
-                        {
-                            complexTypeMembers[newExpr.Members[i]] = arg;
-                            //replace arg with default value instead
-                            newArg = Expression.Constant(Utils.Utilities.CreateInstance(arg.Type), arg.Type);
-                        }
-
-                        //i.e., arg._()
-                        replacements.Add(arg, Expression.Call(Utils.Utilities.GetGenericMethodInfo(nfpInfo, newArg.Type), newArg));
-                    }
-                }
-                else if (bodyExpr is MemberInitExpression memberInitExpr)
-                {
-                    Action<MemberBinding> addBinding = null;
-                    addBinding = (binding) =>
-                    {
-                        switch (binding)
-                        {
-                            case MemberAssignment assignment:
-                                {
-                                    var newAssignmentExpr = assignment.Expression;
-
-                                    if (assignment.Expression.Type.IsComplex())
-                                    {
-                                        complexTypeMembers[assignment.Member] = assignment.Expression;
-                                        //newAssignmentExpr = Expression.Constant
-                                        //    (Utils.Utilities.CreateInstance(assignment.Expression.Type),
-                                        //    assignment.Expression.Type);
-                                    }
-
-                                    //i.e., a = b._()
-                                    replacements.Add(assignment.Expression,
-                                        Expression.Call(Utils.Utilities.GetGenericMethodInfo(nfpInfo, newAssignmentExpr.Type), newAssignmentExpr));
-
-                                    break;
-                                }
-                            default:
-                                {
-                                    throw new InvalidOperationException(string.Format(Messages.InvalidProjectionError, binding.Member.Name));
-                                }
-                            //case MemberMemberBinding memberMemberBinding:
-                            //    {
-                            //        foreach (var childBinding in memberMemberBinding.Bindings)
-                            //        {
-                            //            addBinding(childBinding);
-                            //        }
-                            //        break;
-                            //    }
-                        }
-                    };
-
-                    foreach (var binding in memberInitExpr.Bindings)
-                    {
-                        addBinding(binding);
+                        case PropertiesBuildStrategy.WithParams:
+                        case PropertiesBuildStrategy.WithParamsForValues:
+                            {
+                                //use a parameter to reference the value
+                                jToken = queryContext.CurrentQueryWriter.CreateParameter(jToken);
+                                jToken = new JRaw(Utils.Utilities.GetNewNeo4jParameterSyntax((string)jToken));
+                                break;
+                            }
                     }
                 }
 
-                //make the remaining replacements
-                bodyExpr = replacerVisitor.Visit(bodyExpr);
-                //create new lambda as we don't even need the parameters anymore.
-                //i.e., () => bodyExpr
-                expression = Expression.Lambda(bodyExpr);
+                return jToken;
+            };
 
-                var finalProperties = CypherUtilities.GetFinalProperties(expression, queryContext, out bool hasFunctions);
-                if (finalProperties == null)
-                    //trouble
-                    throw new InvalidOperationException(Messages.InvalidICypherResultItemExpressionError);
+            //first check for complex properties
+            bool simplifiedComplexMembers = false;
+            if ((isOutputQuery || isProjection) && complexTypeMembers?.Count > 0)
+            {
+                simplifiedComplexMembers = true;
+                var entityService = queryContext.EntityService;
 
-                string asterisk = "*";
-                var serializer = queryContext.SerializeCallback;
-
-                var buildStrategy = queryContext.CurrentBuildStrategy ?? PropertiesBuildStrategy.WithParams;
-                var hasQueryWriter = queryContext.CurrentQueryWriter != null;
-                var hasComplexTypeMembers = complexTypeMembers?.Count > 0;
-
-                result = finalProperties.Properties().Select(jp =>
+                foreach (var complexAssignment in complexTypeMembers)
                 {
-                    var jToken = jp.Value; //serializer(jp.Value);
+                    var complexNamePrefix = complexAssignment.Key + Defaults.ComplexTypeNameSeparator;
 
-                    //the asterisk wild-card cannot have a name associated with it, and should ideally be the first parameter
-                    if (jToken.Type == JTokenType.Raw && ((JRaw)jToken).Value.ToString() == asterisk)
-                        return asterisk;
+                    var allPossibleJProps = finalProperties.Properties()
+                        .Where(jp => jp.Name.StartsWith(complexNamePrefix))
+                        .ToArray();
 
-                    if (hasComplexTypeMembers
-                        && complexTypeMembers.FirstOrDefault(m => m.Key.Name == jp.Name) is var complexAssignment
-                        && complexAssignment.Key != null)
+                    if (allPossibleJProps.Length == 0)
+                        continue; //take no actions
+
+                    //make them into a jobject;
+
+                    var derivedTypeInfos = entityService.GetDerivedEntityTypeInfos(complexAssignment.Value.Type);
+                    var allPossibleMemberNames = derivedTypeInfos.SelectMany(ti => ti.JsonNamePropertyMap.Keys)
+                        .Select(mn => mn.ComplexJson ?? mn.Json).Distinct().ToList();
+
+                    bool isFirst = true;
+                    var complexNamePrefixLength = complexNamePrefix.Length;
+
+                    var complexJProperty = new JProperty(complexAssignment.Key, null);
+                    var complexValueStr = "";
+
+                    foreach (var jp in allPossibleJProps)
                     {
-                        //get the final properties for this member
-                        //first make if a constraint
-                        Func<string, bool> f = (_) => _.ToString() != null;
-                        var param = Expression.Parameter(complexAssignment.Key.ReflectedType, "_");
-                        var paramMemberAccess = Expression.MakeMemberAccess(param, complexAssignment.Key);
-                        var equalityExpr = Expression.Equal(paramMemberAccess, complexAssignment.Value);
-                        var predicateExpr = Expression.Lambda(equalityExpr, param);
+                        var actualName = jp.Name.Substring(complexNamePrefixLength);
 
-                        var properties = CypherUtilities.GetConstraintsAsPropertiesLambda(predicateExpr, param.Type);
+                        if (!allPossibleMemberNames.Contains(actualName))
+                            continue;
 
-                        var newValue = CypherUtilities.BuildFinalProperties
-                            (queryContext, jp.Name, properties, 
-                            ref buildStrategy, out var parameter, out var newProperties,
-                            out var finalPropsHasFunctions, separator: ": ",
-                            parameterSeed: $"{jp.Name}_prj",
-                            useVariableMemberAccessAsKey: false,
-                            useVariableAsParameter: false,
-                            wrapValueInJsonObjectNotation: true);
-
-                        jp.Value = new JRaw($"{{ {newValue} }}");
-                    }
-                    else if (hasQueryWriter && jp.Value.Type != JTokenType.Raw)
-                    {
-                        //i.e. a constant/literal
-                        //we don't just write constants directly to the stream
-                        //so consider the build strategy here
-                        switch (buildStrategy)
+                        if (isFirst)
                         {
-                            case PropertiesBuildStrategy.WithParams:
-                            case PropertiesBuildStrategy.WithParamsForValues:
-                                {
-                                    //use a parameter to reference the value
-                                    jToken = queryContext.CurrentQueryWriter.CreateParameter(jToken);
-                                    jToken = Utils.Utilities.GetNewNeo4jParameterSyntax((string)jToken);
-                                    break;
-                                }
+                            isFirst = false;
+
+                            if (finalProperties.Properties().FirstOrDefault(_jp => _jp.Name == complexJProperty.Name) is JProperty existing
+                                && existing?.Name != null)
+                            {
+                                //if it already contains this value then we have a problem
+                                throw new InvalidOperationException(string.Format(Messages.DuplicateProjectionKeyError,
+                                    originalExpression.ToString(), complexJProperty.Name));
+                            }
+
+                            jp.AddAfterSelf(complexJProperty);
+                            complexValueStr = $"{actualName}: {getProcessedJToken(jp.Value)}";
                         }
+                        else
+                        {
+                            complexValueStr += $", {actualName}: {getProcessedJToken(jp.Value)}";
+                        }
+
+                        jp.Remove();
                     }
 
+                    complexJProperty.Value = new JRaw($"{{ {complexValueStr} }}");
+                }
+            }
+
+            string asterisk = "*";
+
+            result = finalProperties.Properties()
+                .Where(jp => members.Contains(jp.Name) || (!simplifiedComplexMembers && members.Any(m => jp.Name.StartsWith(m)))) 
+                //the names must always match for a projection. we want nothing less.
+                //if not projection, i.e., we omit names, then check that its key at least starts with one of the member names.
+                //this would enable us escape metadata properties
+                .Select(jp =>
+            {
+                var jToken = jp.Value; //serializer(jp.Value);
+
+                //the asterisk wild-card cannot have a name associated with it, and should ideally be the first parameter
+                if (jToken.Type == JTokenType.Raw && ((JRaw)jToken).Value.ToString() == asterisk)
+                    return asterisk;
+
+                jToken = getProcessedJToken(jToken);
+
+                if (isProjection)
+                {
                     return $"{jToken} AS {jp.Name}";
+                }
 
-                }).Aggregate((first, second) => $"{first}, {second}");
+                return (string)jToken;
+            }).Aggregate((first, second) => $"{first}, {second}");
 
-                //result = "u.PhoneNumber_Value AS PhoneNumber_Value, u.PhoneNumber_ConfirmationRecord_Instant AS PhoneNumber_ConfirmationRecord_Instant, u.UserName AS UserName";
-                //result = "{ Value: u.PhoneNumber_Value, ConfirmationRecord_Instant: u.PhoneNumber_ConfirmationRecord_Instant } AS PhoneNumber, u.UserName as UserName";
+            //result = "u.PhoneNumber_Value AS PhoneNumber_Value, u.PhoneNumber_ConfirmationRecord_Instant AS PhoneNumber_ConfirmationRecord_Instant, u.UserName AS UserName";
+            //result = "{ Value: u.PhoneNumber_Value, ConfirmationRecord_Instant: u.PhoneNumber_ConfirmationRecord_Instant } AS PhoneNumber, u.UserName as UserName";
 
-                resultMode = CypherResultMode.Projection;
-            }
-            else
-            {
-                //visit the expression directly
-                var visitor = functionVisitor;
-                visitor.Clear();
-                var newBodyExpr = visitor.Visit(bodyExpr);
-                result = visitor.Builder.ToString();
+            resultMode = !isProjection ? CypherResultMode.Set : CypherResultMode.Projection;
 
-                resultMode = CypherResultMode.Set;
-            }
+            //if (bodyExpr.NodeType == ExpressionType.MemberInit
+            //    || bodyExpr.NodeType == ExpressionType.New)
+            //{
+                
+
+            //    Dictionary<MemberInfo, Expression> complexTypeMembers = new Dictionary<MemberInfo, Expression>();
+
+            //    //then we need to seal all assignments with the nfp method ("_") so that they don't affect the final properties key names.
+            //    //the original key/member names set are important to the deserialization method (and to the rest of the user code)
+            //    //hence why a change here won't be appropriate and we need to block such changes
+            //    //as a result, all complex property member accesses must ne made to the last property in projection queries.
+            //    if (bodyExpr is NewExpression newExpr)
+            //    {
+            //        int i = -1;
+
+            //        foreach (var arg in newExpr.Arguments)
+            //        {
+            //            var newArg = arg;
+
+            //            i++;
+
+            //            if (arg.Type.IsComplex())
+            //            {
+            //                complexTypeMembers[newExpr.Members[i]] = arg;
+            //                //replace arg with default value instead
+            //                newArg = Expression.Constant(Utils.Utilities.CreateInstance(arg.Type), arg.Type);
+            //            }
+
+            //            //i.e., arg._()
+            //            replacements.Add(arg, Expression.Call(Utils.Utilities.GetGenericMethodInfo(nfpInfo, newArg.Type), newArg));
+            //        }
+            //    }
+            //    else if (bodyExpr is MemberInitExpression memberInitExpr)
+            //    {
+            //        Action<MemberBinding> addBinding = null;
+            //        addBinding = (binding) =>
+            //        {
+            //            switch (binding)
+            //            {
+            //                case MemberAssignment assignment:
+            //                    {
+            //                        var newAssignmentExpr = assignment.Expression;
+
+            //                        if (assignment.Expression.Type.IsComplex())
+            //                        {
+            //                            complexTypeMembers[assignment.Member] = assignment.Expression;
+            //                            //newAssignmentExpr = Expression.Constant
+            //                            //    (Utils.Utilities.CreateInstance(assignment.Expression.Type),
+            //                            //    assignment.Expression.Type);
+            //                        }
+
+            //                        //i.e., a = b._()
+            //                        replacements.Add(assignment.Expression,
+            //                            Expression.Call(Utils.Utilities.GetGenericMethodInfo(nfpInfo, newAssignmentExpr.Type), newAssignmentExpr));
+
+            //                        break;
+            //                    }
+            //                default:
+            //                    {
+            //                        throw new InvalidOperationException(string.Format(Messages.InvalidProjectionError, binding.Member.Name));
+            //                    }
+            //                //case MemberMemberBinding memberMemberBinding:
+            //                //    {
+            //                //        foreach (var childBinding in memberMemberBinding.Bindings)
+            //                //        {
+            //                //            addBinding(childBinding);
+            //                //        }
+            //                //        break;
+            //                //    }
+            //            }
+            //        };
+
+            //        foreach (var binding in memberInitExpr.Bindings)
+            //        {
+            //            addBinding(binding);
+            //        }
+            //    }
+
+            //    //make the remaining replacements
+            //    bodyExpr = replacerVisitor.Visit(bodyExpr);
+            //    //create new lambda as we don't even need the parameters anymore.
+            //    //i.e., () => bodyExpr
+            //    expression = Expression.Lambda(bodyExpr);
+
+            //    var finalProperties = CypherUtilities.GetFinalProperties(expression, queryContext, out bool hasFunctions);
+            //    if (finalProperties == null)
+            //        //trouble
+            //        throw new InvalidOperationException(Messages.InvalidICypherResultItemExpressionError);
+
+            //    string asterisk = "*";
+            //    var serializer = queryContext.SerializeCallback;
+
+            //    var buildStrategy = queryContext.CurrentBuildStrategy ?? PropertiesBuildStrategy.WithParams;
+            //    var hasQueryWriter = queryContext.CurrentQueryWriter != null;
+            //    var hasComplexTypeMembers = complexTypeMembers?.Count > 0;
+
+            //    result = finalProperties.Properties().Select(jp =>
+            //    {
+            //        var jToken = jp.Value; //serializer(jp.Value);
+
+            //        //the asterisk wild-card cannot have a name associated with it, and should ideally be the first parameter
+            //        if (jToken.Type == JTokenType.Raw && ((JRaw)jToken).Value.ToString() == asterisk)
+            //            return asterisk;
+
+            //        if (hasComplexTypeMembers
+            //            && complexTypeMembers.FirstOrDefault(m => m.Key.Name == jp.Name) is var complexAssignment
+            //            && complexAssignment.Key != null)
+            //        {
+            //            //get the final properties for this member
+            //            //first make if a constraint
+            //            Func<string, bool> f = (_) => _.ToString() != null;
+            //            var param = Expression.Parameter(complexAssignment.Key.ReflectedType, "_");
+            //            var paramMemberAccess = Expression.MakeMemberAccess(param, complexAssignment.Key);
+            //            var equalityExpr = Expression.Equal(paramMemberAccess, complexAssignment.Value);
+            //            var predicateExpr = Expression.Lambda(equalityExpr, param);
+
+            //            var properties = CypherUtilities.GetConstraintsAsPropertiesLambda(predicateExpr, param.Type);
+
+            //            var newValue = CypherUtilities.BuildFinalProperties
+            //                (queryContext, jp.Name, properties, 
+            //                ref buildStrategy, out var parameter, out var newProperties,
+            //                out var finalPropsHasFunctions, separator: ": ",
+            //                parameterSeed: $"{jp.Name}_prj",
+            //                useVariableMemberAccessAsKey: false,
+            //                useVariableAsParameter: false,
+            //                wrapValueInJsonObjectNotation: true);
+
+            //            jp.Value = new JRaw($"{{ {newValue} }}");
+            //        }
+            //        else if (hasQueryWriter && jp.Value.Type != JTokenType.Raw)
+            //        {
+            //            //i.e. a constant/literal
+            //            //we don't just write constants directly to the stream
+            //            //so consider the build strategy here
+            //            switch (buildStrategy)
+            //            {
+            //                case PropertiesBuildStrategy.WithParams:
+            //                case PropertiesBuildStrategy.WithParamsForValues:
+            //                    {
+            //                        //use a parameter to reference the value
+            //                        jToken = queryContext.CurrentQueryWriter.CreateParameter(jToken);
+            //                        jToken = Utils.Utilities.GetNewNeo4jParameterSyntax((string)jToken);
+            //                        break;
+            //                    }
+            //            }
+            //        }
+
+            //        return $"{jToken} AS {jp.Name}";
+
+            //    }).Aggregate((first, second) => $"{first}, {second}");
+
+            //    //result = "u.PhoneNumber_Value AS PhoneNumber_Value, u.PhoneNumber_ConfirmationRecord_Instant AS PhoneNumber_ConfirmationRecord_Instant, u.UserName AS UserName";
+            //    //result = "{ Value: u.PhoneNumber_Value, ConfirmationRecord_Instant: u.PhoneNumber_ConfirmationRecord_Instant } AS PhoneNumber, u.UserName as UserName";
+
+            //    resultMode = CypherResultMode.Projection;
+            //}
+            //else
+            //{
+            //    //visit the expression directly
+            //    var visitor = functionVisitor;
+            //    visitor.Clear();
+            //    var newBodyExpr = visitor.Visit(bodyExpr);
+            //    result = visitor.Builder.ToString();
+
+            //    resultMode = CypherResultMode.Set;
+            //}
 
             return result;
         }

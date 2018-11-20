@@ -168,7 +168,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
             return expression;
         }
 
-        protected string BuildICypherResultItemExpression(LambdaExpression expression,
+        protected string BuildICypherResultItemExpression
+            (LambdaExpression expression, bool isOutputQuery,
             out CypherResultMode resultMode, out CypherResultFormat resultFormat)
         {
             //expecting:
@@ -181,7 +182,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             expression = VisitForICypherResultItem(expression);
             QueryContext.CurrentBuildStrategy = QueryContext.CurrentBuildStrategy ?? PropertiesBuildStrategy.WithParams;
             var result = ExpressionUtilities.BuildProjectionQueryExpression(expression, QueryContext, FunctionVisitor,
-                out resultMode, out resultFormat);
+                isOutputQuery, out resultMode, out resultFormat);
 
             return result;
         }
@@ -221,7 +222,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         #region With
         private ICypherFluentQuery<TResult> SharedWithQuery<TResult>(LambdaExpression expression)
         {
-            var text = "WITH " + BuildICypherResultItemExpression(expression, out var mode, out var format);
+            var text = "WITH " + BuildICypherResultItemExpression(expression, false, out var mode, out var format);
 
             return CypherQuery.Mutate<TResult>(w =>
             {
@@ -250,7 +251,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         #region Return
         protected internal AnnotatedQuery<TResult> SharedReturn<TResult>(LambdaExpression expression)
         {
-            var text = "RETURN " + BuildICypherResultItemExpression(expression, out var mode, out var format);
+            var text = "RETURN " + BuildICypherResultItemExpression(expression, true, out var mode, out var format);
 
             var newQuery = CypherQuery.Mutate<TResult>(w =>
             {
@@ -264,7 +265,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         protected internal AnnotatedQuery<TResult> SharedReturnDistinct<TResult>(LambdaExpression expression)
         {
-            var text = "RETURN DISTINCT " + BuildICypherResultItemExpression(expression, out var mode, out var format);
+            var text = "RETURN DISTINCT " + BuildICypherResultItemExpression(expression, true, out var mode, out var format);
 
             var newQuery = CypherQuery.Mutate<TResult>(w =>
             {

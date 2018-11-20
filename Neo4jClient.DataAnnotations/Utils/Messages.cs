@@ -56,5 +56,7 @@ namespace Neo4jClient.DataAnnotations.Utils
         public const string AmbiguousExpressionError = "Expression is ambiguous and cannot be translated. Expression: {0}.";
 
         public const string MemberAssignmentError = "Could not successfully assign member. Member: {0}, Json Name: {1}.";
+
+        public const string DuplicateProjectionKeyError = "Projection results in duplicate keys. Expression: {0}, Key: {1}.";
     }
 }

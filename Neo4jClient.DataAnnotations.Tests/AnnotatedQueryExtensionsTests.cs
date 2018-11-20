@@ -137,6 +137,29 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void WithComplexMemberAccess(string testContextName, TestContext testContext)
+        {
+            var query = testContext.Query;
+
+            var cypherQuery = query.AsAnnotatedQuery()
+                .With(actor => actor.As<ActorNode>().Address as AddressThirdLevel)
+                .AsCypherQuery()
+                .Query;
+
+            var actual = cypherQuery.QueryText;
+
+            var expected = "WITH actor.NewAddressName_ComplexProperty_Property" 
+                + ", actor.NewAddressName_SomeOtherProperty"
+                + ", actor.NewAddressName_Location_Latitude"
+                + ", actor.NewAddressName_Location_Longitude"
+                + ", actor.NewAddressName_AddressLine, actor.NewAddressName_City"
+                + ", actor.NewAddressName_State, actor.NewAddressName_Country";
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
         public void WithAddedText(string testContextName, TestContext testContext)
         {
             var query = testContext.Query;
@@ -185,6 +208,38 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void WithComplexMultipleParams(string testContextName, TestContext testContext)
+        {
+            var query = testContext.Query;
+
+            var cypherQuery = query.AsAnnotatedQuery()
+                .With((movie, actor, something) => new
+                {
+                    title = movie.As<MovieNode>().Title,
+                    movie.As<MovieNode>().Year,
+                    lg = actor.As<ActorNode>().Address as AddressThirdLevel,
+                    (actor.As<ActorNode>().Address as AddressThirdLevel).ComplexProperty.Property,
+                    something_count = something.Count()
+                })
+                .AsCypherQuery()
+                .Query;
+
+            var actual = cypherQuery.QueryText;
+
+            var expected = "WITH movie.Title AS title, movie.Year AS Year" 
+                + ", { ComplexProperty_Property: actor.NewAddressName_ComplexProperty_Property" 
+                + ", SomeOtherProperty: actor.NewAddressName_SomeOtherProperty" 
+                + ", Location_Latitude: actor.NewAddressName_Location_Latitude" 
+                + ", Location_Longitude: actor.NewAddressName_Location_Longitude" 
+                + ", AddressLine: actor.NewAddressName_AddressLine, City: actor.NewAddressName_City" 
+                + ", State: actor.NewAddressName_State, Country: actor.NewAddressName_Country } AS lg"
+                + ", actor.NewAddressName_ComplexProperty_Property AS Property, count(something) AS something_count";
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
         public void Return(string testContextName, TestContext testContext)
         {
             var query = testContext.Query;
@@ -201,6 +256,30 @@ namespace Neo4jClient.DataAnnotations.Tests
             var actual = cypherQuery.QueryText;
 
             var expected = "RETURN movie.Title AS title, movie.Year AS Year";
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void ReturnComplexMemberAccess(string testContextName, TestContext testContext)
+        {
+            var query = testContext.Query;
+
+            var cypherQuery = query.AsAnnotatedQuery()
+                .Return(actor => actor.As<ActorNode>().Address as AddressThirdLevel)
+                .AsCypherQuery()
+                .Query;
+
+            var actual = cypherQuery.QueryText;
+
+            //doesn't make cypher sense but for tests
+            var expected = "RETURN { ComplexProperty_Property: actor.NewAddressName_ComplexProperty_Property"
+                + ", SomeOtherProperty: actor.NewAddressName_SomeOtherProperty"
+                + ", Location_Latitude: actor.NewAddressName_Location_Latitude"
+                + ", Location_Longitude: actor.NewAddressName_Location_Longitude"
+                + ", AddressLine: actor.NewAddressName_AddressLine, City: actor.NewAddressName_City"
+                + ", State: actor.NewAddressName_State, Country: actor.NewAddressName_Country }";
 
             Assert.Equal(expected, actual);
         }

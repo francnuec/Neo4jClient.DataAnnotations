@@ -13,7 +13,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         #region Return
         internal static ICypherFluentQuery<TResult> SharedReturn<TResult>(this ICypherFluentQuery query, LambdaExpression expression)
         {
-            return SharedProjectionQuery<TResult>(query, expression, "RETURN");
+            return SharedProjectionQuery<TResult>(query, expression, "RETURN", isOutputQuery: true);
         }
 
         public static ICypherFluentQuery<TResult> Return<TResult>(this ICypherFluentQuery query, Expression<Func<TResult>> expression)
@@ -105,7 +105,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         #region ReturnDistinct
         internal static ICypherFluentQuery<TResult> SharedReturnDistinct<TResult>(this ICypherFluentQuery query, LambdaExpression expression)
         {
-            return SharedProjectionQuery<TResult>(query, expression, "RETURN DISTINCT");
+            return SharedProjectionQuery<TResult>(query, expression, "RETURN DISTINCT", isOutputQuery: true);
         }
 
         public static ICypherFluentQuery<TResult> ReturnDistinct<TResult>(this ICypherFluentQuery query, Expression<Func<TResult>> expression)
