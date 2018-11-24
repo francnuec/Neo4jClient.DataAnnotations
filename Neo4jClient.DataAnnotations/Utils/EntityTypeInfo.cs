@@ -8,7 +8,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Newtonsoft.Json.Serialization;
 using Neo4jClient.DataAnnotations.Serialization;
 
-namespace Neo4jClient.DataAnnotations
+namespace Neo4jClient.DataAnnotations.Utils
 {
     public sealed class EntityTypeInfo : IHaveEntityService
     {

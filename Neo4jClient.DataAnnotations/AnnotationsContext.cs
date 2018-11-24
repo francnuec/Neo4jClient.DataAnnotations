@@ -5,6 +5,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using System.Reflection;
 using Neo4jClient.DataAnnotations.Serialization;
+using Neo4jClient.Cypher;
 
 namespace Neo4jClient.DataAnnotations
 {
@@ -102,11 +103,30 @@ namespace Neo4jClient.DataAnnotations
             }
         }
 
+        /// <summary>
+        /// The attached <see cref="IGraphClient"/>
+        /// </summary>
         public IGraphClient GraphClient { get; }
+        /// <summary>
+        /// The attached <see cref="IEntityService"/>
+        /// </summary>
         public IEntityService EntityService { get; }
+        /// <summary>
+        /// The attached <see cref="EntityResolver"/>. This should be <code>null</code> if <see cref="EntityConverter"/> is present.
+        /// </summary>
         public EntityResolver EntityResolver { get; }
+        /// <summary>
+        /// The attached <see cref="EntityConverter"/>. This should be <code>null</code> if <see cref="EntityResolver"/> is present.
+        /// </summary>
         public EntityConverter EntityConverter { get; }
+        /// <summary>
+        /// The attached <see cref="EntityResolverConverter"/> used for deserialization purposes.
+        /// </summary>
         public EntityResolverConverter EntityResolverConverter => EntityResolver?.DeserializeConverter;
+        /// <summary>
+        /// A shortcut to the <see cref="ICypherGraphClient.Cypher"/> property.
+        /// </summary>
+        public ICypherFluentQuery Cypher => GraphClient?.Cypher;
 
         ///// <summary>
         ///// Replaces the <see cref="GraphClient.DefaultJsonContractResolver"/> 

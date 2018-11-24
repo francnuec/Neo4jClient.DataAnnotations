@@ -1,5 +1,5 @@
 ﻿using Neo4jClient.DataAnnotations.Cypher;
-using Neo4jClient.DataAnnotations.Cypher.Extensions;
+using Neo4jClient.DataAnnotations.Cypher.Helpers;
 using Neo4jClient.DataAnnotations.Expressions;
 using Neo4jClient.DataAnnotations.Serialization;
 using Neo4jClient.DataAnnotations.Tests.Models;
@@ -86,7 +86,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 new
                 {
                     Name = "Ellen Pompeo",
-                    Born = Vars.Get<ActorNode>("shondaRhimes").Born,
+                    Born = CypherVariables.Get<ActorNode>("shondaRhimes").Born,
                     Roles = new string[] { "Meredith Grey" },
                     Age = 47.ToString()
                 };
@@ -130,10 +130,10 @@ namespace Neo4jClient.DataAnnotations.Tests
             {
                 new AddressWithComplexType()
                 {
-                    AddressLine = Vars.Get("A")["AddressLine"] as string,
+                    AddressLine = CypherVariables.Get("A")["AddressLine"] as string,
                     Location = new Location()
                     {
-                        Latitude = (double)Vars.Get("A")["Location_Latitude"],
+                        Latitude = (double)CypherVariables.Get("A")["Location_Latitude"],
                         Longitude = 56.90
                     }
                 }.Location
@@ -158,8 +158,8 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             Dictionary<string, object> tokensExpected = new Dictionary<string, object>()
             {
-                { "Location_Latitude", 0.0 }, //because the assignment is pending due to the Vars Get method.
-                { "Location_Longitude", 0.0 } //because the assignment is pending due to the Vars Get method.
+                { "Location_Latitude", 0.0 }, //because the assignment is pending due to the CypherVariables Get method.
+                { "Location_Longitude", 0.0 } //because the assignment is pending due to the CypherVariables Get method.
             };
 
             Assert.Equal(tokensExpected.Count, result.Count);
@@ -179,7 +179,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             {
                 Address = (TestUtilities.Actor.Address as AddressWithComplexType)._(),
                 Coordinates = new double[] { (TestUtilities.Actor.Address as AddressWithComplexType).Location.Latitude,
-                    (double)Vars.Get("shondaRhimes")["NewAddressName_Location_Longitude"] }
+                    (double)CypherVariables.Get("shondaRhimes")["NewAddressName_Location_Longitude"] }
             };
 
             var entityVisitor = new EntityExpressionVisitor(testContext.QueryContext);
@@ -205,7 +205,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 { "Address_Country", "US" },
                 { "Address_Location_Latitude", 34.0522 },
                 { "Address_Location_Longitude", -118.2437 },
-                { "Coordinates", null } //assignment pending due to Vars Get call
+                { "Coordinates", null } //assignment pending due to CypherVariables Get call
             };
 
             Assert.Equal(tokensExpected.Count, result.Count);
@@ -220,9 +220,9 @@ namespace Neo4jClient.DataAnnotations.Tests
         [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
         public void Predicate(string testContextName, TestContext testContext)
         {
-            Expression<Func<ActorNode, bool>> expression = a => a.Born == Vars.Get<ActorNode>("ellenPompeo").Born 
+            Expression<Func<ActorNode, bool>> expression = a => a.Born == CypherVariables.Get<ActorNode>("ellenPompeo").Born 
                 && a.Name == "Shonda Rhimes"
-                && a.Address.AddressLine == Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine;
+                && a.Address.AddressLine == CypherVariables.Get<ActorNode>("shondaRhimes").Address.AddressLine;
 
             var entityVisitor = new EntityExpressionVisitor(testContext.QueryContext, expression.Parameters.FirstOrDefault());
             var newExpression = entityVisitor.Visit(expression.Body);
@@ -243,7 +243,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             Dictionary<string, object> tokensExpected = new Dictionary<string, object>()
             {
                 { "Name", "Shonda Rhimes" },
-                { "Born", 0 }, //assignment pending due to Vars Get call
+                { "Born", 0 }, //assignment pending due to CypherVariables Get call
                 { "NewAddressName_AddressLine", null }
             };
 
@@ -264,13 +264,13 @@ namespace Neo4jClient.DataAnnotations.Tests
                 //because this address object would replace the instance address property entirely.
                 //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
                 //This was done mainly for testing. 
-                //Use a => a.Address.Location.Longitude == (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
+                //Use a => a.Address.Location.Longitude == (double)CypherVariables.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
 
-                AddressLine = Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine,
+                AddressLine = CypherVariables.Get<ActorNode>("shondaRhimes").Address.AddressLine,
                 Location = new Location()
                 {
                     Latitude = 4.0,
-                    Longitude = (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
+                    Longitude = (double)CypherVariables.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
                 }
             } && a.Name == "Shonda Rhimes";
 
@@ -313,13 +313,13 @@ namespace Neo4jClient.DataAnnotations.Tests
             {   //Using this style, parameters set inline of a member access may or may not make it to the generated pattern, or even throw an exception.
                 //This is because this MemberInit may be taken as an object value, since it was accessed, and then used directly.
                 //This was done mainly for testing. 
-                //Use a => a.Address.Location.Longitude == (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
+                //Use a => a.Address.Location.Longitude == (double)CypherVariables.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
 
-                AddressLine = Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine,
+                AddressLine = CypherVariables.Get<ActorNode>("shondaRhimes").Address.AddressLine,
                 Location = new Location()
                 {
                     Latitude = 4.0,
-                    Longitude = (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
+                    Longitude = (double)CypherVariables.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
                 }
             }.Location.Longitude && a.Name == "Shonda Rhimes";
 
@@ -355,7 +355,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
         public void PredicateDictionarySet(string testContextName, TestContext testContext)
         {
-            Expression<Func<Dictionary<string, object>, bool>> expression = a => a["Address"] == Vars.Get<ActorNode>("ellenPompeo").Address 
+            Expression<Func<Dictionary<string, object>, bool>> expression = a => a["Address"] == CypherVariables.Get<ActorNode>("ellenPompeo").Address 
                 && (int)a["Born"] == 1671 
                 && a["Name"] == "Shonda Rhimes";
 

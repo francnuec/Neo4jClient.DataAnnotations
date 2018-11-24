@@ -102,7 +102,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var cypherQuery = query.AsAnnotatedQuery()
                 .With(movie => new
                 {
-                    Funcs.Star,
+                    CypherFunctions.Star,
                     title = movie.As<MovieNode>().Title,
                     movie.As<MovieNode>().Year,
                     mCollected = movie.CollectAsDistinct<MovieNode>()

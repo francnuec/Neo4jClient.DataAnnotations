@@ -4,10 +4,11 @@ using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
+using Neo4jClient.DataAnnotations.Cypher;
 
-namespace Neo4jClient.DataAnnotations.Cypher
+namespace Neo4jClient.DataAnnotations//.Cypher
 {
-    public static partial class PathExtensions
+    public static partial class CypherPathExtensions
     {
         //P = (A)-[R]-(B), where A = First Node in pattern, R = relationship, B = Last Node in pattern, P = entire path, dir = direction of relationship
         //Names are so chosen to allow ease in naming paramters explicitly.
@@ -1714,7 +1715,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: (actor) =&gt; actor.movie == CypherVariables.Get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1735,7 +1736,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously. 
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: (actor) =&gt; actor.movie == CypherVariables.Get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1757,7 +1758,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: (actor) =&gt; actor.movie == CypherVariables.Get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1782,7 +1783,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: (actor) =&gt; actor.movie == CypherVariables.Get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1803,7 +1804,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: (actor) =&gt; actor.movie == CypherVariables.Get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1825,7 +1826,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: (actor) =&gt; actor.movie == CypherVariables.Get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1850,7 +1851,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: (actor) =&gt; actor.movie == CypherVariables.Get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1871,7 +1872,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: (actor) =&gt; actor.movie == CypherVariables.Get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1893,7 +1894,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: (actor) =&gt; actor.movie == CypherVariables.Get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1918,7 +1919,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: (actor) =&gt; actor.movie == CypherVariables.Get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1939,7 +1940,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: (actor) =&gt; actor.movie == CypherVariables.Get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1961,7 +1962,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects simple property comparisons. E.g. A: (actor) =&gt; actor.Name == "Ellen Pompeo" &amp;&amp; actor.Age == 47.
         /// When the <see cref="CypherObject"/> is used, it becomes, A: (actor) =&gt; actor["Name"] == "Ellen Pompeo" &amp;&amp; actor["Age"] == 47.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: (actor) =&gt; actor.movie == Vars.get("movie")["name"].
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: (actor) =&gt; actor.movie == CypherVariables.Get("movie")["name"].
         /// NOTE that only the LOGICAL AND operator (&amp;&amp;) is expected in the expressions. Any other operators used would either be ignored, or result in an exception being thrown.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -1986,7 +1987,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = CypherVariables.Get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2007,7 +2008,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = CypherVariables.Get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2029,7 +2030,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = CypherVariables.Get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2054,7 +2055,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = CypherVariables.Get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2075,7 +2076,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = CypherVariables.Get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2097,7 +2098,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = CypherVariables.Get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2122,7 +2123,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = CypherVariables.Get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2143,7 +2144,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = CypherVariables.Get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2165,7 +2166,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = CypherVariables.Get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2190,7 +2191,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = CypherVariables.Get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2211,7 +2212,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = CypherVariables.Get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -2233,7 +2234,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. A: () =&gt; actor, where actor is an instance of the class Actor which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, A: () =&gt; new { actor.Name, actor.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = Vars.get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. A: () =&gt; new { Name = "Ellen Pompeo", Age = CypherVariables.Get("shondaRhimes").As&lt;Writer&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -3643,7 +3644,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. B: () =&gt; writer, where writer is an instance of the class Writer which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, B: () =&gt; new { writer.Name, writer.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Vars.get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = CypherVariables.Get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -3663,7 +3664,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. B: () =&gt; writer, where writer is an instance of the class Writer which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, B: () =&gt; new { writer.Name, writer.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Vars.get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = CypherVariables.Get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -3687,7 +3688,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. B: () =&gt; writer, where writer is an instance of the class Writer which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, B: () =&gt; new { writer.Name, writer.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Vars.get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = CypherVariables.Get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -3707,7 +3708,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. B: () =&gt; writer, where writer is an instance of the class Writer which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, B: () =&gt; new { writer.Name, writer.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Vars.get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = CypherVariables.Get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -3731,7 +3732,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. B: () =&gt; writer, where writer is an instance of the class Writer which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, B: () =&gt; new { writer.Name, writer.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Vars.get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = CypherVariables.Get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -3751,7 +3752,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. B: () =&gt; writer, where writer is an instance of the class Writer which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, B: () =&gt; new { writer.Name, writer.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Vars.get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = CypherVariables.Get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -3775,7 +3776,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. B: () =&gt; writer, where writer is an instance of the class Writer which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, B: () =&gt; new { writer.Name, writer.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Vars.get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = CypherVariables.Get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -3799,7 +3800,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. B: () =&gt; writer, where writer is an instance of the class Writer which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, B: () =&gt; new { writer.Name, writer.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Vars.get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = CypherVariables.Get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -3819,7 +3820,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// Each expression expects a return instance of the entity type, or an anonymous object declaring specific properties to serialize. E.g. B: () =&gt; writer, where writer is an instance of the class Writer which has only the properties Name and Age.
         /// If <see cref="object"/> type is used, it becomes, B: () =&gt; new { writer.Name, writer.Age }.
         /// This example would generate the sample Cypher predicate shown previously.
-        /// You can also introduce previously declared variables with the <see cref="Vars"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = Vars.get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
+        /// You can also introduce previously declared variables with the <see cref="CypherVariables"/> class. E.g. B: () =&gt; new { Name = "Shonda Rhimes", Age = CypherVariables.Get("ellenPompeo").As&lt;Actor&gt;().Age }, where variable shondaRhimes was declared possibly in a previous Cypher clause.
         /// NOTE that all properties on any instance supplied will be serialized. If you need only a select few properties, declare an anonymous type instead.
         /// </summary>
         /// <param name="source">Path object from the calling cypher clause</param>
@@ -4452,7 +4453,5 @@ namespace Neo4jClient.DataAnnotations.Cypher
             return SharedAssign(source, pathVariable);
         }
         #endregion
-
-        
     }
 }

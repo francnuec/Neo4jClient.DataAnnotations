@@ -14,7 +14,7 @@ using System.Collections;
 using Neo4jClient.Cypher;
 using Neo4jClient.Serialization;
 using Newtonsoft.Json;
-using Neo4jClient.DataAnnotations.Cypher.Extensions;
+using Neo4jClient.DataAnnotations.Cypher.Helpers;
 using System.Runtime.CompilerServices;
 
 namespace Neo4jClient.DataAnnotations.Utils
@@ -289,7 +289,7 @@ namespace Neo4jClient.DataAnnotations.Utils
             expression = expression?.Uncast(out var cast, Defaults.ObjectType); //in case this is coming from a dictionary
             MethodCallExpression methodExpr = null;
             return expression != null && (methodExpr = expression as MethodCallExpression) != null
-                && methodExpr.Method.IsEquivalentTo("_", Defaults.ObjectExtensionsType);
+                && methodExpr.Method.IsEquivalentTo("_", Defaults.HelperExtensionsType);
         }
 
         public static bool HasVars(List<Expression> expressions)
@@ -306,7 +306,7 @@ namespace Neo4jClient.DataAnnotations.Utils
         }
 
         /// <summary>
-        /// Placeholder method for <see cref="Vars"/> class calls in expressions.
+        /// Placeholder method for <see cref="CypherVariables"/> class calls in expressions.
         /// </summary>
         /// <typeparam name="TReturn">The last return type of the contiguous access stretch.</typeparam>
         /// <param name="index">The index of the actual expression in the store.</param>
@@ -336,17 +336,17 @@ namespace Neo4jClient.DataAnnotations.Utils
             return ret;
         }
 
-        public static bool HasSet(Expression expression)
-        {
-            return HasSet(expression, out var methodExpr);
-        }
+        //public static bool HasSet(Expression expression)
+        //{
+        //    return HasSet(expression, out var methodExpr);
+        //}
 
-        public static bool HasSet(Expression expression, out MethodCallExpression methodExpr)
-        {
-            methodExpr = null;
-            return (methodExpr = expression as MethodCallExpression) != null
-                && methodExpr.Method.IsEquivalentTo("_Set", Defaults.ObjectExtensionsType);
-        }
+        //public static bool HasSet(Expression expression, out MethodCallExpression methodExpr)
+        //{
+        //    methodExpr = null;
+        //    return (methodExpr = expression as MethodCallExpression) != null
+        //        && methodExpr.Method.IsEquivalentTo("_Set", Defaults.ObjectExtensionsType);
+        //}
 
         public static void CheckIfComplexTypeInstanceIsNull(object instance, string propertyName, Type declaringType)
         {

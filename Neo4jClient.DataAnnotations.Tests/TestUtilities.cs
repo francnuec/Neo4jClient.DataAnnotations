@@ -267,7 +267,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             .Hop(1) //not necessary, but for tests
             .Constrain(null, null, (actor) =>
                 actor.Name == "Ellen Pompeo"
-                && actor.Born == Vars.Get<ActorNode>("shondaRhimes").Born
+                && actor.Born == CypherVariables.Get<ActorNode>("shondaRhimes").Born
                 && actor.Roles == new string[] { "Meredith Grey" });
         }
 
@@ -278,7 +278,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             .Label(new[] { "Series" }, new[] { "STARRED_IN" }, new[] { "Female" }, true, false, false)
             .Constrain((movie) => movie.Title == "Grey's Anatomy" && movie.Year == 2017, null, (actor) =>
                 actor.Name == "Ellen Pompeo"
-                && actor.Born == Vars.Get<ActorNode>("shondaRhimes").Born
+                && actor.Born == CypherVariables.Get<ActorNode>("shondaRhimes").Born
                 && actor.Roles == new string[] { "Meredith Grey" })
             .Hop(1) //not necessary, but for tests
             ;

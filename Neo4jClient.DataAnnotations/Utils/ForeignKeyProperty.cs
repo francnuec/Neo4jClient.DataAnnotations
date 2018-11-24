@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Neo4jClient.DataAnnotations
+namespace Neo4jClient.DataAnnotations.Utils
 {
     public class ForeignKeyProperty
     {

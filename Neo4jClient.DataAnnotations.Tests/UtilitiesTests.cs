@@ -1,6 +1,6 @@
 ﻿using Neo4jClient.DataAnnotations.Cypher;
 using Neo4jClient.DataAnnotations.Cypher.Functions;
-using Neo4jClient.DataAnnotations.Cypher.Extensions;
+using Neo4jClient.DataAnnotations.Cypher.Helpers;
 using Neo4jClient.DataAnnotations.Expressions;
 using Neo4jClient.DataAnnotations.Tests.Models;
 using Newtonsoft.Json.Linq;
@@ -18,79 +18,79 @@ namespace Neo4jClient.DataAnnotations.Tests
     {
         public static List<object[]> VarsData = new List<object[]>()
         {
-            new object[] { (Expression<Func<ActorNode>>)(() => Vars.Get<ActorNode>("actor")), "actor" },
+            new object[] { (Expression<Func<ActorNode>>)(() => CypherVariables.Get<ActorNode>("actor")), "actor" },
 
-            new object[] { (Expression<Func<int>>)(() => (int)Vars.Get("actor")["address_location_latitude"]),
+            new object[] { (Expression<Func<int>>)(() => (int)CypherVariables.Get("actor")["address_location_latitude"]),
                 "actor.address_location_latitude" },
 
-            new object[] { (Expression<Func<string>>)(() => ((string[])Vars.Get("actor")["roles"])[0]),
+            new object[] { (Expression<Func<string>>)(() => ((string[])CypherVariables.Get("actor")["roles"])[0]),
                 "actor.roles[0]" },
 
-            new object[] { (Expression<Func<string>>)(() => (Vars.Get("actor")["roles"] as string[])[0]),
+            new object[] { (Expression<Func<string>>)(() => (CypherVariables.Get("actor")["roles"] as string[])[0]),
                 "actor.roles[0]" },
 
-            new object[] { (Expression<Func<string>>)(() => Vars.Get<ActorNode>("actor").Roles.ElementAt(2)),
+            new object[] { (Expression<Func<string>>)(() => CypherVariables.Get<ActorNode>("actor").Roles.ElementAt(2)),
                 "actor.Roles[2]" },
 
-            new object[] { (Expression<Func<Location>>)(() => (Vars.Get<ActorNode>("actor").Address as AddressWithComplexType).Location),
+            new object[] { (Expression<Func<Location>>)(() => (CypherVariables.Get<ActorNode>("actor").Address as AddressWithComplexType).Location),
                 "actor.NewAddressName_Location" },
 
-            new object[] { (Expression<Func<double>>)(() => (Vars.Get<ActorNode>("actor").Address as AddressWithComplexType).Location.Latitude),
+            new object[] { (Expression<Func<double>>)(() => (CypherVariables.Get<ActorNode>("actor").Address as AddressWithComplexType).Location.Latitude),
                 "actor.NewAddressName_Location_Latitude" },
 
             //recursive params
-            new object[] { (Expression<Func<string>>)(() => (Vars.Get("actor")["roles"] as string[])[(Vars.Get("actor2")["roles"] as string[])[2]._As<int>()]),
+            new object[] { (Expression<Func<string>>)(() => (CypherVariables.Get("actor")["roles"] as string[])[(CypherVariables.Get("actor2")["roles"] as string[])[2]._As<int>()]),
                 "actor.roles[actor2.roles[2]]" },
 
             //2 levels recursion
-            new object[] { (Expression<Func<string>>)(() => (Vars.Get("actor")["roles"]._As<string[]>())[
-                (Vars.Get("actor2")["roles"] as string[])[Vars.Get<ActorNode>("actor3").Born
+            new object[] { (Expression<Func<string>>)(() => (CypherVariables.Get("actor")["roles"]._As<string[]>())[
+                (CypherVariables.Get("actor2")["roles"] as string[])[CypherVariables.Get<ActorNode>("actor3").Born
                     ]._As<int>()]),
                 "actor.roles[actor2.roles[actor3.Born]]" },
 
             //toString
-            new object[] { (Expression<Func<string>>)(() => Vars.Get<ActorNode>("actor").Born.ToString()),
+            new object[] { (Expression<Func<string>>)(() => CypherVariables.Get<ActorNode>("actor").Born.ToString()),
                 "toString(actor.Born)" },
             
             //string size
-            new object[] { (Expression<Func<int>>)(() => Vars.Get<ActorNode>("actor").Address.City._().Length),
+            new object[] { (Expression<Func<int>>)(() => CypherVariables.Get<ActorNode>("actor").Address.City._().Length),
                 "size(actor.NewAddressName_City)" },
 
             //toLower
             //toUpper
-            new object[] { (Expression<Func<string>>)(() => Vars.Get<ActorNode>("actor").Name.ToLower()
+            new object[] { (Expression<Func<string>>)(() => CypherVariables.Get<ActorNode>("actor").Name.ToLower()
                 .ToUpper()),
                 "toUpper(toLower(actor.Name))" },
 
             //trim
             //lTrim
             //rTrim
-            new object[] { (Expression<Func<string>>)(() => Vars.Get<ActorNode>("actor").Name.Trim().TrimStart().TrimEnd()),
+            new object[] { (Expression<Func<string>>)(() => CypherVariables.Get<ActorNode>("actor").Name.Trim().TrimStart().TrimEnd()),
                 "rTrim(lTrim(trim(actor.Name)))" },
 
             //replace
             new object[] { (Expression<Func<string>>)(() =>
-            Vars.Get<ActorNode>("actor").Name.Replace("Ellen Pompeo", (Vars.Get("shondaRhimes")["Name"] as string).Trim())),
+            CypherVariables.Get<ActorNode>("actor").Name.Replace("Ellen Pompeo", (CypherVariables.Get("shondaRhimes")["Name"] as string).Trim())),
                 "replace(actor.Name, \"Ellen Pompeo\", trim(shondaRhimes.Name))" },
 
             //substring
             new object[] { (Expression<Func<string>>)(() =>
-            Vars.Get<ActorNode>("actor").Name.Substring(3, (Vars.Get("shondaRhimes")["Name"] as string).Length)),
+            CypherVariables.Get<ActorNode>("actor").Name.Substring(3, (CypherVariables.Get("shondaRhimes")["Name"] as string).Length)),
                 "substring(actor.Name, 3, size(shondaRhimes.Name))" },
 
             //reverse
-            new object[] { (Expression<Func<string>>)(() => Vars.Get<ActorNode>("actor").Name.Reverse().ToString()),
+            new object[] { (Expression<Func<string>>)(() => CypherVariables.Get<ActorNode>("actor").Name.Reverse().ToString()),
                 "toString(reverse(actor.Name))" },
 
             //simple filter
-            new object[] { (Expression<Func<string>>)(() => Vars.Get<ActorNode>("actor").Roles.Where(r => r == "role").ToString()),
+            new object[] { (Expression<Func<string>>)(() => CypherVariables.Get<ActorNode>("actor").Roles.Where(r => r == "role").ToString()),
                 "toString(filter(r IN actor.Roles WHERE r = \"role\"))" },
 
             //complex filter
             //XOR
             //NOT
             //this is purely for testing and not necessarily a good example for use in code
-            new object[] { (Expression<Func<string>>)(() => Vars.Get<MovieNode>("movie").Actors
+            new object[] { (Expression<Func<string>>)(() => CypherVariables.Get<MovieNode>("movie").Actors
                 .Where(actor => actor.Actorid != "role" ^ !(actor.Movie.Title.Length >= 10))
                 .ElementAt(0)
                 .Actor.Born.ToString()),
@@ -101,7 +101,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             //aggregate
             //exponential
             //this is purely for testing and not necessarily a good example for use in code
-            new object[] { (Expression<Func<int>>)(() => Vars.Get<MovieNode>("movie").Actors
+            new object[] { (Expression<Func<int>>)(() => CypherVariables.Get<MovieNode>("movie").Actors
                 .Where(actor => actor.Actorid._As<int>() > 1)
                 .Select(actor => actor.Actor.Born)
                 .Aggregate(150, (totalAge, actorYear) => (int)Math.Pow(totalAge + (2017 - actorYear), 2))),
@@ -111,34 +111,34 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             //coalesce
             //this is purely for testing and not necessarily a good example for use in code
-            new object[] { (Expression<Func<object>>)(() => Vars.Get<MovieNode>("movie").Actors
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<MovieNode>("movie").Actors
                 .Select(actor => actor.Actor.Born._As<int?>() ?? 0)),
                 "extract(actor IN movie.Actors | coalesce(actor.Actor.Born, 0))" },
 
             //average
-            new object[] { (Expression<Func<double>>)(() => Vars.Get<ActorNode>("actor").Born
+            new object[] { (Expression<Func<double>>)(() => CypherVariables.Get<ActorNode>("actor").Born
                 .Average()),
                 "avg(actor.Born)" },
 
             //collect
             //this is purely for testing and not necessarily a good example for use in code
-            new object[] { (Expression<Func<object>>)(() => Vars.Get<ActorNode>("actor")
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<ActorNode>("actor")
                 .Collect()),
                 "collect(actor)" },
 
             //aggregate count *
-            new object[] { (Expression<Func<object>>)(() => Vars.Get<ActorNode>("*")
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<ActorNode>("*")
                 .Count()),
                 "count(*)" },
 
             //aggregate distinct count
-            new object[] { (Expression<Func<object>>)(() => Vars.Get<ActorNode>("actor").Born.Distinct()
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<ActorNode>("actor").Born.Distinct()
                 .Count()),
                 "count(DISTINCT actor.Born)" },
 
             //convert
             //this is purely for testing and not necessarily a good example for use in code
-            new object[] { (Expression<Func<object>>)(() => Vars.Get<ActorNode>("actors")._AsList()
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<ActorNode>("actors")._AsList()
                 .Where(a => Convert.ToBoolean(
                 Convert.ToSingle(Convert.ToInt32(a.Born))))),
                 "filter(a IN actors WHERE toBoolean(toFloat(toInteger(a.Born))))" },
@@ -146,7 +146,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             //arraylength = size
             //length
             //this is purely for testing and not necessarily a good example for use in code
-            new object[] { (Expression<Func<object>>)(() => Vars.Get<string[]>("actor.Name")
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<string[]>("actor.Name")
                 .Length._AsList().Length()),
                 "length(size(actor.Name))" },
 
@@ -154,40 +154,40 @@ namespace Neo4jClient.DataAnnotations.Tests
             //head
             //last
             //this is purely for testing and not necessarily a good example for use in code
-            new object[] { (Expression<Func<object>>)(() => Vars.Get<List<string>>("actor.Name")
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<List<string>>("actor.Name")
                 .Count._AsList().FirstOrDefault()._AsList().Last()),
                 "last(head(size(actor.Name)))" },
 
             //all
             //this is purely for testing and not necessarily a good example for use in code
-            new object[] { (Expression<Func<bool>>)(() => Vars.Get<MovieNode>("movie").Actors
+            new object[] { (Expression<Func<bool>>)(() => CypherVariables.Get<MovieNode>("movie").Actors
                 .All(actor => actor.Actorid._As<int?>() > 1)),
                 "all(actor IN movie.Actors WHERE actor.Actorid > 1)" },
 
             //any
             //null
             //this is purely for testing and not necessarily a good example for use in code
-            new object[] { (Expression<Func<bool>>)(() => Vars.Get<MovieNode>("movie").Actors
+            new object[] { (Expression<Func<bool>>)(() => CypherVariables.Get<MovieNode>("movie").Actors
                 .Any(actor => actor.Actorid == null)),
                 "any(actor IN movie.Actors WHERE actor.Actorid IS NULL)" },
 
             ////any with random variable
-            //new object[] { (Expression<Func<object>>)(() => Vars.Get<List<string>>("actor.Name")
+            //new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<List<string>>("actor.Name")
             //    .Any()),
             //    "any(randomVar IN actor.Name WHERE randomVar IS NOT NULL)" },
 
             //IN with variable
-            new object[] { (Expression<Func<object>>)(() => Vars.Get<List<ActorNode>>("movie.Actors")
-                .AsEnumerable().Contains(Vars.Get<ActorNode>("actor"))),
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<List<ActorNode>>("movie.Actors")
+                .AsEnumerable().Contains(CypherVariables.Get<ActorNode>("actor"))),
                 "actor IN movie.Actors" },
 
             //List Contain's IN
-            new object[] { (Expression<Func<object>>)(() => Vars.Get<List<string>>("actor.Name")
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<List<string>>("actor.Name")
                 .Contains("c")),
                 "\"c\" IN actor.Name" },
 
             //split
-            new object[] { (Expression<Func<object>>)(() => Vars.Get<string>("actor.Name")
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<string>("actor.Name")
                 .Split(new char[] { '.' })),
                 "split(actor.Name, \".\")" },
 
@@ -195,57 +195,71 @@ namespace Neo4jClient.DataAnnotations.Tests
             //type
             //properties
             //this is purely for testing and not necessarily a good example for use in code
-            new object[] { (Expression<Func<object>>)(() => Vars.Get<ActorNode>("actor")
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<ActorNode>("actor")
                 ._AsList().Id()._AsList().Type()._AsList().Properties()),
                 "properties(type(id(actor)))" },
 
             //timestamp
             //this is purely for testing and not necessarily a good example for use in code
-            new object[] { (Expression<Func<object>>)(() => Vars.Get<ActorNode>("actors")
-                ._AsList().Where(a => a.Born._As<long>() == Cypher.Funcs.Timestamp())),
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<ActorNode>("actors")
+                ._AsList().Where(a => a.Born._As<long>() == CypherFunctions.Timestamp())),
                 "filter(a IN actors WHERE a.Born = timestamp())" },
 
             //= == IS NULL
             //<> == IS NOT NULL
             //this is purely for testing and not necessarily a good example for use in code
-            new object[] { (Expression<Func<object>>)(() => Vars.Get<ActorNode>("actors")
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<ActorNode>("actors")
                 ._AsList().Where(a => a.Name == null && null != a.Born._As<int?>())),
                 "filter(a IN actors WHERE (a.Name IS NULL) AND (a.Born IS NOT NULL))" },
 
+            //= == IS NULL
+            //<> == IS NOT NULL
+            //this is purely for testing and not necessarily a good example for use in code
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<ActorNode>("actors")
+                ._AsList().Where(a => a.Name.IsNull() && a.Born._As<int?>().IsNotNull())),
+                "filter(a IN actors WHERE a.Name IS NULL AND a.Born IS NOT NULL)" },
+
+            //= == IS NULL
+            //<> == IS NOT NULL
+            //this is purely for testing and not necessarily a good example for use in code
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<ActorNode>("actors")
+                ._AsList().Where(a => CypherFunctions.IsNull(a.Name) && CypherFunctions.IsNotNull(a.Born._As<int?>()))),
+                "filter(a IN actors WHERE a.Name IS NULL AND a.Born IS NOT NULL)" },
+
             //List Concat == +
             //this is purely for testing and not necessarily a good example for use in code
-            new object[] { (Expression<Func<object>>)(() => Vars.Get<MovieNode>("actor1.Movies")
-                ._AsList().Concat(Vars.Get<MovieNode>("actor2.Movies")._AsList())),
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<MovieNode>("actor1.Movies")
+                ._AsList().Concat(CypherVariables.Get<MovieNode>("actor2.Movies")._AsList())),
                 "actor1.Movies + actor2.Movies" },
 
             //List Union
             //this is purely for testing and not necessarily a good example for use in code
-            new object[] { (Expression<Func<object>>)(() => Vars.Get<MovieNode>("actor1.Movies")
-                ._AsList().Union(Vars.Get<MovieNode>("actor2.Movies")._AsList())),
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<MovieNode>("actor1.Movies")
+                ._AsList().Union(CypherVariables.Get<MovieNode>("actor2.Movies")._AsList())),
                 "actor1.Movies + actor2.Movies" },
 
             ////List Intersect
             ////this is purely for testing and not necessarily a good example for use in code
-            //new object[] { (Expression<Func<object>>)(() => Vars.Get<MovieNode>("actor1.Movies")
-            //    ._AsList().Intersect(Vars.Get<MovieNode>("actor2.Movies")._AsList())),
+            //new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<MovieNode>("actor1.Movies")
+            //    ._AsList().Intersect(CypherVariables.Get<MovieNode>("actor2.Movies")._AsList())),
             //    "filter(randomVar IN actor1.Movies WHERE randomVar IN actor2.Movies)" },
 
             //* + aggregate count *
             //this is purely for testing and not necessarily a good example for use in code
-            new object[] { (Expression<Func<object>>)(() => Vars.Get<ActorNode>("*")
-                ._AsList().Union(Funcs.Count(Funcs.Star)._AsList<ActorNode>())),
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<ActorNode>("*")
+                ._AsList().Union(CypherFunctions.Count(CypherFunctions.Star)._AsList<ActorNode>())),
                 "* + count(*)" },
 
             //* + range
             //this is purely for testing and not necessarily a good example for use in code
-            new object[] { (Expression<Func<object>>)(() => Vars.Get<int>("*")
-                ._AsList().Union(Funcs.Range(9, 5, -2))),
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<int>("*")
+                ._AsList().Union(CypherFunctions.Range(9, 5, -2))),
                 "* + range(9, 5, -2)" },
 
             //* + atan2
             //this is purely for testing and not necessarily a good example for use in code
-            new object[] { (Expression<Func<object>>)(() => Vars.Get<int>("*")
-                ._AsList().Union(Math.Atan2(Vars.Get<int>("aInt"), 2.76457687)._AsList<int>())),
+            new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<int>("*")
+                ._AsList().Union(Math.Atan2(CypherVariables.Get<int>("aInt"), 2.76457687)._AsList<int>())),
                 "* + atan2(aInt, 2.76457687)" },
         };
 
@@ -280,7 +294,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                     { "NewAddressName_State", "ellenPompeo.NewAddressName_State" },
                     { "NewAddressName_Country", "ellenPompeo.NewAddressName_Country" },
                 },
-                (Expression<Func<Dictionary<string, object>, bool>>)(a => a["Address"] == Vars.Get<ActorNode>("ellenPompeo").Address
+                (Expression<Func<Dictionary<string, object>, bool>>)(a => a["Address"] == CypherVariables.Get<ActorNode>("ellenPompeo").Address
                     && (int)a["Born"] == 1671 && a["Name"] == "Shonda Rhimes"),
             },
             new object[] {
@@ -319,13 +333,13 @@ namespace Neo4jClient.DataAnnotations.Tests
                         //because this address object would replace the instance address property entirely.
                         //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
                         //This was done mainly for testing. 
-                        //Use a => a.Address.Location.Longitude == (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
+                        //Use a => a.Address.Location.Longitude == (double)CypherVariables.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
 
-                        AddressLine = Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine,
+                        AddressLine = CypherVariables.Get<ActorNode>("shondaRhimes").Address.AddressLine,
                         Location = new Location()
                         {
                             Latitude = 4.0,
-                            Longitude = (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
+                            Longitude = (double)CypherVariables.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
                         }
                     }
                 })
@@ -376,13 +390,13 @@ namespace Neo4jClient.DataAnnotations.Tests
                     //because this address object would replace the instance address property entirely.
                     //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
                     //This was done mainly for testing. 
-                    //Use a => a.Address.Location.Longitude == (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
+                    //Use a => a.Address.Location.Longitude == (double)CypherVariables.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
 
-                    AddressLine = Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine,
+                    AddressLine = CypherVariables.Get<ActorNode>("shondaRhimes").Address.AddressLine,
                     Location = new Location()
                     {
                         Latitude = 4.0,
-                        Longitude = (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
+                        Longitude = (double)CypherVariables.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
                     }
                 } && a.Name == "Shonda Rhimes" && a.TestForeignKeyId == 5)
             },
@@ -396,13 +410,13 @@ namespace Neo4jClient.DataAnnotations.Tests
                 {   //Using this style, variables set inline of a member access may or may not make it to the generated pattern, or even throw an exception.
                     //This is because this MemberInit may be taken as an object value, since it was accessed, and then used directly.
                     //This was done mainly for testing. 
-                    //Use a => a.Address.Location.Longitude == (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
+                    //Use a => a.Address.Location.Longitude == (double)CypherVariables.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
 
-                    AddressLine = Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine,
+                    AddressLine = CypherVariables.Get<ActorNode>("shondaRhimes").Address.AddressLine,
                     Location = new Location()
                     {
                         Latitude = 4.0,
-                        Longitude = (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
+                        Longitude = (double)CypherVariables.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
                     }
                 }.Location.Longitude && a.Name == "Shonda Rhimes"),
                 //typeof(InvalidOperationException), string.Format(Messages.AmbiguousVarsPathError, "shondaRhimes.NewAddressName_AddressLine")
@@ -423,13 +437,13 @@ namespace Neo4jClient.DataAnnotations.Tests
                     //because this address object would replace the instance address property entirely.
                     //Also note that there's a good chance the parameters set inline here wouldn't make it to the generated pattern.
                     //This was done mainly for testing. 
-                    //Use a => a.Address.Location.Longitude == (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
+                    //Use a => a.Address.Location.Longitude == (double)CypherVariables.Get("ellenPompeo")["NewAddressName_Location_Longitude"] instead.
 
-                    AddressLine = Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine,
+                    AddressLine = CypherVariables.Get<ActorNode>("shondaRhimes").Address.AddressLine,
                     Location = new Location()
                     {
                         Latitude = 4.0,
-                        Longitude = (double)Vars.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
+                        Longitude = (double)CypherVariables.Get("ellenPompeo")["NewAddressName_Location_Longitude"]
                     }
                 } && a.Name == "Shonda Rhimes")
             },
@@ -440,7 +454,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                     { "NewAddressName_AddressLine", "shondaRhimes.NewAddressName_AddressLine" },
                 },
                 (Expression<Func<ActorNode, bool>>)(a =>
-                    (a.Address as AddressWithComplexType).AddressLine == Vars.Get<ActorNode>("shondaRhimes").Address.AddressLine
+                    (a.Address as AddressWithComplexType).AddressLine == CypherVariables.Get<ActorNode>("shondaRhimes").Address.AddressLine
                     && a.Name == "Shonda Rhimes")
             },
             new object[] {
@@ -467,7 +481,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                     { "Name", "\"Shonda Rhimes\"" },
                     { "Born", "ellenPompeo.Born" },
                 },
-                (Expression<Func<ActorNode, bool>>)(a => a.Born == Vars.Get<ActorNode>("ellenPompeo").Born && a.Name == "Shonda Rhimes")
+                (Expression<Func<ActorNode, bool>>)(a => a.Born == CypherVariables.Get<ActorNode>("ellenPompeo").Born && a.Name == "Shonda Rhimes")
             },
             new object[] {
                 new Dictionary<string, dynamic>()
@@ -485,7 +499,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                     //the following is purely a test, and not necessarily a good example for neo4j cypher.
                     Address = (TestUtilities.Actor.Address as AddressWithComplexType)._(),
                     Coordinates = new double[] { (TestUtilities.Actor.Address as AddressWithComplexType).Location.Latitude,
-                        (double)Vars.Get("shondaRhimes")["NewAddressName_Location_Longitude"] }
+                        (double)CypherVariables.Get("shondaRhimes")["NewAddressName_Location_Longitude"] }
                 })
             },
             new object[] {
@@ -497,13 +511,13 @@ namespace Neo4jClient.DataAnnotations.Tests
                 (Expression<Func<object>>)(() => new
                 {
                     //the following is purely a test, and not necessarily a good example for neo4j cypher.
-                    //avoid using inline Vars with outer member access.
+                    //avoid using inline CypherVariables with outer member access.
                     new AddressWithComplexType()
                     {
-                        AddressLine = Vars.Get("A")["AddressLine"] as string,
+                        AddressLine = CypherVariables.Get("A")["AddressLine"] as string,
                         Location = new Location()
                         {
-                            Latitude = (double)Vars.Get("A")["Location_Latitude"],
+                            Latitude = (double)CypherVariables.Get("A")["Location_Latitude"],
                             Longitude = 56.90
                         }
                     }.Location
@@ -522,7 +536,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 new
                 {
                     Name = "Ellen Pompeo",
-                    Born = Vars.Get<ActorNode>("shondaRhimes").Born,
+                    Born = CypherVariables.Get<ActorNode>("shondaRhimes").Born,
                     Roles = new string[] { "Meredith Grey" },
                     Age = 47.ToString()
                 })
@@ -540,7 +554,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 new
                 {
                     Name = new JRaw("Ellen Pompeo"), //._AsRaw(),
-                    Born = Convert.ToBoolean(Vars.Get<ActorNode>("shondaRhimes").Born),
+                    Born = Convert.ToBoolean(CypherVariables.Get<ActorNode>("shondaRhimes").Born),
                     Roles = new string[] { "Meredith Grey".Distinct() },
                     Age = 47.ToString()
                 })

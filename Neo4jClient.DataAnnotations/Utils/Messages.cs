@@ -37,7 +37,7 @@ namespace Neo4jClient.DataAnnotations.Utils
 
         public const string JsonPropertyNotFoundError = "Json Property '{0}' not found for Type '{1}'";
 
-        public const string AmbiguousVarsPathError = "Expression path to Neo4j variable is ambiguous and cannot be translated. Vars: {0}.";
+        public const string AmbiguousVarsPathError = "Expression path to Neo4j variable is ambiguous and cannot be translated. CypherVariables: {0}.";
 
         public const string NoResolverOrConverterError = "You must enable either the EntityResolver or EntityConverter for Neo4jClient.DataAnnotations to work.";
 

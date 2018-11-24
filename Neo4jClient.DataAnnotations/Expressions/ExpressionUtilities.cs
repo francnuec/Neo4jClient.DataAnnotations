@@ -1,6 +1,6 @@
 ﻿using Neo4jClient.Cypher;
 using Neo4jClient.DataAnnotations.Cypher;
-using Neo4jClient.DataAnnotations.Cypher.Extensions;
+using Neo4jClient.DataAnnotations.Cypher.Helpers;
 using Neo4jClient.DataAnnotations.Serialization;
 using Newtonsoft.Json.Linq;
 using System;
@@ -58,13 +58,13 @@ namespace Neo4jClient.DataAnnotations.Expressions
             variable = variable ?? parameterExpr.Name;
             var randomVar = $"_ve_{Utils.Utilities.GetRandomVariableFor(variable)}_rdm_";
 
-            //create a Vars.Get call for this variable
+            //create a CypherVariables.Get call for this variable
             var varsGetCallExpr = GetVarsGetExpressionFor(randomVar, sourceType);
 
             //get the body without an object cast if present
             var bodyExpr = expressions.Body.Uncast(out var cast, castToRemove: typeof(object));
 
-            //replace the parameter with the a Vars.Get call
+            //replace the parameter with the a CypherVariables.Get call
             var newBodyExpr = new ParameterReplacerVisitor(
                     new Dictionary<string, Expression>() { { parameterExpr.Name, varsGetCallExpr } }
                     ).Visit(bodyExpr);
@@ -118,9 +118,9 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         public static MethodCallExpression GetVarsGetExpressionFor(string variable, Type type)
         {
-            //create a Vars.Get call for this variable
-            var varsGetMethodInfo = Utils.Utilities.GetGenericMethodInfo(Utils.Utilities.GetMethodInfo(() => Vars.Get<object>(null)), type);
-            //now Vars.Get<type>(variable)
+            //create a CypherVariables.Get call for this variable
+            var varsGetMethodInfo = Utils.Utilities.GetGenericMethodInfo(Utils.Utilities.GetMethodInfo(() => CypherVariables.Get<object>(null)), type);
+            //now CypherVariables.Get<type>(variable)
             var varsGetCallExpr = Expression.Call(varsGetMethodInfo, Expression.Constant(variable, Defaults.StringType));
 
             return varsGetCallExpr;
@@ -133,9 +133,9 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         public static MethodCallExpression GetVarsGetExpressionFor(LambdaExpression selector, Type source, Type result)
         {
-            //create a Vars.Get call for this selector
-            var varsGetMethodInfo = Utils.Utilities.GetGenericMethodInfo(Utils.Utilities.GetMethodInfo(() => Vars.Get<object, object>(null)), source, result);
-            //now Vars.Get<source, result>(selector)
+            //create a CypherVariables.Get call for this selector
+            var varsGetMethodInfo = Utils.Utilities.GetGenericMethodInfo(Utils.Utilities.GetMethodInfo(() => CypherVariables.Get<object, object>(null)), source, result);
+            //now CypherVariables.Get<source, result>(selector)
             var varsGetCallExpr = Expression.Call(varsGetMethodInfo, selector);
 
             return varsGetCallExpr;

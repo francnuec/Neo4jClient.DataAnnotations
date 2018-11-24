@@ -118,9 +118,9 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     case ExpressionType.Unbox:
                     case ExpressionType.Call when (n is MethodCallExpression callExpr
                     && (
-                    (callExpr.Method.Name.StartsWith("_As") && callExpr.Method.DeclaringType == Defaults.ObjectExtensionsType) //._As and ._AsList()
-                    || (callExpr.Method.Name == "Get" && callExpr.Method.DeclaringType == Defaults.VarsType) //Vars.Get()
-                    || callExpr.Method.IsEquivalentTo(Defaults.CypherObjectIndexerInfo) //Vars.Get("")[""]
+                    (callExpr.Method.Name.StartsWith("_As") && callExpr.Method.DeclaringType == Defaults.HelperExtensionsType) //._As and ._AsList()
+                    || (callExpr.Method.Name == "Get" && callExpr.Method.DeclaringType == Defaults.VarsType) //CypherVariables.Get()
+                    || callExpr.Method.IsEquivalentTo(Defaults.CypherObjectIndexerInfo) //CypherVariables.Get("")[""]
                     //|| (callExpr.Method.Name == "_" && callExpr.Method.DeclaringType == Defaults.ObjectExtensionsType) //._()
                     )
                     ):
@@ -203,7 +203,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     //it doesn't have a vars get call, so add one
                     var randomVar = "_fev_" + Utils.Utilities.GetRandomVariableFor("fevr");
 
-                    //create a Vars.Get call for this variable
+                    //create a CypherVariables.Get call for this variable
                     var varsGetCallExpr = ExpressionUtilities.GetVarsGetExpressionFor(randomVar, currentNode.Type);
 
                     _unhandledNodes.Insert(0, varsGetCallExpr); //this is just going to be the header

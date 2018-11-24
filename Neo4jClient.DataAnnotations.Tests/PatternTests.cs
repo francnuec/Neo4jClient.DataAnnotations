@@ -301,7 +301,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 .Prop(() => new
                 {
                     Name = "Ellen Pompeo",
-                    Born = Vars.Get<ActorNode>("shondaRhimes").Born,
+                    Born = CypherVariables.Get<ActorNode>("shondaRhimes").Born,
                     Roles = new string[] { "Meredith Grey" },
                     Age = 47.ToString()
                 })
@@ -337,7 +337,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 .Pattern<ActorNode>("Ambode")
                 .Constrain((actor) =>
                     actor.Name == "Ellen Pompeo"
-                    && actor.Born == Vars.Get<ActorNode>("shondaRhimes").Born
+                    && actor.Born == CypherVariables.Get<ActorNode>("shondaRhimes").Born
                     && actor.Roles == new string[] { "Meredith Grey" })
                 .Pattern as Pattern;
 

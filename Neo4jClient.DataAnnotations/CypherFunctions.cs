@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 
-namespace Neo4jClient.DataAnnotations.Cypher
+namespace Neo4jClient.DataAnnotations//.Cypher
 {
-    public class Funcs
+    public static class CypherFunctions
     {
         /// <summary>
         /// The neo4j asterisk (*) wildcard.
@@ -15,6 +15,26 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
         public static JRaw Star { get; } = new JRaw("*");
+
+        /// <summary>
+        /// The neo4j <code>IS NULL</code> function
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <returns></returns>
+        public static bool IsNull<TSource>(TSource obj)
+        {
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
+        }
+
+        /// <summary>
+        /// The neo4j <code>IS NOT NULL</code> function
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <returns></returns>
+        public static bool IsNotNull<TSource>(TSource obj)
+        {
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
+        }
 
         /// <summary>
         /// The neo4j collect aggregator.
@@ -357,7 +377,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
-        public static double HalfVersine<TSource>(TSource source)
+        public static double Haversin<TSource>(TSource source)
         {
             throw new NotImplementedException(Messages.FunctionsInvokeError);
         }

@@ -47,7 +47,7 @@
 //            {
 //                //if (type == null && Node != null)
 //                //{
-//                //    type = Utilities.HasParams(Filtered) ? SpecialNodeType.Vars : 
+//                //    type = Utilities.HasParams(Filtered) ? SpecialNodeType.CypherVariables : 
 //                //        (Visitor != null && Visitor.IsPredicateAssignmentValue(Node) ? 
 //                //        SpecialNodeType.PredicateAssignment : 
 //                //        SpecialNodeType.Other

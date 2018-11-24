@@ -6,9 +6,9 @@ using System.Text;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 
-namespace Neo4jClient.DataAnnotations.Cypher.Extensions
+namespace Neo4jClient.DataAnnotations.Cypher.Helpers
 {
-    public static class ObjectExtensions
+    public static class HelperExtensions
     {
         /// <summary>
         /// No Further Processing. Naming and other processing escape. This instructs the expression visitors to use as specified.
@@ -25,60 +25,56 @@ namespace Neo4jClient.DataAnnotations.Cypher.Extensions
 
         /// <summary>
         /// Casts an object to a certain type so as to use its properties directly.
-        /// Use only in expressions, especially with <see cref="Vars"/> method calls (in which case it Pseudo-casts).
+        /// Use only in expressions, especially with <see cref="CypherVariables"/> method calls (in which case it Pseudo-casts).
         /// NOTE: THIS METHOD IS NOT SAFE TO EXECUTE. If the cast fails, it merely generates a default value for the return type.
         /// </summary>
         /// <typeparam name="TReturn"></typeparam>
         /// <returns></returns>
         public static TReturn _As<TReturn>(this object obj)
         {
-            throw new NotImplementedException(Messages.DummyMethodInvokeError);
+            //do something, just in case this method was executed
+            TReturn ret = default(TReturn);
 
-            ////do something, just in case this method was executed
-            //TReturn ret = default(TReturn);
+            try
+            {
+                ret = (TReturn)obj;
+            }
+            catch
+            {
+                throw new NotImplementedException(Messages.DummyMethodInvokeError);
+            }
 
-            //try
-            //{
-            //    ret = (TReturn)obj;
-            //}
-            //catch
-            //{
-
-            //}
-
-            //return ret;
+            return ret;
         }
 
         /// <summary>
         /// Casts an object to a list of a certain type so as to use IEnumerable extension methods.
-        /// Use only in expressions, especially with <see cref="Vars"/> method calls (in which case it Pseudo-casts).
+        /// Use only in expressions, especially with <see cref="CypherVariables"/> method calls (in which case it Pseudo-casts).
         /// Shortcut for <code>._As&lt;List&lt;T&gt;&gt;()</code>
-        /// NOTE: THIS METHOD IS NOT SAFE TO EXECUTE. If the cast fails, it merely returns a null value.
+        /// NOTE: THIS METHOD IS NOT SAFE TO EXECUTE. If the cast fails, it throws an error.
         /// </summary>
         /// <typeparam name="TReturn"></typeparam>
         /// <returns></returns>
         public static List<TReturn> _AsList<TReturn>(this object obj)
         {
-            throw new NotImplementedException(Messages.DummyMethodInvokeError);
+            //do something, just in case this method was executed
+            List<TReturn> ret = null;
 
-            ////do something, just in case this method was executed
-            //List<TReturn> ret = null;
+            try
+            {
+                ret = (List<TReturn>)obj;
+            }
+            catch
+            {
+                throw new NotImplementedException(Messages.DummyMethodInvokeError);
+            }
 
-            //try
-            //{
-            //    ret = (List<TReturn>)obj;
-            //}
-            //catch
-            //{
-
-            //}
-
-            //return ret;
+            return ret;
         }
 
         /// <summary>
         /// Casts an object to a list of a certain type so as to use IEnumerable extension methods.
-        /// Use only in expressions, especially with <see cref="Vars"/> method calls (in which case it Pseudo-casts).
+        /// Use only in expressions, especially with <see cref="CypherVariables"/> method calls (in which case it Pseudo-casts).
         /// Shortcut for <code>._As&lt;List&lt;T&gt;&gt;()</code>
         /// NOTE: THIS METHOD IS NOT SAFE TO EXECUTE. If the cast fails, it merely returns a list having <paramref name="obj"/> as only item.
         /// </summary>
@@ -86,10 +82,8 @@ namespace Neo4jClient.DataAnnotations.Cypher.Extensions
         /// <returns></returns>
         public static List<TSource> _AsList<TSource>(this TSource obj)
         {
-            throw new NotImplementedException(Messages.DummyMethodInvokeError);
-
-            ////do something, just in case this method was executed
-            //List<TSource> ret = _AsList<TSource>(obj as object);
+            //do something, just in case this method was executed
+            List<TSource> ret = _AsList<TSource>(obj as object);
 
             //try
             //{
@@ -97,9 +91,10 @@ namespace Neo4jClient.DataAnnotations.Cypher.Extensions
             //}
             //catch
             //{
+            //    throw new NotImplementedException(Messages.DummyMethodInvokeError);
             //}
 
-            //return ret;
+            return ret;
         }
 
         ///// <summary>
@@ -112,9 +107,9 @@ namespace Neo4jClient.DataAnnotations.Cypher.Extensions
         //}
 
         ///// <summary>
-        ///// Allows you to expressively assign new values (especially <see cref="Vars"/>) to select properties of an existing instance without cloning or modifying the original instance.
+        ///// Allows you to expressively assign new values (especially <see cref="CypherVariables"/>) to select properties of an existing instance without cloning or modifying the original instance.
         ///// These new values would be used in place of the old ones on the instance.
-        ///// E.g. () =&gt; ellenPompeo._Set(actor =&gt; actor.Born == Vars.Get&lt;Actor&gt;("shondaRhimes").Born);
+        ///// E.g. () =&gt; ellenPompeo._Set(actor =&gt; actor.Born == CypherVariables.Get&lt;Actor&gt;("shondaRhimes").Born);
         ///// NOTE: THIS IS NOT CYPHER SET CLAUSE. EXPECTED USE IS WITHIN A PATTERN EXPRESSION. The member selection must always be on the left, and new values on the right of a logical equal-to ('==') operation. Use '&amp;&amp;' for more properties.
         ///// Also note that this method does not modify this instance, but overrides its final properties written to cypher.
         ///// </summary>
@@ -131,25 +126,5 @@ namespace Neo4jClient.DataAnnotations.Cypher.Extensions
         //{
         //    return instance;
         //}
-
-        /// <summary>
-        /// The neo4j <code>IS NULL</code> function
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static bool IsNull<T>(this T obj)
-        {
-            throw new NotImplementedException(Messages.FunctionsInvokeError); //return obj == null;
-        }
-
-        /// <summary>
-        /// The neo4j <code>IS NOT NULL</code> function
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static bool IsNotNull<T>(this T obj)
-        {
-            throw new NotImplementedException(Messages.FunctionsInvokeError); //return !IsNull(obj);
-        }
     }
 }

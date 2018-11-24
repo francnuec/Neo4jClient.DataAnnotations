@@ -1,7 +1,7 @@
 ﻿using Neo4jClient.Cypher;
 using Neo4jClient.DataAnnotations.Cypher;
 using Neo4jClient.DataAnnotations.Cypher.Functions;
-using Neo4jClient.DataAnnotations.Cypher.Extensions;
+using Neo4jClient.DataAnnotations.Cypher.Helpers;
 using Neo4jClient.DataAnnotations.Serialization;
 using Neo4jClient.DataAnnotations.Tests.Models;
 using Neo4jClient.Serialization;
@@ -222,7 +222,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = query.Set((ActorNode actor) =>
                 actor.Name == "Ellen Pompeo"
-                && actor.Born == Vars.Get<ActorNode>("shondaRhimes").Born
+                && actor.Born == CypherVariables.Get<ActorNode>("shondaRhimes").Born
                 && actor.Roles == new string[] { "Meredith Grey" }, out var setParam).Query.QueryText;
 
             var expected = $"SET actor.Name = ${setParam}.Name, actor.Born = shondaRhimes.Born, actor.Roles = ${setParam}.Roles";
@@ -275,7 +275,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var actual = query.UsingBuildStrategy(PropertiesBuildStrategy.WithParams)
                 .Set((ActorNode actor) =>
                 actor.Name == "Ellen Pompeo"
-                && actor.Born == (Vars.Get<ActorNode>("actor").Born + 1) //((int?)null ?? 1969) + 1
+                && actor.Born == (CypherVariables.Get<ActorNode>("actor").Born + 1) //((int?)null ?? 1969) + 1
                 && actor.Roles == new string[] { "Meredith Grey" }, out var setParam).Query.QueryText;
 
             //When using Set predicate, WithParams strategy is the same as WithParamsForValues
@@ -649,7 +649,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var cypherQuery = query
                 .With((MovieNode movie) => new
                 {
-                    Funcs.Star,
+                    CypherFunctions.Star,
                     title = movie.Title,
                     movie.Year,
                     mCollected = movie.Distinct().Collect()

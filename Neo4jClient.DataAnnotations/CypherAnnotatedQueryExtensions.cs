@@ -1,13 +1,11 @@
 ﻿using Neo4jClient.Cypher;
 using System;
-using Neo4jClient.DataAnnotations.Utils;
-using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text;
+using Neo4jClient.DataAnnotations.Cypher;
 
-namespace Neo4jClient.DataAnnotations.Cypher
+namespace Neo4jClient.DataAnnotations//.Cypher
 {
-    public static class AnnotatedQueryExtensions
+    public static class CypherAnnotatedQueryExtensions
     {
         #region CypherQuery
         public static ICypherFluentQuery AsCypherQuery(this IAnnotatedQuery annotatedQuery)
@@ -24,11 +22,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
         {
             return (IOrderedCypherFluentQuery)annotatedQuery.CypherQuery;
         }
-
-        //public static IOrderedCypherFluentQuery AsOrderedCypherQuery(this IOrderedAnnotatedQuery annotatedQuery)
-        //{
-        //    return (IOrderedCypherFluentQuery)annotatedQuery.CypherQuery;
-        //}
         #endregion
 
         #region Where

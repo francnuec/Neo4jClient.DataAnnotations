@@ -1,6 +1,5 @@
 ﻿using System;
 using Neo4jClient.DataAnnotations.Utils;
-using Neo4jClient.DataAnnotations.Utils;
 
 namespace Neo4jClient.DataAnnotations
 {

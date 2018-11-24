@@ -7,11 +7,31 @@ using System.Text;
 namespace Neo4jClient.DataAnnotations.Cypher.Functions
 {
     /// <summary>
-    /// To avoid method signature conflicts and clogging our intellisence, these were separated unto another class.
-    /// You can still use the <see cref="Cypher.Funcs"/> class as an aternative.
+    /// To avoid method signature conflicts and clogging our intellisence, these were separated into another class.
+    /// You can still use the <see cref="CypherFunctions"/> class as an aternative.
     /// </summary>
-    public static class ExtensionFuncs
+    public static class CypherExtensionFunctions
     {
+        /// <summary>
+        /// The neo4j <code>IS NULL</code> function
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <returns></returns>
+        public static bool IsNull<TSource>(this TSource obj)
+        {
+            throw new NotImplementedException(Messages.FunctionsInvokeError); //return obj == null;
+        }
+
+        /// <summary>
+        /// The neo4j <code>IS NOT NULL</code> function
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <returns></returns>
+        public static bool IsNotNull<TSource>(this TSource obj)
+        {
+            throw new NotImplementedException(Messages.FunctionsInvokeError); //return !IsNull(obj);
+        }
+
         /// <summary>
         /// The neo4j collect aggregator.
         /// </summary>
@@ -203,16 +223,6 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         }
 
         /// <summary>
-        /// The neo4j tail function.
-        /// </summary>
-        /// <typeparam name="TSource"></typeparam>
-        /// <returns></returns>
-        public static List<TSource> Tail<TSource>(this IEnumerable<TSource> source)
-        {
-            throw new NotImplementedException(Messages.FunctionsInvokeError);
-        }
-
-        /// <summary>
         /// The neo4j stDev function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
@@ -248,6 +258,16 @@ namespace Neo4jClient.DataAnnotations.Cypher.Functions
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
         public static int PercentileDisc<TSource>(this TSource source, double percentile)
+        {
+            throw new NotImplementedException(Messages.FunctionsInvokeError);
+        }
+
+        /// <summary>
+        /// The neo4j tail function.
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <returns></returns>
+        public static List<TSource> Tail<TSource>(this IEnumerable<TSource> source)
         {
             throw new NotImplementedException(Messages.FunctionsInvokeError);
         }

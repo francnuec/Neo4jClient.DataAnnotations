@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Neo4jClient.DataAnnotations.Serialization;
 using System;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Neo4jClient.DataAnnotations
 {

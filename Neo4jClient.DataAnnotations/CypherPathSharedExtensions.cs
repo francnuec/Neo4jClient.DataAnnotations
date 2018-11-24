@@ -5,10 +5,11 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Reflection;
+using Neo4jClient.DataAnnotations.Cypher;
 
-namespace Neo4jClient.DataAnnotations.Cypher
+namespace Neo4jClient.DataAnnotations//.Cypher
 {
-    public static partial class PathExtensions
+    public static partial class CypherPathExtensions
     {
         #region Pattern
         internal static IPatternedPath SharedPattern(this IPathBuilder source,

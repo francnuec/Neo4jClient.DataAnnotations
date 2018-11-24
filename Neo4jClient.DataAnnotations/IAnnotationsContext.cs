@@ -1,13 +1,15 @@
-﻿using Neo4jClient.DataAnnotations.Serialization;
+﻿using Neo4jClient.Cypher;
+using Neo4jClient.DataAnnotations.Serialization;
 
 namespace Neo4jClient.DataAnnotations
 {
     public interface IAnnotationsContext
     {
-        EntityConverter EntityConverter { get; }
-        EntityResolver EntityResolver { get; }
-        IEntityService EntityService { get; }
         IGraphClient GraphClient { get; }
+        IEntityService EntityService { get; }
+        EntityResolver EntityResolver { get; }
         EntityResolverConverter EntityResolverConverter { get; }
+        EntityConverter EntityConverter { get; }
+        ICypherFluentQuery Cypher { get; }
     }
 }

@@ -6,7 +6,7 @@ using Neo4jClient.Cypher;
 using System.Reflection;
 using Neo4jClient.DataAnnotations.Expressions;
 
-namespace Neo4jClient.DataAnnotations.Cypher
+namespace Neo4jClient.DataAnnotations//.Cypher
 {
     public static partial class CypherFluentQueryExtensions
     {

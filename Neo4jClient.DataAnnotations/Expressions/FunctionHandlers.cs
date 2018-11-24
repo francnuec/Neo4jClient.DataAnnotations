@@ -1,10 +1,11 @@
-﻿using Neo4jClient.DataAnnotations.Cypher.Extensions;
+﻿using Neo4jClient.DataAnnotations.Cypher.Helpers;
 using System;
 using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Neo4jClient.DataAnnotations.Cypher.Functions;
 
 namespace Neo4jClient.DataAnnotations.Expressions
 {
@@ -106,7 +107,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
         }
 
         /// <summary>
-        /// Rewrites the Parameter Expression as a Vars.Get method call.
+        /// Rewrites the Parameter Expression as a CypherVariables.Get method call.
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
@@ -179,7 +180,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
                     Expression operandNode = node.Left != nullNode ? node.Left : node.Right;
 
-                    var genericMethodInfo = Utils.Utilities.GetGenericMethodInfo(Defaults.IsNullMethodInfo, operandNode.Type);
+                    var genericMethodInfo = Utils.Utilities.GetGenericMethodInfo(Defaults.IsNullExMethodInfo, operandNode.Type);
                     MethodCallExpression methodCall = Expression.Call(genericMethodInfo, operandNode);
 
                     //trigger the IS NULL write
@@ -218,7 +219,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
                     Expression operandNode = node.Left != nullNode ? node.Left : node.Right;
 
-                    var genericMethodInfo = Utils.Utilities.GetGenericMethodInfo(Defaults.IsNotNullMethodInfo, operandNode.Type);
+                    var genericMethodInfo = Utils.Utilities.GetGenericMethodInfo(Defaults.IsNotNullExMethodInfo, operandNode.Type);
                     MethodCallExpression methodCall = Expression.Call(genericMethodInfo, operandNode);
 
                     //trigger the IS NOT NULL write
@@ -258,11 +259,13 @@ namespace Neo4jClient.DataAnnotations.Expressions
         /// <returns></returns>
         public static Func<Expression> IsNull(FunctionHandlerContext context)
         {
-            if (context.Expression is MethodCallExpression methodCallExpr
-                && methodCallExpr.Method is var methodInfo
-                && methodInfo.Name == "IsNull"
-                && methodInfo.DeclaringType == Defaults.ObjectExtensionsType
-                && methodInfo.IsExtensionMethod())
+            //if (context.Expression is MethodCallExpression methodCallExpr
+            //    && methodCallExpr.Method is var methodInfo
+            //    && methodInfo.Name == "IsNull"
+            //    && methodInfo.DeclaringType == Defaults.ObjectExtensionsType
+            //    && methodInfo.IsExtensionMethod())
+
+            if (IsFuncsMethod(context, "IsNull", out var methodCallExpr, out var methodInfo))
             {
                 return () =>
                 {
@@ -282,11 +285,13 @@ namespace Neo4jClient.DataAnnotations.Expressions
         /// <returns></returns>
         public static Func<Expression> IsNotNull(FunctionHandlerContext context)
         {
-            if (context.Expression is MethodCallExpression methodCallExpr
-                && methodCallExpr.Method is var methodInfo
-                && methodInfo.Name == "IsNotNull"
-                && methodInfo.DeclaringType == Defaults.ObjectExtensionsType
-                && methodInfo.IsExtensionMethod())
+            //if (context.Expression is MethodCallExpression methodCallExpr
+            //    && methodCallExpr.Method is var methodInfo
+            //    && methodInfo.Name == "IsNotNull"
+            //    && methodInfo.DeclaringType == Defaults.ObjectExtensionsType
+            //    && methodInfo.IsExtensionMethod())
+
+            if (IsFuncsMethod(context, "IsNotNull", out var methodCallExpr, out var methodInfo))
             {
                 return () =>
                 {
@@ -304,7 +309,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
             if (context.Expression is MethodCallExpression methodCallExpr
                 && methodCallExpr.Method is var methodInfo
                 && methodInfo.Name == "_AsRaw"
-                && methodInfo.DeclaringType == Defaults.ObjectExtensionsType
+                && methodInfo.DeclaringType == Defaults.HelperExtensionsType
                 && methodInfo.IsExtensionMethod())
             {
                 return () =>
@@ -424,7 +429,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
         }
 
         /// <summary>
-        /// Skips the No-Further-Processing method (<see cref="ObjectExtensions._{T}(T)"/>) in an expression.
+        /// Skips the No-Further-Processing method (<see cref="HelperExtensions._{T}(T)"/>) in an expression.
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
@@ -433,7 +438,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
             if (context.Expression is MethodCallExpression methodCallExpr
                 && methodCallExpr.Method is var methodInfo
                 && methodInfo.Name == "_"
-                && methodInfo.DeclaringType == Defaults.ObjectExtensionsType
+                && methodInfo.DeclaringType == Defaults.HelperExtensionsType
                 && methodInfo.IsExtensionMethod())
             {
                 return () =>
@@ -1139,8 +1144,8 @@ namespace Neo4jClient.DataAnnotations.Expressions
             return ((methodCallExpr = context.Expression as MethodCallExpression) != null
                 && (methodInfo = methodCallExpr.Method) != null
                 && methodInfo.Name == method
-                && (methodInfo.DeclaringType == Defaults.ExtensionFuncsType
-                || methodInfo.DeclaringType == Defaults.FuncsType));
+                && (methodInfo.DeclaringType == Defaults.CypherExtensionFuncsType
+                || methodInfo.DeclaringType == Defaults.CypherFuncsType));
         }
 
         public static Func<Expression> FuncsMethod(FunctionHandlerContext context, string method, string cypherMethod)
@@ -1316,7 +1321,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     var parameter = Expression.Parameter(sourceType, randomVar);
 
                     var isNotNullMethod = Utils.Utilities.GetGenericMethodInfo(
-                        Utils.Utilities.GetMethodInfo(() => ObjectExtensions.IsNotNull<object>(null)), sourceType);
+                        Utils.Utilities.GetMethodInfo(() => CypherExtensionFunctions.IsNotNull<object>(null)), sourceType);
 
                     var isNotNullMethodCall = Expression.Call(isNotNullMethod, parameter); //i.e., randomVar.IsNotNull()
 
