@@ -1,6 +1,5 @@
 ﻿using Neo4jClient.Cypher;
 using Neo4jClient.DataAnnotations.Cypher;
-using Neo4jClient.DataAnnotations.Cypher.Helpers;
 using Neo4jClient.DataAnnotations.Serialization;
 using Newtonsoft.Json.Linq;
 using System;
@@ -175,7 +174,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 replacements.Clear();
             }
 
-            var nfpInfo = Defaults.NfpMethodInfo;
+            var nfpInfo = Defaults.NfpExtMethodInfo;
 
             List<ElementInit> dictItems = new List<ElementInit>();
             List<string> members = new List<string>();
@@ -1236,7 +1235,13 @@ namespace Neo4jClient.DataAnnotations.Expressions
                             currentExpression = methodCallExpr.Object;
 
                             if (currentExpression == null //maybe extension method
-                                && methodCallExpr.Method.IsExtensionMethod())
+                                && (methodCallExpr.Method.IsExtensionMethod()
+                                || (methodCallExpr.Method.DeclaringType == Defaults.CypherFuncsType //checking for our functions
+                                    && (methodCallExpr.Method.Name.StartsWith("_") //our dummy method
+                                    || Defaults.CypherExtensionFuncsType.GetMethods().Any(p => p.Name == methodCallExpr.Method.Name)) //or one of our functions with backing extension
+                                    )
+                                  )
+                                )
                             {
                                 if (Utils.Utilities.HasNfpEscape(methodCallExpr))
                                     nfpExpr = methodCallExpr;

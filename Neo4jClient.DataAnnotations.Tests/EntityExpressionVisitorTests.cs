@@ -1,15 +1,10 @@
-﻿using Neo4jClient.DataAnnotations.Cypher;
-using Neo4jClient.DataAnnotations.Cypher.Helpers;
-using Neo4jClient.DataAnnotations.Expressions;
-using Neo4jClient.DataAnnotations.Serialization;
+﻿using Neo4jClient.DataAnnotations.Expressions;
 using Neo4jClient.DataAnnotations.Tests.Models;
-using Newtonsoft.Json;
 using System;
 using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using Xunit;
 
 namespace Neo4jClient.DataAnnotations.Tests
@@ -177,7 +172,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             //the following is purely a test, and not necessarily a good example for neo4j cypher.
             Expression<Func<object>> expression = () => new
             {
-                Address = (TestUtilities.Actor.Address as AddressWithComplexType)._(),
+                Address = CypherFunctions._(TestUtilities.Actor.Address as AddressWithComplexType),
                 Coordinates = new double[] { (TestUtilities.Actor.Address as AddressWithComplexType).Location.Latitude,
                     (double)CypherVariables.Get("shondaRhimes")["NewAddressName_Location_Longitude"] }
             };

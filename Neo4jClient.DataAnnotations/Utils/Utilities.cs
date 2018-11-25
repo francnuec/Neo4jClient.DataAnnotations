@@ -5,16 +5,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 using System.Linq;
 using System.Linq.Expressions;
-using Neo4jClient.DataAnnotations.Cypher;
-using System.Text;
-using Neo4jClient.DataAnnotations.Serialization;
-using Neo4jClient.DataAnnotations.Expressions;
-using Newtonsoft.Json.Linq;
-using System.Collections;
-using Neo4jClient.Cypher;
-using Neo4jClient.Serialization;
-using Newtonsoft.Json;
-using Neo4jClient.DataAnnotations.Cypher.Helpers;
 using System.Runtime.CompilerServices;
 
 namespace Neo4jClient.DataAnnotations.Utils
@@ -289,7 +279,8 @@ namespace Neo4jClient.DataAnnotations.Utils
             expression = expression?.Uncast(out var cast, Defaults.ObjectType); //in case this is coming from a dictionary
             MethodCallExpression methodExpr = null;
             return expression != null && (methodExpr = expression as MethodCallExpression) != null
-                && methodExpr.Method.IsEquivalentTo("_", Defaults.HelperExtensionsType);
+                && (methodExpr.Method.IsEquivalentTo("_", Defaults.CypherFuncsType)
+                || methodExpr.Method.IsEquivalentTo("_", Defaults.CypherExtensionFuncsType));
         }
 
         public static bool HasVars(List<Expression> expressions)

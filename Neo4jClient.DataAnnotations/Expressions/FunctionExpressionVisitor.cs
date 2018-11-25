@@ -1,6 +1,5 @@
 ﻿using Neo4jClient.Cypher;
 using Neo4jClient.DataAnnotations.Cypher;
-using Neo4jClient.DataAnnotations.Cypher.Helpers;
 using System;
 using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
@@ -23,7 +22,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 { Utils.Utilities.GetMethodInfo(() => CypherFunctions.IsNull<object>(null)), FunctionHandlers.IsNull },
                 { Utils.Utilities.GetMethodInfo(() => CypherFunctions.IsNotNull<object>(null)), FunctionHandlers.IsNotNull },
                 //{ Utils.Utilities.GetMethodInfo(() => ObjectExtensions._AsRaw(null)), FunctionHandlers._AsRaw },
-                { Defaults.NfpMethodInfo, FunctionHandlers.NoFurtherProcessing },
+                { Defaults.NfpExtMethodInfo, FunctionHandlers.NoFurtherProcessing },
 
                 #region ICypherResultItem Functions
                 { Utils.Utilities.GetMethodInfo(() => (null as ICypherResultItem).As<object>()), (c) => FunctionHandlers.ICypherResultItemMethod(c, "As", "", (m, cc) =>

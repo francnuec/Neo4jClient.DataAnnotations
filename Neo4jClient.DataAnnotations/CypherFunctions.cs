@@ -16,6 +16,95 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         /// <returns></returns>
         public static JRaw Star { get; } = new JRaw("*");
 
+
+        /// <summary>
+        /// No Further Processing. Naming and other processing escape. This instructs the expression visitors to use as specified.
+        /// NOTE: This method does not affect serialization. So inner complex typed properties would still serialize to exploded properties as expected.
+        /// This method is mainly used by the expression visitors, and mostly at the top surface level (rarely deep into the object).
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static T _<T>(T obj)
+        {
+            return obj;
+        }
+
+        /// <summary>
+        /// Casts an object to a certain type so as to use its properties directly.
+        /// Use only in expressions, especially with <see cref="CypherVariables"/> method calls (in which case it Pseudo-casts).
+        /// NOTE: THIS METHOD IS NOT SAFE TO EXECUTE. If the cast fails, it merely generates a default value for the return type.
+        /// </summary>
+        /// <typeparam name="TReturn"></typeparam>
+        /// <returns></returns>
+        public static TReturn _As<TReturn>(object obj)
+        {
+            //do something, just in case this method was executed
+            TReturn ret = default(TReturn);
+
+            try
+            {
+                ret = (TReturn)obj;
+            }
+            catch
+            {
+                throw new NotImplementedException(Messages.DummyMethodInvokeError);
+            }
+
+            return ret;
+        }
+
+        /// <summary>
+        /// Casts an object to a list of a certain type so as to use IEnumerable extension methods.
+        /// Use only in expressions, especially with <see cref="CypherVariables"/> method calls (in which case it Pseudo-casts).
+        /// Shortcut for <code>._As&lt;List&lt;T&gt;&gt;()</code>
+        /// NOTE: THIS METHOD IS NOT SAFE TO EXECUTE. If the cast fails, it throws an error.
+        /// </summary>
+        /// <typeparam name="TReturn"></typeparam>
+        /// <returns></returns>
+        public static List<TReturn> _AsList<TReturn>(object obj)
+        {
+            //do something, just in case this method was executed
+            List<TReturn> ret = null;
+
+            try
+            {
+                ret = (List<TReturn>)obj;
+            }
+            catch
+            {
+                throw new NotImplementedException(Messages.DummyMethodInvokeError);
+            }
+
+            return ret;
+        }
+
+        /// <summary>
+        /// Casts an object to a list of a certain type so as to use IEnumerable extension methods.
+        /// Use only in expressions, especially with <see cref="CypherVariables"/> method calls (in which case it Pseudo-casts).
+        /// Shortcut for <code>._As&lt;List&lt;T&gt;&gt;()</code>
+        /// NOTE: THIS METHOD IS NOT SAFE TO EXECUTE. If the cast fails, it merely returns a list having <paramref name="obj"/> as only item.
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <returns></returns>
+        public static List<TSource> _AsList<TSource>(TSource obj)
+        {
+            //do something, just in case this method was executed
+            List<TSource> ret = _AsList<TSource>(obj as object);
+
+            //try
+            //{
+            //    ret = new List<TSource>() { obj };
+            //}
+            //catch
+            //{
+            //    throw new NotImplementedException(Messages.DummyMethodInvokeError);
+            //}
+
+            return ret;
+        }
+
+
         /// <summary>
         /// The neo4j <code>IS NULL</code> function
         /// </summary>

@@ -211,7 +211,8 @@ namespace Neo4jClient.DataAnnotations.Utils
                 case ExpressionType.Unbox:
                 case ExpressionType.Call when ((callExpr = expression as MethodCallExpression) != null
                     && (callExpr.Method.Name.StartsWith("_As")
-                    && callExpr.Method.DeclaringType == Defaults.HelperExtensionsType)):
+                    && (callExpr.Method.DeclaringType == Defaults.CypherFuncsType 
+                    || callExpr.Method.DeclaringType == Defaults.CypherExtensionFuncsType))):
                     {
                         if (castToRemove == null || castToRemove == expression.Type)
                         {

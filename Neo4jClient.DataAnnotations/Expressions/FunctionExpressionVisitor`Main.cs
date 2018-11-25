@@ -118,7 +118,8 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     case ExpressionType.Unbox:
                     case ExpressionType.Call when (n is MethodCallExpression callExpr
                     && (
-                    (callExpr.Method.Name.StartsWith("_As") && callExpr.Method.DeclaringType == Defaults.HelperExtensionsType) //._As and ._AsList()
+                    (callExpr.Method.Name.StartsWith("_As") && (callExpr.Method.DeclaringType == Defaults.CypherFuncsType
+                    || callExpr.Method.DeclaringType == Defaults.CypherExtensionFuncsType)) //._As and ._AsList()
                     || (callExpr.Method.Name == "Get" && callExpr.Method.DeclaringType == Defaults.VarsType) //CypherVariables.Get()
                     || callExpr.Method.IsEquivalentTo(Defaults.CypherObjectIndexerInfo) //CypherVariables.Get("")[""]
                     //|| (callExpr.Method.Name == "_" && callExpr.Method.DeclaringType == Defaults.ObjectExtensionsType) //._()

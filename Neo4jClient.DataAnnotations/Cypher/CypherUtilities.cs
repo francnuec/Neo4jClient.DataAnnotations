@@ -9,8 +9,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using Neo4jClient.Cypher;
 using Newtonsoft.Json;
-using Neo4jClient.DataAnnotations.Serialization;
-using Neo4jClient.DataAnnotations.Cypher.Helpers;
 using Neo4jClient.Serialization;
 
 namespace Neo4jClient.DataAnnotations.Cypher

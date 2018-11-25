@@ -1,15 +1,12 @@
 ﻿using Neo4jClient.DataAnnotations.Cypher;
 using Neo4jClient.DataAnnotations.Cypher.Functions;
-using Neo4jClient.DataAnnotations.Cypher.Helpers;
 using Neo4jClient.DataAnnotations.Expressions;
 using Neo4jClient.DataAnnotations.Tests.Models;
 using Newtonsoft.Json.Linq;
 using System;
-using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using Xunit;
 
 namespace Neo4jClient.DataAnnotations.Tests
@@ -54,6 +51,10 @@ namespace Neo4jClient.DataAnnotations.Tests
             
             //string size
             new object[] { (Expression<Func<int>>)(() => CypherVariables.Get<ActorNode>("actor").Address.City._().Length),
+                "size(actor.NewAddressName_City)" },
+
+            //string size
+            new object[] { (Expression<Func<int>>)(() => CypherFunctions._(CypherVariables.Get<ActorNode>("actor").Address.City).Length),
                 "size(actor.NewAddressName_City)" },
 
             //toLower
@@ -197,6 +198,19 @@ namespace Neo4jClient.DataAnnotations.Tests
             //this is purely for testing and not necessarily a good example for use in code
             new object[] { (Expression<Func<object>>)(() => CypherVariables.Get<ActorNode>("actor")
                 ._AsList().Id()._AsList().Type()._AsList().Properties()),
+                "properties(type(id(actor)))" },
+
+            //id
+            //type
+            //properties
+            //this is purely for testing and not necessarily a good example for use in code
+            new object[] { (Expression<Func<object>>)(() => 
+                CypherFunctions.Properties(
+                CypherFunctions._AsList(
+                CypherFunctions._AsList(
+                CypherFunctions._AsList(
+                    CypherVariables.Get<ActorNode>("actor"))
+                        .Id()).Type()))),
                 "properties(type(id(actor)))" },
 
             //timestamp

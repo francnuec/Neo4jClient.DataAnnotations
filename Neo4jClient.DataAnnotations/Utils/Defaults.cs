@@ -1,6 +1,4 @@
 ﻿using Neo4jClient.Cypher;
-using Neo4jClient.DataAnnotations.Cypher;
-using Neo4jClient.DataAnnotations.Cypher.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
@@ -27,7 +25,7 @@ namespace Neo4jClient.DataAnnotations.Utils
         public static readonly Type ComplexType = typeof(ComplexTypeAttribute);
         public static readonly Type VarsType = typeof(CypherVariables);
         public static readonly Type ExtensionsType = typeof(Extensions);
-        public static readonly Type HelperExtensionsType = typeof(HelperExtensions);
+        //public static readonly Type HelperExtensionsType = typeof(HelperExtensions);
         public static readonly Type NeoScalarType = typeof(NeoScalarAttribute);
         public static readonly Type NeoNonScalarType = typeof(NeoNonScalarAttribute);
         public static readonly Type ObjectType = typeof(object);
@@ -57,13 +55,13 @@ namespace Neo4jClient.DataAnnotations.Utils
 
         internal static readonly PropertyInfo PropertyDummyPropertyInfo = PropertyDummyType.GetProperty("Property");
 
-        public static readonly MethodInfo AsMethodInfo = Utils.Utilities.GetMethodInfo(() => HelperExtensions._As<object>(null));
+        //public static readonly MethodInfo AsMethodInfo = Utils.Utilities.GetMethodInfo(() => HelperExtensions._As<object>(null));
 
-        public static readonly MethodInfo AsListMethodInfo = Utils.Utilities.GetMethodInfo(() => HelperExtensions._AsList<object>(null));
+        //public static readonly MethodInfo AsListMethodInfo = Utils.Utilities.GetMethodInfo(() => HelperExtensions._AsList<object>(null));
 
-        public static readonly MethodInfo IsNullExMethodInfo = Utils.Utilities.GetMethodInfo(() => CypherExtensionFunctions.IsNull<object>(null));
+        public static readonly MethodInfo IsNullExtMethodInfo = Utils.Utilities.GetMethodInfo(() => CypherExtensionFunctions.IsNull<object>(null));
 
-        public static readonly MethodInfo IsNotNullExMethodInfo = Utils.Utilities.GetMethodInfo(() => CypherExtensionFunctions.IsNotNull<object>(null));
+        public static readonly MethodInfo IsNotNullExtMethodInfo = Utils.Utilities.GetMethodInfo(() => CypherExtensionFunctions.IsNotNull<object>(null));
 
         public static readonly MethodInfo CypherObjectIndexerInfo =
             CypherObjectType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
@@ -78,7 +76,7 @@ namespace Neo4jClient.DataAnnotations.Utils
         public static readonly MethodInfo DictStringObjectAddMethod = Utils.Utilities.GetMethodInfo
             (() => new Dictionary<string, object>().Add(null, null));
 
-        public static readonly MethodInfo NfpMethodInfo = Utils.Utilities.GetMethodInfo(() => HelperExtensions._<object>(null));
+        public static readonly MethodInfo NfpExtMethodInfo = Utils.Utilities.GetMethodInfo(() => CypherExtensionFunctions._<object>(null));
 
         public const string QueryBuildStrategyKey = "querypropbuildstrategy";
 

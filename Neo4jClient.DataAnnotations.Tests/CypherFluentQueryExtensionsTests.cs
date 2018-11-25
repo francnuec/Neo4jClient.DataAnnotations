@@ -1,18 +1,8 @@
-﻿using Neo4jClient.Cypher;
-using Neo4jClient.DataAnnotations.Cypher;
+﻿using Neo4jClient.DataAnnotations.Cypher;
 using Neo4jClient.DataAnnotations.Cypher.Functions;
-using Neo4jClient.DataAnnotations.Cypher.Helpers;
-using Neo4jClient.DataAnnotations.Serialization;
 using Neo4jClient.DataAnnotations.Tests.Models;
-using Neo4jClient.Serialization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using NSubstitute;
 using System;
-using Neo4jClient.DataAnnotations.Utils;
-using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text;
 using Xunit;
 
 namespace Neo4jClient.DataAnnotations.Tests

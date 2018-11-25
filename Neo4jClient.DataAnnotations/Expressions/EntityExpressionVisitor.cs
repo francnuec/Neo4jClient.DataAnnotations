@@ -233,7 +233,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                         keyInfo.ResolveNames(Resolver, Serializer);
 
                         //seal it with an nfp so the name is constant
-                        valueExpr = Expression.Call(Utils.Utilities.GetGenericMethodInfo(Defaults.NfpMethodInfo, valueExpr.Type), valueExpr);
+                        valueExpr = Expression.Call(Utils.Utilities.GetGenericMethodInfo(Defaults.NfpExtMethodInfo, valueExpr.Type), valueExpr);
                     }
 
                     AddDictionaryElementInit(dictItems, keyInfo, ref valueExpr, PendingAssignments);

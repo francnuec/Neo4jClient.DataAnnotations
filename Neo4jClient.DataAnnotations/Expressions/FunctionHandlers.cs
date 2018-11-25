@@ -1,5 +1,4 @@
-﻿using Neo4jClient.DataAnnotations.Cypher.Helpers;
-using System;
+﻿using System;
 using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Linq;
@@ -180,7 +179,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
                     Expression operandNode = node.Left != nullNode ? node.Left : node.Right;
 
-                    var genericMethodInfo = Utils.Utilities.GetGenericMethodInfo(Defaults.IsNullExMethodInfo, operandNode.Type);
+                    var genericMethodInfo = Utils.Utilities.GetGenericMethodInfo(Defaults.IsNullExtMethodInfo, operandNode.Type);
                     MethodCallExpression methodCall = Expression.Call(genericMethodInfo, operandNode);
 
                     //trigger the IS NULL write
@@ -219,7 +218,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
                     Expression operandNode = node.Left != nullNode ? node.Left : node.Right;
 
-                    var genericMethodInfo = Utils.Utilities.GetGenericMethodInfo(Defaults.IsNotNullExMethodInfo, operandNode.Type);
+                    var genericMethodInfo = Utils.Utilities.GetGenericMethodInfo(Defaults.IsNotNullExtMethodInfo, operandNode.Type);
                     MethodCallExpression methodCall = Expression.Call(genericMethodInfo, operandNode);
 
                     //trigger the IS NOT NULL write
@@ -306,11 +305,12 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         public static Func<Expression> _AsRaw(FunctionHandlerContext context)
         {
-            if (context.Expression is MethodCallExpression methodCallExpr
-                && methodCallExpr.Method is var methodInfo
-                && methodInfo.Name == "_AsRaw"
-                && methodInfo.DeclaringType == Defaults.HelperExtensionsType
-                && methodInfo.IsExtensionMethod())
+            //if (context.Expression is MethodCallExpression methodCallExpr
+            //    && methodCallExpr.Method is var methodInfo
+            //    && methodInfo.Name == "_AsRaw"
+            //    && methodInfo.DeclaringType == Defaults.HelperExtensionsType
+            //    && methodInfo.IsExtensionMethod())
+            if (IsFuncsMethod(context, "_AsRaw", out var methodCallExpr, out var methodInfo))
             {
                 return () =>
                 {
@@ -435,11 +435,12 @@ namespace Neo4jClient.DataAnnotations.Expressions
         /// <returns></returns>
         public static Func<Expression> NoFurtherProcessing(FunctionHandlerContext context)
         {
-            if (context.Expression is MethodCallExpression methodCallExpr
-                && methodCallExpr.Method is var methodInfo
-                && methodInfo.Name == "_"
-                && methodInfo.DeclaringType == Defaults.HelperExtensionsType
-                && methodInfo.IsExtensionMethod())
+            //if (context.Expression is MethodCallExpression methodCallExpr
+            //    && methodCallExpr.Method is var methodInfo
+            //    && methodInfo.Name == "_"
+            //    && methodInfo.DeclaringType == Defaults.HelperExtensionsType
+            //    && methodInfo.IsExtensionMethod())
+            if (IsFuncsMethod(context, "_", out var methodCallExpr, out var methodInfo))
             {
                 return () =>
                 {
