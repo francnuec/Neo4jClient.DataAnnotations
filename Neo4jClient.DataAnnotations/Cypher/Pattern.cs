@@ -22,7 +22,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         {
         }
 
-        public Pattern(ICypherFluentQuery query, IPathExtent path, IAnnotationsContext context = null)
+        public Pattern(ICypherFluentQuery query, IPathExtent path, AnnotationsContext context = null)
             : base(query, context)
         {
             Path = path;
@@ -1501,7 +1501,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
         internal static Type GetOtherNodeFromRAndKnownNode
-            (IEntityService entityService, Type R, Type knownNode, bool findingA, ref RelationshipDirection? direction)
+            (EntityService entityService, Type R, Type knownNode, bool findingA, ref RelationshipDirection? direction)
         {
             var rInfo = entityService.GetEntityTypeInfo(R);
 

@@ -5,13 +5,13 @@ namespace Neo4jClient.DataAnnotations
 {
     public abstract class EntitySet<T> : IHaveEntityInfo, IHaveEntityService
     {
-        public EntitySet(IEntityService entityService)
+        public EntitySet(EntityService entityService)
         {
             EntityService = entityService ?? throw new ArgumentNullException(nameof(entityService));
             entityService.AddEntityType(typeof(T));
         }
 
-        public IEntityService EntityService { get; set; }
+        public EntityService EntityService { get; set; }
 
         private EntityTypeInfo info;
         public EntityTypeInfo EntityInfo

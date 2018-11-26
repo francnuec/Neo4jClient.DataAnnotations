@@ -8,7 +8,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 {
     public class PathBuilder : Annotated, IPathBuilder //, IPathFinish
     {
-        public PathBuilder(ICypherFluentQuery query, IAnnotationsContext context = null)
+        public PathBuilder(ICypherFluentQuery query, AnnotationsContext context = null)
             :base(query, context)
         {
 
@@ -16,7 +16,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         public PathBuilder(ICypherFluentQuery query, 
             Expression<Func<IPathBuilder, IPathExtent>> expression,
-            IAnnotationsContext context = null)
+            AnnotationsContext context = null)
             : this(query, context)
         {
             Path = expression?.Compile().Invoke(this);
@@ -24,7 +24,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
         public PathBuilder(ICypherFluentQuery query, IPathExtent path,
-            string pathVariable, IAnnotationsContext context)
+            string pathVariable, AnnotationsContext context)
             : this(query, context)
         {
             Path = path;

@@ -2,7 +2,7 @@
 {
     internal class ConcreteEntitySet<T> : EntitySet<T>
     {
-        public ConcreteEntitySet(IEntityService entityService) : base(entityService)
+        public ConcreteEntitySet(DataAnnotations.EntityService entityService) : base(entityService)
         {
         }
     }

@@ -11,13 +11,13 @@ namespace Neo4jClient.DataAnnotations
     public static class GraphClientExtensions
     {
         /// <summary>
-        /// Gets the <see cref="IAnnotationsContext"/> attached to the <see cref="IGraphClient"/>.
+        /// Gets the <see cref="AnnotationsContext"/> attached to the <see cref="IGraphClient"/>.
         /// </summary>
         /// <param name="graphClient">The graph client.</param>
-        /// <returns>Returns an instance of <see cref="IAnnotationsContext"/> or null if not found.</returns>
-        public static IAnnotationsContext GetAnnotationsContext(this IGraphClient graphClient)
+        /// <returns>Returns an instance of <see cref="AnnotationsContext"/> or null if not found.</returns>
+        public static AnnotationsContext GetAnnotationsContext(this IGraphClient graphClient)
         {
-            IAnnotationsContext context = null;
+            AnnotationsContext context = null;
 
             var resolver = graphClient?.JsonContractResolver as EntityResolver;
             context = resolver?.AnnotationsContext;
@@ -34,7 +34,7 @@ namespace Neo4jClient.DataAnnotations
 
 
         /// <summary>
-        /// Attaches an <see cref="IAnnotationsContext"/> of type <see cref="AnnotationsContext"/> to the <see cref="IGraphClient"/> 
+        /// Attaches an <see cref="AnnotationsContext"/> of type <see cref="AnnotationsContext"/> to the <see cref="IGraphClient"/> 
         /// using a resolver of type <see cref="EntityResolver"/>.
         /// </summary>
         /// <param name="graphClient">The graph client.</param>
@@ -45,21 +45,21 @@ namespace Neo4jClient.DataAnnotations
         }
 
         /// <summary>
-        /// Attaches an <see cref="IAnnotationsContext"/> of type <see cref="AnnotationsContext"/> to the <see cref="IGraphClient"/> 
+        /// Attaches an <see cref="AnnotationsContext"/> of type <see cref="AnnotationsContext"/> to the <see cref="IGraphClient"/> 
         /// using a resolver of type <see cref="EntityResolver"/>.
         /// </summary>
         /// <param name="graphClient">The graph client.</param>
-        /// <param name="entityService">The service that provides entity information. Ideally, only one instance of <see cref="IEntityService"/> should exist.
+        /// <param name="entityService">The service that provides entity information. Ideally, only one instance of <see cref="EntityService"/> should exist.
         /// This parameter is optional and can be null, however, you can get a new instance from <see cref="AnnotationsContext.CreateNewEntityService"/>.
         /// </param>
         /// <returns></returns>
-        public static IGraphClient WithAnnotations(this IGraphClient graphClient, IEntityService entityService)
+        public static IGraphClient WithAnnotations(this IGraphClient graphClient, EntityService entityService)
         {
             return WithAnnotations<AnnotationsContext>(graphClient, entityService);
         }
 
         /// <summary>
-        /// Attaches an <see cref="IAnnotationsContext"/> of type <typeparamref name="TContext"/> to the <see cref="IGraphClient"/> 
+        /// Attaches an <see cref="AnnotationsContext"/> of type <typeparamref name="TContext"/> to the <see cref="IGraphClient"/> 
         /// using a resolver of type <see cref="EntityResolver"/>.
         /// </summary>
         /// <param name="graphClient">The graph client.</param>
@@ -70,22 +70,22 @@ namespace Neo4jClient.DataAnnotations
         }
 
         /// <summary>
-        /// Attaches an <see cref="IAnnotationsContext"/> of type <typeparamref name="TContext"/> to the <see cref="IGraphClient"/> 
+        /// Attaches an <see cref="AnnotationsContext"/> of type <typeparamref name="TContext"/> to the <see cref="IGraphClient"/> 
         /// using a resolver of type <see cref="EntityResolver"/>.
         /// </summary>
         /// <param name="graphClient">The graph client.</param>
-        /// <param name="entityService">The service that provides entity information. Ideally, only one instance of <see cref="IEntityService"/> should exist.
+        /// <param name="entityService">The service that provides entity information. Ideally, only one instance of <see cref="EntityService"/> should exist.
         /// This parameter is optional and can be null, however, you can get a new instance from <see cref="AnnotationsContext.CreateNewEntityService"/>.
         /// </param>
         /// <returns></returns>
-        public static IGraphClient WithAnnotations<TContext>(this IGraphClient graphClient, IEntityService entityService) 
+        public static IGraphClient WithAnnotations<TContext>(this IGraphClient graphClient, EntityService entityService) 
             where TContext : AnnotationsContext
         {
             return WithAnnotations<TContext, EntityResolver>(graphClient, entityService);
         }
 
         /// <summary>
-        /// Attaches an <see cref="IAnnotationsContext"/> of type <typeparamref name="TContext"/> 
+        /// Attaches an <see cref="AnnotationsContext"/> of type <typeparamref name="TContext"/> 
         /// using a resolver of type <typeparamref name="TResolver"/>.
         /// </summary>
         /// <param name="graphClient">The graph client.</param>
@@ -98,15 +98,15 @@ namespace Neo4jClient.DataAnnotations
         }
 
         /// <summary>
-        /// Attaches an <see cref="IAnnotationsContext"/> of type <typeparamref name="TContext"/> 
+        /// Attaches an <see cref="AnnotationsContext"/> of type <typeparamref name="TContext"/> 
         /// using a resolver of type <typeparamref name="TResolver"/>.
         /// </summary>
         /// <param name="graphClient">The graph client.</param>
-        /// <param name="entityService">The service that provides entity information. Ideally, only one instance of <see cref="IEntityService"/> should exist.
+        /// <param name="entityService">The service that provides entity information. Ideally, only one instance of <see cref="EntityService"/> should exist.
         /// This parameter is optional and can be null, however, you can get a new instance from <see cref="AnnotationsContext.CreateNewEntityService"/>.
         /// </param>
         /// <returns></returns>
-        public static IGraphClient WithAnnotations<TContext, TResolver>(this IGraphClient graphClient, IEntityService entityService)
+        public static IGraphClient WithAnnotations<TContext, TResolver>(this IGraphClient graphClient, EntityService entityService)
             where TContext : AnnotationsContext
             where TResolver : EntityResolver, new()
         {
@@ -114,16 +114,16 @@ namespace Neo4jClient.DataAnnotations
         }
 
         /// <summary>
-        /// Attaches an <see cref="IAnnotationsContext"/> of type <typeparamref name="TContext"/> 
+        /// Attaches an <see cref="AnnotationsContext"/> of type <typeparamref name="TContext"/> 
         /// using a resolver of type <typeparamref name="TResolver"/>.
         /// </summary>
         /// <param name="graphClient">The graph client.</param>
-        /// <param name="entityService">The service that provides entity information. Ideally, only one instance of <see cref="IEntityService"/> should exist.
+        /// <param name="entityService">The service that provides entity information. Ideally, only one instance of <see cref="EntityService"/> should exist.
         /// This parameter is optional and can be null, however, you can get a new instance from <see cref="AnnotationsContext.CreateNewEntityService"/>.
         /// </param>
         /// <param name="context">The newly created <typeparamref name="TContext"/>.</param>
         /// <returns></returns>
-        public static IGraphClient WithAnnotations<TContext, TResolver>(this IGraphClient graphClient, IEntityService entityService, out TContext context)
+        public static IGraphClient WithAnnotations<TContext, TResolver>(this IGraphClient graphClient, EntityService entityService, out TContext context)
             where TContext : AnnotationsContext
             where TResolver : EntityResolver, new()
         {
@@ -133,7 +133,7 @@ namespace Neo4jClient.DataAnnotations
 
 
         /// <summary>
-        /// Attaches an <see cref="IAnnotationsContext"/> of type <see cref="AnnotationsContext"/> to the <see cref="IGraphClient"/> 
+        /// Attaches an <see cref="AnnotationsContext"/> of type <see cref="AnnotationsContext"/> to the <see cref="IGraphClient"/> 
         /// using a converter of type <see cref="EntityConverter"/>.
         /// </summary>
         /// <param name="graphClient">The graph client.</param>
@@ -144,21 +144,21 @@ namespace Neo4jClient.DataAnnotations
         }
 
         /// <summary>
-        /// Attaches an <see cref="IAnnotationsContext"/> of type <see cref="AnnotationsContext"/> to the <see cref="IGraphClient"/> 
+        /// Attaches an <see cref="AnnotationsContext"/> of type <see cref="AnnotationsContext"/> to the <see cref="IGraphClient"/> 
         /// using a converter of type <see cref="EntityConverter"/>.
         /// </summary>
         /// <param name="graphClient">The graph client.</param>
-        /// <param name="entityService">The service that provides entity information. Ideally, only one instance of <see cref="IEntityService"/> should exist.
+        /// <param name="entityService">The service that provides entity information. Ideally, only one instance of <see cref="EntityService"/> should exist.
         /// This parameter is optional and can be null, however, you can get a new instance from <see cref="AnnotationsContext.CreateNewEntityService"/>.
         /// </param>
         /// <returns></returns>
-        public static IGraphClient WithAnnotationsConverter(this IGraphClient graphClient, IEntityService entityService)
+        public static IGraphClient WithAnnotationsConverter(this IGraphClient graphClient, EntityService entityService)
         {
             return WithAnnotationsConverter<AnnotationsContext>(graphClient, entityService);
         }
 
         /// <summary>
-        /// Attaches an <see cref="IAnnotationsContext"/> of type <typeparamref name="TContext"/> to the <see cref="IGraphClient"/> 
+        /// Attaches an <see cref="AnnotationsContext"/> of type <typeparamref name="TContext"/> to the <see cref="IGraphClient"/> 
         /// using a converter of type <see cref="EntityConverter"/>.
         /// </summary>
         /// <param name="graphClient">The graph client.</param>
@@ -169,22 +169,22 @@ namespace Neo4jClient.DataAnnotations
         }
 
         /// <summary>
-        /// Attaches an <see cref="IAnnotationsContext"/> of type <typeparamref name="TContext"/> to the <see cref="IGraphClient"/> 
+        /// Attaches an <see cref="AnnotationsContext"/> of type <typeparamref name="TContext"/> to the <see cref="IGraphClient"/> 
         /// using a converter of type <see cref="EntityConverter"/>.
         /// </summary>
         /// <param name="graphClient">The graph client.</param>
-        /// <param name="entityService">The service that provides entity information. Ideally, only one instance of <see cref="IEntityService"/> should exist.
+        /// <param name="entityService">The service that provides entity information. Ideally, only one instance of <see cref="EntityService"/> should exist.
         /// This parameter is optional and can be null, however, you can get a new instance from <see cref="AnnotationsContext.CreateNewEntityService"/>.
         /// </param>
         /// <returns></returns>
-        public static IGraphClient WithAnnotationsConverter<TContext>(this IGraphClient graphClient, IEntityService entityService)
+        public static IGraphClient WithAnnotationsConverter<TContext>(this IGraphClient graphClient, EntityService entityService)
             where TContext : AnnotationsContext
         {
             return WithAnnotationsConverter<TContext, EntityConverter>(graphClient, entityService);
         }
 
         /// <summary>
-        /// Attaches an <see cref="IAnnotationsContext"/> of type <typeparamref name="TContext"/> 
+        /// Attaches an <see cref="AnnotationsContext"/> of type <typeparamref name="TContext"/> 
         /// using a converter of type <typeparamref name="TConverter"/>.
         /// </summary>
         /// <param name="graphClient">The graph client.</param>
@@ -197,16 +197,16 @@ namespace Neo4jClient.DataAnnotations
         }
 
         /// <summary>
-        /// Attaches an <see cref="IAnnotationsContext"/> of type <typeparamref name="TContext"/> 
+        /// Attaches an <see cref="AnnotationsContext"/> of type <typeparamref name="TContext"/> 
         /// using a converter of type <typeparamref name="TConverter"/>.
         /// </summary>
         /// <param name="graphClient">The graph client.</param>
-        /// <param name="entityService">The service that provides entity information. Ideally, only one instance of <see cref="IEntityService"/> should exist.
+        /// <param name="entityService">The service that provides entity information. Ideally, only one instance of <see cref="EntityService"/> should exist.
         /// This parameter is optional and can be null, however, you can get a new instance from <see cref="AnnotationsContext.CreateNewEntityService"/>.
         /// </param>
         /// <returns></returns>
         public static IGraphClient WithAnnotationsConverter<TContext, TConverter>
-            (this IGraphClient graphClient, IEntityService entityService)
+            (this IGraphClient graphClient, EntityService entityService)
             where TContext : AnnotationsContext
             where TConverter : EntityConverter, new()
         {
@@ -214,17 +214,17 @@ namespace Neo4jClient.DataAnnotations
         }
 
         /// <summary>
-        /// Attaches an <see cref="IAnnotationsContext"/> of type <typeparamref name="TContext"/> 
+        /// Attaches an <see cref="AnnotationsContext"/> of type <typeparamref name="TContext"/> 
         /// using a converter of type <typeparamref name="TConverter"/>.
         /// </summary>
         /// <param name="graphClient">The graph client.</param>
-        /// <param name="entityService">The service that provides entity information. Ideally, only one instance of <see cref="IEntityService"/> should exist.
+        /// <param name="entityService">The service that provides entity information. Ideally, only one instance of <see cref="EntityService"/> should exist.
         /// This parameter is optional and can be null, however, you can get a new instance from <see cref="AnnotationsContext.CreateNewEntityService"/>.
         /// </param>
         /// <param name="context">The newly created <typeparamref name="TContext"/>.</param>
         /// <returns></returns>
         public static IGraphClient WithAnnotationsConverter<TContext, TConverter>
-            (this IGraphClient graphClient, IEntityService entityService, out TContext context)
+            (this IGraphClient graphClient, EntityService entityService, out TContext context)
             where TContext : AnnotationsContext
             where TConverter : EntityConverter, new()
         {
@@ -234,7 +234,7 @@ namespace Neo4jClient.DataAnnotations
 
 
         internal static IGraphClient SharedWithAnnotations<TContext, TResolver, TConverter>
-            (this IGraphClient graphClient, IEntityService entityService, out TContext context, bool useConverter)
+            (this IGraphClient graphClient, EntityService entityService, out TContext context, bool useConverter)
             where TContext : AnnotationsContext
             where TResolver : EntityResolver, new()
             where TConverter : EntityConverter, new()

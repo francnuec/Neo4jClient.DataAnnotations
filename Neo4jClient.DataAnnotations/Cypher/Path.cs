@@ -39,7 +39,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         {
         }
 
-        public Path(IPathBuilder builder, IAnnotationsContext context)
+        public Path(IPathBuilder builder, AnnotationsContext context)
             : base(builder.CypherQuery, context)
         {
             Builder = builder;
@@ -87,7 +87,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Init();
         }
 
-        public Path(IPathBuilder builder, IAnnotationsContext context)
+        public Path(IPathBuilder builder, AnnotationsContext context)
             : base(builder, context)
         {
             Init();

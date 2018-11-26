@@ -26,9 +26,9 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
         public override bool CanWrite => AnnotationsContext.EntityResolver == null;
 
-        public virtual IAnnotationsContext AnnotationsContext { get; internal set; }
+        public virtual AnnotationsContext AnnotationsContext { get; internal set; }
 
-        public IEntityService EntityService => AnnotationsContext.EntityService;
+        public EntityService EntityService => AnnotationsContext.EntityService;
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
@@ -213,7 +213,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
         }
 
         private static void HandleComplexTypedPropsRead
-            (IEntityService entityService, JsonSerializer serializer,
+            (EntityService entityService, JsonSerializer serializer,
             object value, JObject valueJObject, EntityTypeInfo entityInfo)
         {
             var complexTypedProps = entityInfo.ComplexTypedProperties;
@@ -316,7 +316,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
         }
 
         private static void HandleComplexTypedPropsWrite
-            (IEntityService entityService, JsonSerializer serializer,
+            (EntityService entityService, JsonSerializer serializer,
             object value, JObject valueJObject, EntityTypeInfo entityInfo, Metadata metadata)
         {
             var complexTypedProps = entityInfo.ComplexTypedProperties;

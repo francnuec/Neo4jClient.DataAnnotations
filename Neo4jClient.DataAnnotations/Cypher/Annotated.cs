@@ -18,7 +18,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             internalCypherQuery = query ?? throw new ArgumentNullException(nameof(query));
         }
 
-        public Annotated(ICypherFluentQuery query, IAnnotationsContext context = null) : this(query)
+        public Annotated(ICypherFluentQuery query, AnnotationsContext context = null) : this(query)
         {
             AnnotationsContext = context;
         }
@@ -31,9 +31,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
             }
         }
 
-        private IAnnotationsContext context;
+        private AnnotationsContext context;
 
-        public IAnnotationsContext AnnotationsContext
+        public AnnotationsContext AnnotationsContext
         {
             get
             {
@@ -50,7 +50,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             }
         }
 
-        public IEntityService EntityService => AnnotationsContext?.EntityService;
+        public EntityService EntityService => AnnotationsContext?.EntityService;
 
         public string Build(ref ICypherFluentQuery query)
         {

@@ -5,9 +5,12 @@ using System.Linq;
 using System.Reflection;
 using System.Collections.Concurrent;
 
-namespace Neo4jClient.DataAnnotations.Utils
+namespace Neo4jClient.DataAnnotations
 {
-    internal sealed class EntityService : IEntityService
+    /// <summary>
+    /// This class provides entity information.
+    /// </summary>
+    public sealed class EntityService : IEntityService
     {
         private ConcurrentDictionary<Type, EntityTypeInfo> entityTypeInfos { get; set; }
             = new ConcurrentDictionary<Type, EntityTypeInfo>();
@@ -18,12 +21,12 @@ namespace Neo4jClient.DataAnnotations.Utils
         internal ConcurrentDictionary<Type, bool> processedScalarTypes { get; }
         = new ConcurrentDictionary<Type, bool>();
 
-        public EntityService()
+        internal EntityService()
         {
 
         }
 
-        public EntityService(IEnumerable<Type> entityTypes) : this()
+        internal EntityService(IEnumerable<Type> entityTypes) : this()
         {
             AddEntityTypes(entityTypes);
         }

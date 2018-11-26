@@ -16,11 +16,11 @@ namespace Neo4jClient.DataAnnotations.Serialization
             DeserializeConverter = new EntityResolverConverter(this);
         }
 
-        public virtual IAnnotationsContext AnnotationsContext { get; internal set; }
+        public virtual AnnotationsContext AnnotationsContext { get; internal set; }
 
         public virtual EntityResolverConverter DeserializeConverter { get; }
 
-        public IEntityService EntityService => AnnotationsContext.EntityService;
+        public EntityService EntityService => AnnotationsContext.EntityService;
 
         protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
         {

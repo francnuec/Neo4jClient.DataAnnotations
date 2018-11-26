@@ -9,11 +9,14 @@ using Neo4jClient.Cypher;
 
 namespace Neo4jClient.DataAnnotations
 {
+    /// <summary>
+    /// The context class for entities.
+    /// </summary>
     public class AnnotationsContext : IAnnotationsContext, IHaveEntityService
     {
         private static object staticLockObj = new object();
-        private static IEntityService defaultEntityService;
-        protected static IEntityService DefaultEntityService
+        private static EntityService defaultEntityService;
+        protected static EntityService DefaultEntityService
         {
             get
             {
@@ -34,7 +37,7 @@ namespace Neo4jClient.DataAnnotations
         {
         }
 
-        public AnnotationsContext(IGraphClient graphClient, IEntityService entityService) 
+        public AnnotationsContext(IGraphClient graphClient, EntityService entityService) 
             : this(graphClient, null, null, entityService)
         {
         }
@@ -44,7 +47,7 @@ namespace Neo4jClient.DataAnnotations
         {
         }
 
-        public AnnotationsContext(IGraphClient graphClient, EntityResolver resolver, IEntityService entityService) 
+        public AnnotationsContext(IGraphClient graphClient, EntityResolver resolver, EntityService entityService) 
             : this(graphClient, resolver, null, entityService)
         {
         }
@@ -54,7 +57,7 @@ namespace Neo4jClient.DataAnnotations
         {
         }
 
-        public AnnotationsContext(IGraphClient graphClient, EntityConverter converter, IEntityService entityService)
+        public AnnotationsContext(IGraphClient graphClient, EntityConverter converter, EntityService entityService)
             : this(graphClient, null, converter, entityService)
         {
         }
@@ -63,7 +66,7 @@ namespace Neo4jClient.DataAnnotations
             IGraphClient graphClient, 
             EntityResolver resolver, 
             EntityConverter converter, 
-            IEntityService entityService)
+            EntityService entityService)
         {
             GraphClient = graphClient ?? throw new ArgumentNullException(nameof(graphClient));
 
@@ -108,9 +111,9 @@ namespace Neo4jClient.DataAnnotations
         /// </summary>
         public IGraphClient GraphClient { get; }
         /// <summary>
-        /// The attached <see cref="IEntityService"/>
+        /// The attached <see cref="DataAnnotations.EntityService"/>
         /// </summary>
-        public IEntityService EntityService { get; }
+        public EntityService EntityService { get; }
         /// <summary>
         /// The attached <see cref="EntityResolver"/>. This should be <code>null</code> if <see cref="EntityConverter"/> is present.
         /// </summary>
@@ -128,68 +131,8 @@ namespace Neo4jClient.DataAnnotations
         /// </summary>
         public ICypherFluentQuery Cypher => GraphClient?.Cypher;
 
-        ///// <summary>
-        ///// Replaces the <see cref="GraphClient.DefaultJsonContractResolver"/> 
-        ///// with <see cref="EntityResolver"/> in order to handle entity JSON serialization and deserialization, while making other necessary configuration changes.
-        ///// NOTE: THIS METHOD SHOULD BE CALLED ONLY ONCE, AND BEFORE ANY CODE THAT USES <see cref="Neo4jClient"/> IS CALLED. 
-        ///// If you already use your own custom resolver, do not call this method, 
-        ///// but call the <see cref="RegisterWithConverter()"/> method instead to use the <see cref="EntityConverter"/>.
-        ///// </summary>
-        //internal void AttachResolver(IGraphClient graphClient)
-        //{
-        //    AttachResolver(graphClient, new EntityResolver());
-        //}
-
-        ///// <summary>
-        ///// Replaces the <see cref="GraphClient.DefaultJsonContractResolver"/> 
-        ///// with <see cref="EntityResolver"/> in order to handle entity JSON serialization and deserialization, while making other necessary configuration changes.
-        ///// NOTE: THIS METHOD SHOULD BE CALLED ONLY ONCE, AND BEFORE ANY CODE THAT USES <see cref="Neo4jClient"/> IS CALLED. 
-        ///// If you already use your own custom resolver, do not call this method, 
-        ///// but call the <see cref="RegisterWithConverter(IEnumerable{Type}, EntityConverter)"/> method instead to use the <see cref="EntityConverter"/>.
-        ///// </summary>
-        ///// <param name="entityTypes">All entity types (i.e., model classes) used in your project. 
-        ///// Ideally, this library needs to know all your entity types early on so as to best determine how to construct the class hierarchies. 
-        ///// For simple classes with no inheritances, you may probably skip adding any entity types. 
-        ///// But if your models have derived types, especially for complex type models, it's best to input all entity types at the point of registration.
-        ///// </param>
-        ///// <param name="resolver">An instance of <see cref="EntityResolver"/> to use. An instance from a derived class is permitted.</param>
-        //internal void AttachResolver(IGraphClient graphClient, EntityResolver resolver)
-        //{
-        //    InternalAttachment(graphClient, resolver, null);
-        //}
-
-        ///// <summary>
-        ///// Adds <see cref="EntityConverter"/> to the <see cref="GraphClient.DefaultJsonConverters"/> array in order to handle entity JSON serialization and deserialization, 
-        ///// while making other necessary configuration changes.
-        ///// NOTE: THIS METHOD SHOULD BE CALLED ONLY ONCE, AND BEFORE ANY CODE THAT USES <see cref="Neo4jClient"/> IS CALLED. 
-        ///// If you think the converter would undesirably interfere with your JSON serialization, and you do not already use your own custom resolver,  
-        ///// then call the <see cref="RegisterWithResolver()"/> method instead to use the <see cref="EntityResolver"/>.
-        ///// </summary>
-        //internal void AttachConverter(IGraphClient graphClient)
-        //{
-        //    AttachConverter(graphClient, new EntityConverter());
-        //}
-
-        ///// <summary>
-        ///// Adds <see cref="EntityConverter"/> to the <see cref="GraphClient.DefaultJsonConverters"/> array in order to handle entity JSON serialization and deserialization, 
-        ///// while making other necessary configuration changes.
-        ///// NOTE: THIS METHOD SHOULD BE CALLED ONLY ONCE, AND BEFORE ANY CODE THAT USES <see cref="Neo4jClient"/> IS CALLED. 
-        ///// If you think the converter would undesirably interfere with your JSON serialization, and you do not already use your own custom resolver,  
-        ///// then call the <see cref="RegisterWithResolver(IEnumerable{Type}, EntityResolver)"/> method instead to use the <see cref="EntityResolver"/>.
-        ///// </summary>
-        ///// <param name="entityTypes">All entity types (i.e., model classes) used in your project. 
-        ///// Ideally, this library needs to know all your entity types early on so as to best determine how to construct the class hierarchies. 
-        ///// For simple classes with no inheritances, you may probably skip adding any entity types. 
-        ///// But if your models have derived types, especially for complex type models, it's best to input all entity types at the point of registration.
-        ///// </param>
-        ///// <param name="converter">An instance of <see cref="EntityConverter"/> to use. An instance from a derived class is permitted.</param>
-        //internal void AttachConverter(IGraphClient graphClient, EntityConverter converter)
-        //{
-        //    InternalAttachment(graphClient, null, converter);
-        //}
-
         protected static void Attach
-            (IAnnotationsContext context, IGraphClient graphClient,
+            (AnnotationsContext context, IGraphClient graphClient,
             EntityResolver resolver, EntityConverter converter)
         {
             if (context == null)
@@ -268,7 +211,7 @@ namespace Neo4jClient.DataAnnotations
             }
         }
 
-        public static IEntityService CreateNewEntityService()
+        public static EntityService CreateNewEntityService()
         {
             return new EntityService();
         }

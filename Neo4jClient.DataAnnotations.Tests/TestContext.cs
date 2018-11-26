@@ -49,9 +49,9 @@ namespace Neo4jClient.DataAnnotations.Tests
             }
         }
 
-        public abstract IAnnotationsContext AnnotationsContext { get; set; }
+        public abstract AnnotationsContext AnnotationsContext { get; set; }
 
-        protected virtual IEntityService EntityService => AnnotationsContext.EntityService;
+        protected virtual EntityService EntityService => AnnotationsContext.EntityService;
         public virtual IEnumerable<Type> EntityTypes => EntityService.EntityTypes;
 
         public abstract JsonSerializerSettings SerializerSettings { get; set; }
@@ -214,8 +214,8 @@ namespace Neo4jClient.DataAnnotations.Tests
             }
         }
 
-        private IAnnotationsContext annotationsContext;
-        public override IAnnotationsContext AnnotationsContext
+        private AnnotationsContext annotationsContext;
+        public override AnnotationsContext AnnotationsContext
         {
             get
             {
@@ -292,8 +292,8 @@ namespace Neo4jClient.DataAnnotations.Tests
             }
         }
 
-        private IAnnotationsContext annotationsContext;
-        public override IAnnotationsContext AnnotationsContext
+        private AnnotationsContext annotationsContext;
+        public override AnnotationsContext AnnotationsContext
         {
             get
             {

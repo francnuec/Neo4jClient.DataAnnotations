@@ -10,7 +10,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
     {
         List<Expression> seenExpressions = new List<Expression>();
 
-        public ParameterAccessStretchVisitor(IEntityService entityService)
+        public ParameterAccessStretchVisitor(EntityService entityService)
         {
             EntityService = entityService ?? throw new ArgumentNullException(nameof(entityService));
         }
@@ -18,7 +18,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
         public Dictionary<Expression, ParameterExpression> ParameterAccesses { get; } 
             = new Dictionary<Expression, ParameterExpression>();
 
-        public IEntityService EntityService { get; }
+        public EntityService EntityService { get; }
 
         public override Expression Visit(Expression node)
         {

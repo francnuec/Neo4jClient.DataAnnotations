@@ -26,13 +26,13 @@ namespace Neo4jClient.DataAnnotations.Utils
         private List<JsonProperty> _jsonProps = null;
 
 
-        public EntityTypeInfo(Type type, IEntityService service)
+        public EntityTypeInfo(Type type, DataAnnotations.EntityService service)
         {
             Type = type ?? throw new ArgumentNullException(nameof(type));
             EntityService = service ?? throw new ArgumentNullException(nameof(service));
         }
 
-        public IEntityService EntityService { get; }
+        public EntityService EntityService { get; }
 
         public Type Type { get; }
 

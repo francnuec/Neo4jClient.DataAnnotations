@@ -21,8 +21,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public EntityConverter Converter => AnnotationsContext.EntityConverter; //{ get; set; }
         public Func<object, string> SerializeCallback { get; set; }
 
-        private IAnnotationsContext annotationsContext;
-        public IAnnotationsContext AnnotationsContext
+        private AnnotationsContext annotationsContext;
+        public AnnotationsContext AnnotationsContext
         {
             get
             {
@@ -40,7 +40,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             }
         }
 
-        public IEntityService EntityService => AnnotationsContext?.EntityService;
+        public EntityService EntityService => AnnotationsContext?.EntityService;
 
         /// <summary>
         /// Note that this query writer is useless against subsequent <see cref="ICypherFluentQuery"/> calls when the query object changes

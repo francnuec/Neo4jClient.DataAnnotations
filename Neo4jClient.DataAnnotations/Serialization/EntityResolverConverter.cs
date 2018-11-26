@@ -32,9 +32,9 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
         public override bool CanWrite => false;
 
-        public IAnnotationsContext AnnotationsContext => Resolver.AnnotationsContext;
+        public AnnotationsContext AnnotationsContext => Resolver.AnnotationsContext;
 
-        public IEntityService EntityService => AnnotationsContext.EntityService;
+        public EntityService EntityService => AnnotationsContext.EntityService;
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {

@@ -62,8 +62,8 @@ namespace Neo4jClient.DataAnnotations.Expressions
         /// </summary>
         public Dictionary<string, object> Misc { get; set; } = new Dictionary<string, object>();
 
-        public IAnnotationsContext AnnotationsContext => Visitor?.AnnotationsContext;
+        public AnnotationsContext AnnotationsContext => Visitor?.AnnotationsContext;
 
-        public IEntityService EntityService => AnnotationsContext?.EntityService;
+        public EntityService EntityService => AnnotationsContext?.EntityService;
     }
 }

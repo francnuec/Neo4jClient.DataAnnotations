@@ -7,6 +7,6 @@ namespace Neo4jClient.DataAnnotations
 {
     public interface IHaveEntityService
     {
-        IEntityService EntityService { get; }
+        EntityService EntityService { get; }
     }
 }

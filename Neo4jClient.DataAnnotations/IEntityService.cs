@@ -1,11 +1,10 @@
 ﻿using Neo4jClient.DataAnnotations.Utils;
 using System;
-using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 
 namespace Neo4jClient.DataAnnotations
 {
-    public interface IEntityService
+    internal interface IEntityService
     {
         ICollection<Type> EntityTypes { get; }
         List<Type> KnownNonScalarTypes { get; }

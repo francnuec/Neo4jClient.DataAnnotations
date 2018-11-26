@@ -339,12 +339,12 @@ namespace Neo4jClient.DataAnnotations.Utils
             return false;
         }
 
-        public static bool IsEntity(this Expression expression, IEntityService entityService)
+        public static bool IsEntity(this Expression expression, DataAnnotations.EntityService entityService)
         {
             return entityService.ContainsEntityType(expression.Type);
         }
 
-        public static bool IsScalar(this Type type, IEntityService entityService)
+        public static bool IsScalar(this Type type, DataAnnotations.EntityService entityService)
         {
             return Utils.Utilities.IsScalarType(type, entityService);
         }

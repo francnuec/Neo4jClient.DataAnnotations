@@ -15,12 +15,12 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         static MethodInfo mutateGenericMethodInfo = null;
 
         #region AnnotationsContext
-        public static IAnnotationsContext GetAnnotationsContext(this ICypherFluentQuery query)
+        public static AnnotationsContext GetAnnotationsContext(this ICypherFluentQuery query)
         {
             var client = (query as IAttachedReference)?.Client;
-            IAnnotationsContext context = client?.GetAnnotationsContext();
+            AnnotationsContext context = client?.GetAnnotationsContext();
 
-            return context ?? throw new InvalidOperationException($"Could not get an instance of {nameof(IAnnotationsContext)} from query.");
+            return context ?? throw new InvalidOperationException($"Could not get an instance of {nameof(AnnotationsContext)} from query.");
         }
         #endregion
 
@@ -29,7 +29,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         /// <see cref="IAnnotatedQuery"/> abstracts methods that re-implement Neo4jClient methods using the same signatures in order to take advantage of annotations features like ComplexTypes.
         /// Separating these methods this way ensures that we avoid collisions.
         /// E.g. client.Cypher.AsAnnotatedQuery().Where((MovieNode movie) =&gt; movie.Year == 2017)
-        /// See Tests for examples. Call <see cref="CypherAnnotatedQueryExtensions.AsCypherQuery(IAnnotatedQuery)"/> to return to normal Cypher methods.
+        /// See Tests for examples. Call <see cref="AnnotatedQueryExtensions.AsCypherQuery(IAnnotatedQuery)"/> to return to normal Cypher methods.
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
@@ -41,7 +41,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         /// <see cref="IOrderedAnnotatedQuery"/> abstracts methods that re-implement Neo4jClient methods using the same signatures in order to take advantage of annotations features like ComplexTypes.
         /// Separating these methods this way ensures that we avoid collisions.
         /// E.g. client.Cypher.AsAnnotatedQuery().Where((MovieNode movie) =&gt; movie.Year == 2017)
-        /// See Tests for examples. Call <see cref="CypherAnnotatedQueryExtensions.AsCypherQuery(IOrderedAnnotatedQuery)"/> to return to normal Cypher methods.
+        /// See Tests for examples. Call <see cref="AnnotatedQueryExtensions.AsCypherQuery(IOrderedAnnotatedQuery)"/> to return to normal Cypher methods.
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>

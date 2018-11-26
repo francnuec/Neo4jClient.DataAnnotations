@@ -23,7 +23,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         public FunctionVisitorContext Context { get; }
 
-        public IAnnotationsContext AnnotationsContext => QueryContext.AnnotationsContext;
+        public AnnotationsContext AnnotationsContext => QueryContext.AnnotationsContext;
 
         //public StringBuilder Builder { get; } = new StringBuilder();
 
@@ -50,7 +50,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
         protected List<Expression> IgnoredNodes { get; private set; } = new List<Expression>();
         protected List<Expression> UnhandledNodes { get; private set; } = new List<Expression>();
 
-        public IEntityService EntityService => AnnotationsContext.EntityService;
+        public EntityService EntityService => AnnotationsContext.EntityService;
 
         private FunctionHandlerContext handlerTestContext = null;
         private List<Func<FunctionHandlerContext, Func<Expression>>> canHandleHandlers

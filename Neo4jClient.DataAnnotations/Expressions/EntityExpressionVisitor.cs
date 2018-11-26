@@ -46,9 +46,9 @@ namespace Neo4jClient.DataAnnotations.Expressions
             }
         }
 
-        public IAnnotationsContext AnnotationsContext => QueryContext?.AnnotationsContext;
+        public AnnotationsContext AnnotationsContext => QueryContext?.AnnotationsContext;
 
-        public IEntityService EntityService => AnnotationsContext?.EntityService;
+        public EntityService EntityService => AnnotationsContext?.EntityService;
 
         public Dictionary<EntityMemberInfo, object> PendingAssignments { get; set; }
             = new Dictionary<EntityMemberInfo, object>();
@@ -482,7 +482,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                         //uncast the box around the argument
                         argument = argument.UncastBox(out var argCast);
 
-                        member.ResolveNames(AnnotationsContext.EntityResolver, Serializer);
+                        member.ResolveNames((EntityResolver)AnnotationsContext.EntityResolver, Serializer);
 
                         if (ExpressionUtilities.IsSpecialNode(FuncsVisitor, argument, 
                             out var aValue, out var hasVars, out var hasFunctions, out var hasDummyMethod))

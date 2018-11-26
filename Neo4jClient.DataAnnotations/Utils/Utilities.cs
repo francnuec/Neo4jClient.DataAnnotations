@@ -140,7 +140,7 @@ namespace Neo4jClient.DataAnnotations.Utils
                 type.GetGenericArguments().FirstOrDefault() : null);
         }
 
-        public static bool IsScalarType(Type type, IEntityService entityService)
+        public static bool IsScalarType(Type type, DataAnnotations.EntityService entityService)
         {
             bool isScalar = false;
             if ((entityService as EntityService)?.processedScalarTypes.TryGetValue(type, out isScalar) == true)
@@ -238,7 +238,7 @@ namespace Neo4jClient.DataAnnotations.Utils
             return member ?? throw new ArgumentException("Expression is not a field", "expression");
         }
 
-        internal static void InitializeComplexTypedProperties(object entity, IEntityService entityService)
+        internal static void InitializeComplexTypedProperties(object entity, DataAnnotations.EntityService entityService)
         {
             var entityInfo = entityService.GetEntityTypeInfo(entity.GetType());
 

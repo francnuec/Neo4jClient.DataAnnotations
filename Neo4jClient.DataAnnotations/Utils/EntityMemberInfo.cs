@@ -10,7 +10,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 {
     public class EntityMemberInfo : IHaveEntityService
     {
-        public EntityMemberInfo(IEntityService entityService,
+        public EntityMemberInfo(EntityService entityService,
             string memberName, Type memberType,
             EntityMemberInfo complexParent = null, Type reflectedType = null)
         {
@@ -38,7 +38,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
             } while (root != null);
         }
 
-        public EntityMemberInfo(IEntityService entityService, MemberInfo member,
+        public EntityMemberInfo(EntityService entityService, MemberInfo member,
             EntityMemberInfo complexParent = null, Type reflectedType = null)
             : this(entityService, member?.Name ?? throw new ArgumentNullException(nameof(member)),
                   member.GetMemberType(), complexParent, reflectedType)
@@ -175,7 +175,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         public EntityMemberInfo ComplexRoot { get; }
 
-        public IEntityService EntityService { get; }
+        public EntityService EntityService { get; }
 
         public override bool Equals(object obj)
         {

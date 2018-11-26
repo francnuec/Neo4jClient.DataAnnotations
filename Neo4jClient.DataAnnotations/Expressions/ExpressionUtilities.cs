@@ -568,7 +568,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
         }
 
         internal static void TraverseEntityPath
-            (IEntityService entityService,
+            (EntityService entityService,
             object entity, Type entityType, List<Expression> pathExpressions,
             ref int index, out Type lastType,
             out Dictionary<EntityMemberInfo, int> pathTraversed, //Dictionary<EntityMemberInfo, (int PathIndex, Type LastType)> pathTraversed,
@@ -877,7 +877,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
         //}
 
         internal static string[] GetEntityPathNames
-        (IEntityService entityService,
+        (EntityService entityService,
         ref object entity, ref Type entityType,
         List<Expression> expressions,
         ref int currentIndex, EntityResolver resolver, Func<object, string> serializer,
@@ -992,7 +992,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
         }
 
         internal static List<Expression> ExplodeComplexTypeMemberAccess
-            (IEntityService entityService,
+            (EntityService entityService,
             Expression expression, out List<List<MemberInfo>> inversePaths)
         {
             return ExplodeComplexTypeAndMemberAccess(entityService, ref expression,
@@ -1000,14 +1000,14 @@ namespace Neo4jClient.DataAnnotations.Expressions
         }
 
         internal static void ExplodeComplexType
-            (IEntityService entityService, Type type, out List<List<MemberInfo>> inversePaths)
+            (EntityService entityService, Type type, out List<List<MemberInfo>> inversePaths)
         {
             Expression empty = null;
             ExplodeComplexTypeAndMemberAccess(entityService, ref empty, type, out inversePaths, shouldTryCast: false);
         }
 
         internal static List<Expression> ExplodeComplexTypeAndMemberAccess
-            (IEntityService entityService,
+            (EntityService entityService,
             ref Expression expression, Type type,
             out List<List<MemberInfo>> inversePaths, bool shouldTryCast = true)
         {
@@ -1158,13 +1158,13 @@ namespace Neo4jClient.DataAnnotations.Expressions
         }
 
         public static List<Expression> GetSimpleMemberAccessStretch
-            (IEntityService entityService, Expression expression, out Expression entityBestGuess)
+            (EntityService entityService, Expression expression, out Expression entityBestGuess)
         {
             return GetSimpleMemberAccessStretch(entityService, expression, out entityBestGuess, out var isContinuous);
         }
 
         public static List<Expression> GetSimpleMemberAccessStretch
-            (IEntityService entityService, 
+            (EntityService entityService, 
             Expression expression, out Expression entityBestGuess, out bool isContinuous)
         {
             isContinuous = true;
