@@ -66,7 +66,7 @@ Here are our `Address` and `MovieNode` models. Same observations apply as in the
 
 Now that we have described our models, we need to use them in our Cypher queries. To do this, we'd use the fluent interface this library exposes on the Neo4jClient methods. This interface also allows you to modify your patterns on demand, overriding select existing data attributes. Remember to add:
 
-    using Neo4jClient.DataAnnotations.Cypher;
+    using Neo4jClient.DataAnnotations;
 
 Let's match each actor with all movies they acted in using our models.
 
@@ -77,7 +77,7 @@ In Cypher:
 
 With annotations: 
 
-    var results = graphClient.Cypher
+    var results = graphClient.WithAnnotations().Cypher
     .Match(path => path.Pattern<ActorNode, MovieNode>("actor", "acted_in", "movie"))
     .Return((actor, movie) => new {
         Actor = actor.As<ActorNode>(),
@@ -98,7 +98,7 @@ In this library, the example Cypher query above describes an extended path, beca
 
 With annotations:
 
-    var results = graphClient.Cypher
+    var results = graphClient.WithAnnotations().Cypher
     .Match(path => path
     .Pattern((ActorNode tom) => tom.Movies, "movie")
     .Constrain(tom => tom.Name == "Tom Hanks")
@@ -111,25 +111,53 @@ With annotations:
 
 The above examples employ really simple scenarios to explain this library. The real advantage you'd get from using this library would be in describing really complex patterns (with maybe complex properties too), and then the library accurately interprets your intentions.
 
-See this [wiki page](https://github.com/francnuec/Neo4jClient.DataAnnotations/wiki) for more examples. You can also check the unit tests. To see this library used in an actual project, head over to my [Neo4j.AspNetCore.Identity](https://github.com/francnuec/Neo4j.AspNetCore.Identity) project to study the code and sample.
-
 ### Neo4jClient Integration ###
 ----------
-To use this library with `Neo4jClient` in your project, you must register it so as to make needed configuration changes before any code that uses the `Neo4jClient` library is called. You must call the `Neo4jAnnotations.RegisterWithResolver` method, or the `Neo4jAnnotations.RegisterWithConverter` method. You're permitted to call just one of them.
+To use this library with `Neo4jClient` in your project, you must register it with your `IGraphClient` instance so as to make needed configuration changes before any code that uses the `Neo4jClient` library is called. You must call the `IGraphClient.WithAnnotations` method or the `IGraphClient.WithAnnotationsConverter` method for each new instance of `GraphClient`. You're permitted to call just one of them. The methods attach a default instance of the `AnnotationsContext` class to the `IGraphClient` instance. 
 
-For ASP.NET core projects, the best place to register is within the `ConfigureServices` method of your `Startup` class. That is:
+However, ideally, this library needs to know all your entity types (i.e., model classes) early on so as to best determine how to construct the class hierarchies. For simple classes with no inheritances, you may skip adding any entity types. But if your models have derived types, especially for complex type models, it's best to input all entity types at the point of registration. This is done by subclassing the `AnnotationsContext` class and then adding the entity types as properties of that class like you would with `EntityFramework`. For instance, this is a sample context class used in the library tests:
+
+    public class AppContext : AnnotationsContext
+    {
+        public TestAnnotationsContext
+                (IGraphClient graphClient, EntityResolver resolver, IEntityService entityService) 
+                : base(graphClient, resolver, entityService)
+        {
+        }
+
+        public TestAnnotationsContext
+                (IGraphClient graphClient, EntityConverter converter, IEntityService entityService) 
+                : base(graphClient, converter, entityService)
+        {
+        }
+
+        public virtual EntitySet<PersonNode> Persons { get; set; }
+        public virtual EntitySet<DirectorNode> Directors { get; set; }
+        public virtual EntitySet<MovieNode> Movies { get; set; }
+        public virtual EntitySet<MovieExtraNode> MovieExtras { get; set; }
+        public virtual EntitySet<ActorNode> Actors { get; set; }
+        public virtual EntitySet<Address> Addresses { get; set; }
+        public virtual EntitySet<Location> Locations { get; set; }
+    }
+    
+Note that, unlike `EntityFramework`, even the `ComplexType` classes are added to this context class. It is planned that in a later release of this library, support for `LINQ` operations will be added to the library through these `EntitySet` properties. For now, they just help the library discover all your entity types early on, and ahead of usage.
+
+Now, you can proceed to attach the new context class to your `IGraphClient` instance by the calling `IGraphClient.WithAnnotations<AppContext>` method. For projects that utilize dependency containers, you should instead configure the `AnnotationsContext` class as a service, then require it as a dependency in your classes. In ASP.NET core projects, this is best done within the `ConfigureServices` method of your `Startup` class using the provided helper methods. For example:
 
     public void ConfigureServices(IServiceCollection services)
     {
         // Add framework services.
         
-        var entityTypes = new Type[] { typeof(ActorNode), typeof(Address), typeof(MovieNode) };
-        Neo4jAnnotations.RegisterWithResolver(entityTypes);
+        //Add your choice of IGraphClient as a service.
+	
+        //Add Neo4jClient.DataAnnotations as a service
+        services.AddNeo4jAnnotations<AppContext>(); // or simply, services.AddNeo4jAnnotations(), for the default context instance.
     }
-Ideally, this library needs to know all your entity types (i.e., model classes) early on so as to best determine how to construct the class hierarchies. For simple classes with no inheritances, you may probably skip adding any entity types. But if your models have derived types, especially for complex type models, it's best to input all entity types at the point of registration.
-
+    
 ----------
 ... and we're done.
+
+Please see this [wiki page](https://github.com/francnuec/Neo4jClient.DataAnnotations/wiki) for more examples. You can also check the unit tests to get an idea of other features available in the library. To see this library used in an actual project, head over to my [Neo4j.AspNetCore.Identity](https://github.com/francnuec/Neo4j.AspNetCore.Identity) project to study the code and sample.
 
 If you encounter an exception anywhere, kindly raise an issue so we can deal with it. If you're are trying to figure out how to describe your models, or a Neo4j pattern, ask your question in an issue too and hopefully we can use your scenario as an example for everyone else.
 
