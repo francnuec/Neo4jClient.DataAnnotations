@@ -142,7 +142,7 @@ However, ideally, this library needs to know all your entity types (i.e., model 
     
 Note that, unlike `EntityFramework`, even the `ComplexType` classes are added to this context class. It is planned that in a later release of this library, support for `LINQ` operations will be added to the library through these `EntitySet` properties. For now, they just help the library discover all your entity types early on, and ahead of usage.
 
-Now, you can proceed to attach the new context class to your `IGraphClient` instance by the calling `IGraphClient.WithAnnotations<AppContext>` method. For projects that utilize dependency containers, you should instead configure the `AnnotationsContext` class as a service, then require it as a dependency in your classes. In ASP.NET core projects, this is best done within the `ConfigureServices` method of your `Startup` class using the provided helper methods. For example:
+Now, you can proceed to attach the new context class to your `IGraphClient` instance by calling the `IGraphClient.WithAnnotations<AppContext>` method. For projects that utilize dependency containers, you should instead configure the `AnnotationsContext` class as a service, then require it as a dependency in your classes. In ASP.NET core projects, this is best done within the `ConfigureServices` method of your `Startup` class using the provided helper methods. For example:
 
     public void ConfigureServices(IServiceCollection services)
     {
@@ -151,7 +151,7 @@ Now, you can proceed to attach the new context class to your `IGraphClient` inst
         //Add your choice of IGraphClient as a service.
 	
         //Add Neo4jClient.DataAnnotations as a service
-        services.AddNeo4jAnnotations<AppContext>(); // or simply, services.AddNeo4jAnnotations(), for the default context instance.
+        services.AddNeo4jAnnotations<AppContext>(); //or simply, services.AddNeo4jAnnotations(), for the default context instance.
     }
     
 ----------
