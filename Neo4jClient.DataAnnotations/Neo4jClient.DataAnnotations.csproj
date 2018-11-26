@@ -16,8 +16,8 @@
 *Introduced support for dependency containers through the IAnnotationsContext and IEntityService interfaces.
 *Complete rewrite of EntityExpressionVisitor.
 *Cleaned up many of the static methods.</PackageReleaseNotes>
-    <Version>2.0.0</Version>
-    <FileVersion>2.0.0.0</FileVersion>
+    <Version>2.0.1</Version>
+    <FileVersion>2.0.1.0</FileVersion>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
   </PropertyGroup>
 
