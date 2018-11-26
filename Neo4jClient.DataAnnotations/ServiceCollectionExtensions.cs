@@ -15,7 +15,17 @@ namespace Microsoft.Extensions.DependencyInjection
 
         public static AnnotationsBuilder AddNeo4jAnnotations<TContext>(this IServiceCollection services) where TContext : AnnotationsContext
         {
-            services.TryAddSingleton<EntityService, EntityService>();
+            try
+            {
+                services.AddSingleton<EntityService, EntityService>(provider =>
+                {
+                    return AnnotationsContext.CreateNewEntityService();
+                });
+            }
+            catch
+            {
+            }
+            
             services.AddScoped<AnnotationsContext, TContext>();
 
             return new AnnotationsBuilder(typeof(TContext), services);
