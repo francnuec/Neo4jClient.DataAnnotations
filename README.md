@@ -119,12 +119,12 @@ However, ideally, this library needs to know all your entity types (i.e., model 
 
     public class AppContext : AnnotationsContext
     {
-        public AppContext(IGraphClient graphClient, EntityResolver resolver, IEntityService entityService) 
+        public AppContext(IGraphClient graphClient, EntityResolver resolver, EntityService entityService) 
                 : base(graphClient, resolver, entityService)
         {
         }
 
-        public AppContext(IGraphClient graphClient, EntityConverter converter, IEntityService entityService) 
+        public AppContext(IGraphClient graphClient, EntityConverter converter, EntityService entityService) 
                 : base(graphClient, converter, entityService)
         {
         }
