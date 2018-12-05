@@ -113,18 +113,18 @@ The above examples employ really simple scenarios to explain this library. The r
 
 ### Neo4jClient Integration ###
 ----------
-To use this library with `Neo4jClient` in your project, you must register it with your `IGraphClient` instance so as to make needed configuration changes before any code that uses the `Neo4jClient` library is called. You must call the `IGraphClient.WithAnnotations` method or the `IGraphClient.WithAnnotationsConverter` method for each new instance of `GraphClient`. You're permitted to call just one of them. The methods attach a default instance of the `AnnotationsContext` class to the `IGraphClient` instance. 
+To use this library with `Neo4jClient` in your project, you must register it with your `IGraphClient` instance so as to make needed configuration changes before any code that uses the `Neo4jClient` library is called. You must call the `IGraphClient.WithAnnotations` method, or the `IGraphClient.WithAnnotationsConverter` method, for each ***new instance*** of `IGraphClient` that you use. You're permitted to call just one of them. These methods attach a default instance of the `AnnotationsContext` class to the `IGraphClient` instance. Again, although you can safely call any of the methods multiple times as you wish, you really only need to make the call just once for each new instance of `IGraphClient` that you use.
 
-However, ideally, this library needs to know all your entity types (i.e., model classes) early on so as to best determine how to construct the class hierarchies. For simple classes with no inheritances, you may skip adding any entity types. But if your models have derived types, especially for complex type models, it's best to input all entity types at the point of registration. This is done by subclassing the `AnnotationsContext` class and then adding the entity types as properties of that class like you would with `EntityFramework`. For instance, this is a sample context class used in the library tests:
+Also, ideally, this library needs to know all your entity types (i.e., model classes) early on so as to best determine how to construct the class hierarchies. For simple classes with no inheritances, you may skip adding any entity types. However, if your models have derived types, especially for complex type models, it's best to input all entity types at the point of registration. This is done by subclassing the `AnnotationsContext` class, then adding the entity types as properties of that class the same way it is done in `EntityFramework` context classes. For instance, this is a sample context class used in our tests:
 
     public class AppContext : AnnotationsContext
     {
-        public AppContext(IGraphClient graphClient, EntityResolver resolver, IEntityService entityService) 
+        public AppContext(IGraphClient graphClient, EntityResolver resolver, EntityService entityService) 
                 : base(graphClient, resolver, entityService)
         {
         }
 
-        public AppContext(IGraphClient graphClient, EntityConverter converter, IEntityService entityService) 
+        public AppContext(IGraphClient graphClient, EntityConverter converter, EntityService entityService) 
                 : base(graphClient, converter, entityService)
         {
         }
@@ -144,12 +144,14 @@ Now, you can proceed to attach the new context class to your `IGraphClient` inst
 
     public void ConfigureServices(IServiceCollection services)
     {
-        // Add framework services.
+        //Add framework services.
         
         //Add your choice of IGraphClient as a service.
 	
         //Add Neo4jClient.DataAnnotations as a service
-        services.AddNeo4jAnnotations<AppContext>(); //or simply, services.AddNeo4jAnnotations(), for the default context instance.
+        services.AddNeo4jAnnotations<AppContext>(); 
+	
+        //or simply, services.AddNeo4jAnnotations(), for the default context instance.
     }
     
 ----------
