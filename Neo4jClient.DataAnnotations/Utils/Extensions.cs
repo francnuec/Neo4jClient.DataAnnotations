@@ -99,7 +99,7 @@ namespace Neo4jClient.DataAnnotations.Utils
         public static object GetDefaultValue(this Type type)
         {
             if (type.GetTypeInfo().IsValueType)
-                return Utils.Utilities.CreateInstance(type);
+                return Activator.CreateInstance(type, true); //Utils.Utilities.CreateInstance(type);
 
             return null;
         }
@@ -398,6 +398,11 @@ namespace Neo4jClient.DataAnnotations.Utils
             }
 
             return jVal;
+        }
+
+        public static bool CanBeNull(this Type type)
+        {
+            return !type.IsValueType || (Nullable.GetUnderlyingType(type) != null);
         }
     }
 }

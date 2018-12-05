@@ -364,6 +364,9 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 var propValueJObject = JObject.FromObject(propValue, serializer);
                 var propValueInfo = entityService.GetEntityTypeInfo(propValueType);
 
+                //we really need to stop the null properties only when the value returned is a derived type.
+                bool storeNullProps = prop.PropertyType != propValueType;
+
                 foreach (var propChild in propValueJObject.Children<JProperty>())
                 {
                     if (propChild.Value.Type == JTokenType.Object)
@@ -394,7 +397,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
                     entityInfo.JsonNamePropertyMap[newPropName] = propNamePair.Value; //propValueInfo.JsonNamePropertyMap[propChild.Name];
 
-                    if (newProp.Value == null || newProp.Value.Type == JTokenType.Null)
+                    if (storeNullProps && (newProp.Value == null || newProp.Value.Type == JTokenType.Null))
                     {
                         //we need to store this in metadata because neo4j does not store null properties.
                         metadata.NullProperties.Add(newProp.Name);

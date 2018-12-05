@@ -15,10 +15,11 @@
 *Lots of breaking changes.
 *Introduced support for dependency containers through the IAnnotationsContext and IEntityService interfaces.
 *Complete rewrite of EntityExpressionVisitor.
-*Cleaned up many of the static methods.</PackageReleaseNotes>
-    <Version>2.0.1</Version>
-    <FileVersion>2.0.1.0</FileVersion>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+*Cleaned up many of the static methods.
+*Now respects the NotMappedAttribute during entire-object serializations.</PackageReleaseNotes>
+    <Version>2.0.2</Version>
+    <FileVersion>2.0.2.0</FileVersion>
+    <AssemblyVersion>2.0.2.0</AssemblyVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

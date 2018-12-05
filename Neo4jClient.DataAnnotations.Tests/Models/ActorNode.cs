@@ -13,6 +13,9 @@ namespace Neo4jClient.DataAnnotations.Tests.Models
     {
         public string[] Roles { get; set; }
 
+        [NotMapped]
+        public int TestForeignKeyIdNotMapped { get; set; }
+
         public int TestForeignKeyId { get; set; }
 
         public object TestForeignKey { get; set; }

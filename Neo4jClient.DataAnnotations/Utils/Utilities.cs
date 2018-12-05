@@ -365,7 +365,7 @@ namespace Neo4jClient.DataAnnotations.Utils
             }
         }
 
-        internal static object CreateInstance(Type type, bool nonPublic = true, object[] parameters = null)
+        public static object CreateInstance(Type type, bool nonPublic = true, object[] parameters = null)
         {
             object o = null;
 
@@ -375,35 +375,87 @@ namespace Neo4jClient.DataAnnotations.Utils
             }
             catch (MissingMemberException e)
             {
+                var flags = BindingFlags.Instance | BindingFlags.Public;
+
                 if (nonPublic)
-                {
-                    var flags = BindingFlags.Instance | BindingFlags.NonPublic;
+                    flags = flags | BindingFlags.NonPublic;
 
-                    parameters = parameters ?? new object[0];
+                parameters = parameters ?? new object[0];
 
-                    var constructors = type.GetConstructors(flags)
-                        .Where(c => (c.GetParameters()?.Length ?? 0) == parameters.Length);
-
-                    if (constructors?.Count() > 0)
+                var constructors = type.GetConstructors(flags)
+                    .Select(c => new
                     {
-                        foreach (var constructor in constructors)
-                        {
-                            try
-                            {
-                                o = constructor.Invoke(parameters);
-                                break;
-                            }
-                            catch
-                            {
+                        actual = c,
+                        parameters = c.GetParameters()
+                    })
+                    .Where(nc => nc.parameters.Length == parameters.Length
+                        || (nc.parameters.Any(p => p.IsOptional || p.HasDefaultValue) && nc.parameters.Length > parameters.Length))
+                    .OrderBy(nc => nc.parameters.Length == parameters.Length ? -1 : nc.parameters.Length);
 
+                if (constructors?.Count() > 0)
+                {
+                    foreach (var constructor in constructors)
+                    {
+                        var _params = parameters;
+
+                        var paramInfos = constructor.parameters;
+                        if (paramInfos.Length > parameters.Length)
+                        {
+                            //some of the parameters are optional
+                            //find a way to arrange them in order
+                            //ideally, they should be at the end of the parameter list.
+
+                            var paramList = new List<object>();
+                            var paramsEnumerator = parameters.GetEnumerator();
+                            paramsEnumerator.MoveNext();
+
+                            foreach (var paramInfo in paramInfos)
+                            {
+                                try
+                                {
+                                    if (paramsEnumerator.Current != null ?
+                                        paramInfo.ParameterType.IsGenericAssignableFrom(paramsEnumerator.Current.GetType())
+                                        : paramInfo.ParameterType.CanBeNull())
+                                    {
+                                        //found a match, or a parameter that can be assigned null
+                                        //consume and movenext
+                                        paramList.Add(paramsEnumerator.Current);
+                                        paramsEnumerator.MoveNext();
+                                        continue;
+                                    }
+                                }
+                                catch
+                                {
+
+                                }
+
+                                if (paramInfo.HasDefaultValue)
+                                {
+                                    paramList.Add(paramInfo.DefaultValue ?? paramInfo.RawDefaultValue);
+                                }
+                                else
+                                {
+                                    //add default
+                                    paramList.Add(paramInfo.ParameterType.GetDefaultValue());
+                                }
                             }
+
+                            _params = paramList.ToArray();
+                        }
+
+                        try
+                        {
+                            o = constructor.actual.Invoke(_params);
+                            break;
+                        }
+                        catch
+                        {
+
                         }
                     }
-
-                    if (o == null)
-                        throw e;
                 }
-                else
+
+                if (o == null)
                     throw e;
             }
 

@@ -42,6 +42,7 @@ namespace Neo4jClient.DataAnnotations.Utils
         public static readonly Type EntitySetType = typeof(EntitySet<>);
         public static readonly Type ConcreteEntitySetType = typeof(ConcreteEntitySet<>);
         public static readonly Type DictStringObjectType = typeof(Dictionary<string, object>);
+        public static readonly Type NotMappedType = typeof(NotMappedAttribute);
         #endregion
 
         public const BindingFlags MemberSearchBindingFlags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;

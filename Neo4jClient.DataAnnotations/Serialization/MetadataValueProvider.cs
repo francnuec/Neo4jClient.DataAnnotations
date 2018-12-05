@@ -40,7 +40,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 if (metadata?.NullProperties?.Count > 0 && Properties?.Count > 0)
                 {
                     //call each property and set a null value
-                    foreach(var nullProp in metadata.NullProperties)
+                    foreach (var nullProp in metadata.NullProperties)
                     {
                         var jsonProperty = Properties.FirstOrDefault(p => p.PropertyName == nullProp);
 
@@ -73,6 +73,8 @@ namespace Neo4jClient.DataAnnotations.Serialization
             //create new metadata and go through props (which should be complex props) to find null values
             var metadata = new Metadata();
 
+            //we really need to stop the null properties only when the value returned is a derived type.
+
             if (target != null && Properties?.Count > 0)
             {
                 foreach (var prop in Properties)
@@ -82,14 +84,19 @@ namespace Neo4jClient.DataAnnotations.Serialization
                         var value = prop.ValueProvider.GetValue(target);
                         if (value == null)
                         {
-                            metadata.NullProperties.Add(prop.PropertyName);
+                            var complexValueProvider = prop.ValueProvider as ComplexTypedPropertyValueProvider;
+
+                            if (complexValueProvider == null || 
+                                complexValueProvider.Type != complexValueProvider.ValueProvider.GetValue(target)?.GetType())
+                            {
+                                metadata.NullProperties.Add(prop.PropertyName);
+                            }
                         }
                     }
                     catch (JsonSerializationException e) when (e.InnerException is InvalidCastException)
                     {
 
                     }
-
                 }
             }
 

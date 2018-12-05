@@ -24,6 +24,7 @@ namespace Neo4jClient.DataAnnotations.Utils
             = new Dictionary<Type, List<ForeignKeyProperty>>();
         private JsonObjectContract JsonContract { get; set; }
         private List<JsonProperty> _jsonProps = null;
+        private List<PropertyInfo> notMappedProps;
 
 
         public EntityTypeInfo(Type type, DataAnnotations.EntityService service)
@@ -224,6 +225,26 @@ namespace Neo4jClient.DataAnnotations.Utils
             }
         }
 
+        public List<PropertyInfo> NotMappedProperties
+        {
+            get
+            {
+                lock (this)
+                {
+                    if (notMappedProps == null)
+                    {
+                        var attr = Defaults.NotMappedType;
+
+                        notMappedProps = AllProperties
+                            .Where(p => p.IsDefined(attr))
+                            .ToList();
+                    }
+                }
+
+                return notMappedProps;
+            }
+        }
+
 
         internal List<JsonProperty> JsonProperties
         {
@@ -393,7 +414,8 @@ namespace Neo4jClient.DataAnnotations.Utils
             {
                 //ignore all nav properties
                 var navProps = NavigationableProperties;
-                var allPropsToIgnore = new List<PropertyInfo>(navProps);
+                var notMappedProps = NotMappedProperties;
+                var allPropsToIgnore = new List<PropertyInfo>(navProps.Union(notMappedProps));
 
                 foreach (var property in JsonProperties)
                 {

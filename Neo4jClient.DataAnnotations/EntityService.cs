@@ -125,7 +125,7 @@ namespace Neo4jClient.DataAnnotations
             if (baseType == null)
                 throw new ArgumentNullException(nameof(baseType));
 
-            lock(this)
+            lock (this)
             {
                 var existing = EntityTypes.Where(type => baseType.IsAssignableFrom(type)
                 || baseType.IsGenericAssignableFrom(type));
