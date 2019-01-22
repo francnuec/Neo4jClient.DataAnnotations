@@ -222,7 +222,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 {
                     if (resolver != null)
                     {
-                        typeInfo.WithJsonResolver(resolver);
+                        typeInfo.ResolveJsonPropertiesUsing(resolver);
                     }
                     else
                     {

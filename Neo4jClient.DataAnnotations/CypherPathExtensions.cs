@@ -469,6 +469,51 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         /// <returns>A source that can allow you match more nodes.</returns>
         /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
+            (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship, string R, string B)
+        {
+            return SharedPattern<TANode, TBNode>(source, relationship, R, B, null);
+        }
+
+        /// <summary>
+        /// P = (A)-[R]-(B).
+        /// To omit any variable, pass empty string or null to it.
+        /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
+        /// </summary>
+        /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <param name="source">Path object from the calling cypher clause</param>
+        /// <param name="relationship">Selects the property that represents the one-to-one relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
+        /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
+        /// Null value means annotations determine the direction.
+        /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
+        /// <returns>A source that can allow you match more nodes.</returns>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
+        public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
+            (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship, string A, string R, string B)
+        {
+            return SharedPattern<TANode, TBNode>(source, relationship, A, R, B, null);
+        }
+
+        /// <summary>
+        /// P = (A)-[R]-(B).
+        /// To omit any variable, pass empty string or null to it.
+        /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
+        /// </summary>
+        /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <param name="source">Path object from the calling cypher clause</param>
+        /// <param name="relationship">Selects the property that represents the one-to-one relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
+        /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
+        /// Null value means annotations determine the direction.
+        /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
+        /// <returns>A source that can allow you match more nodes.</returns>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
+        public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship, string B, RelationshipDirection dir)
         {
             return SharedPattern<TANode, TBNode>(source, relationship, null, B, dir);
@@ -491,9 +536,9 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         /// <returns>A source that can allow you match more nodes.</returns>
         /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
-            (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship, string R, string B)
+            (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship, string R, string B, RelationshipDirection dir)
         {
-            return SharedPattern<TANode, TBNode>(source, relationship, R, B, null);
+            return SharedPattern<TANode, TBNode>(source, relationship, R, B, dir);
         }
 
         /// <summary>
@@ -505,6 +550,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
         /// <param name="relationship">Selects the property that represents the one-to-one relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
+        /// <param name="A">Variable for first node in pattern</param>
         /// <param name="R">Variable for relationship</param>
         /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
@@ -513,9 +559,9 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         /// <returns>A source that can allow you match more nodes.</returns>
         /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
-            (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship, string R, string B, RelationshipDirection dir)
+            (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship, string A, string R, string B, RelationshipDirection dir)
         {
-            return SharedPattern<TANode, TBNode>(source, relationship, R, B, dir);
+            return SharedPattern<TANode, TBNode>(source, relationship, A, R, B, dir);
         }
 
 
@@ -603,28 +649,6 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         /// <returns>A source that can allow you match more nodes.</returns>
         /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
         public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
-            (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string B, RelationshipDirection dir)
-        {
-            return SharedPattern<TANode, TBNode>(source, relationship, null, B, dir);
-        }
-
-        /// <summary>
-        /// P = (A)-[R]-(B).
-        /// To omit any variable, pass empty string or null to it.
-        /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
-        /// </summary>
-        /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
-        /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
-        /// <param name="source">Path object from the calling cypher clause</param>
-        /// <param name="relationship">Selects the property that represents the to-many relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
-        /// <param name="R">Variable for relationship</param>
-        /// <param name="B">Variable for last node in pattern</param>
-        /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
-        /// Null value means annotations determine the direction.
-        /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
-        /// <returns>A source that can allow you match more nodes.</returns>
-        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
-        public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string R, string B)
         {
             return SharedPattern<TANode, TBNode>(source, relationship, R, B, null);
@@ -639,6 +663,52 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
         /// <param name="source">Path object from the calling cypher clause</param>
         /// <param name="relationship">Selects the property that represents the to-many relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
+        /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
+        /// Null value means annotations determine the direction.
+        /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
+        /// <returns>A source that can allow you match more nodes.</returns>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
+        public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
+            (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string A, string R, string B)
+        {
+            return SharedPattern<TANode, TBNode>(source, relationship, A, R, B, null);
+        }
+
+        /// <summary>
+        /// P = (A)-[R]-(B).
+        /// To omit any variable, pass empty string or null to it.
+        /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
+        /// </summary>
+        /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <param name="source">Path object from the calling cypher clause</param>
+        /// <param name="relationship">Selects the property that represents the to-many relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
+        /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
+        /// Null value means annotations determine the direction.
+        /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
+        /// <returns>A source that can allow you match more nodes.</returns>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
+        public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
+            (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string B, RelationshipDirection dir)
+        {
+            return SharedPattern<TANode, TBNode>(source, relationship, null, B, dir);
+        }
+
+        /// <summary>
+        /// P = (A)-[R]-(B).
+        /// To omit any variable, pass empty string or null to it.
+        /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
+        /// </summary>
+        /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <param name="source">Path object from the calling cypher clause</param>
+        /// <param name="relationship">Selects the property that represents the to-many relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
+        /// <param name="A">Variable for first node in pattern</param>
         /// <param name="R">Variable for relationship</param>
         /// <param name="B">Variable for last node in pattern</param>
         /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
@@ -650,6 +720,29 @@ namespace Neo4jClient.DataAnnotations//.Cypher
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string R, string B, RelationshipDirection dir)
         {
             return SharedPattern<TANode, TBNode>(source, relationship, R, B, dir);
+        }
+
+        /// <summary>
+        /// P = (A)-[R]-(B).
+        /// To omit any variable, pass empty string or null to it.
+        /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
+        /// </summary>
+        /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <param name="source">Path object from the calling cypher clause</param>
+        /// <param name="relationship">Selects the property that represents the to-many relationship in this pattern. The variable used in this expression automatically represents Node A.</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
+        /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
+        /// Null value means annotations determine the direction.
+        /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
+        /// <returns>A source that can allow you match more nodes.</returns>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
+        public static IPatternedPath<TANode, TBNode> Pattern<TANode, TBNode>
+            (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string A, string R, string B, RelationshipDirection dir)
+        {
+            return SharedPattern<TANode, TBNode>(source, relationship, A, R, B, dir);
         }
 
 
@@ -815,7 +908,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, null);
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, null, null);
         }
 
         /// <summary>
@@ -839,7 +932,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship, RelationshipDirection dir)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, dir);
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, null, dir);
         }
 
         /// <summary>
@@ -863,7 +956,32 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship, string R, string B)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, null);
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, R, B, null);
+        }
+
+        /// <summary>
+        /// P = (A)-[R]-(B).
+        /// To omit any variable, pass empty string or null to it.
+        /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
+        /// </summary>
+        /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <typeparam name="TRel">The class of Relationship R. If annotated, information like its type could be gotten from this class.</typeparam>
+        /// <param name="source">Path object from the calling cypher clause</param>
+        /// <param name="beginRelationship">Selects the property that represent the one-to-one relationship in this pattern.
+        /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
+        /// The variable used in this expression automatically represents Node A.</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
+        /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
+        /// Null value means annotations determine the direction.
+        /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
+        /// <returns>A source that can allow you match more nodes.</returns>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
+        public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
+            (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship, string A, string R, string B)
+        {
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, A, R, B, null);
         }
 
         /// <summary>
@@ -887,7 +1005,32 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship, string R, string B, RelationshipDirection dir)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, dir);
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, R, B, dir);
+        }
+
+        /// <summary>
+        /// P = (A)-[R]-(B).
+        /// To omit any variable, pass empty string or null to it.
+        /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
+        /// </summary>
+        /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <typeparam name="TRel">The class of Relationship R. If annotated, information like its type could be gotten from this class.</typeparam>
+        /// <param name="source">Path object from the calling cypher clause</param>
+        /// <param name="beginRelationship">Selects the property that represent the one-to-one relationship in this pattern.
+        /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
+        /// The variable used in this expression automatically represents Node A.</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
+        /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
+        /// Null value means annotations determine the direction.
+        /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
+        /// <returns>A source that can allow you match more nodes.</returns>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
+        public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
+            (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship, string A, string R, string B, RelationshipDirection dir)
+        {
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, A, R, B, dir);
         }
 
 
@@ -913,7 +1056,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, null);
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, null, null);
         }
 
         /// <summary>
@@ -937,7 +1080,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship, RelationshipDirection dir)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, dir);
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, null, null, dir);
         }
 
         /// <summary>
@@ -961,7 +1104,32 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship, string R, string B)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, null);
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, R, B, null);
+        }
+
+        /// <summary>
+        /// P = (A)-[R]-(B).
+        /// To omit any variable, pass empty string or null to it.
+        /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
+        /// </summary>
+        /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <typeparam name="TRel">The class of Relationship R. If annotated, information like its type could be gotten from this class.</typeparam>
+        /// <param name="source">Path object from the calling cypher clause</param>
+        /// <param name="beginRelationship">Selects the property that represent the to-many relationship in this pattern.
+        /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
+        /// The variable used in this expression automatically represents Node A.</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
+        /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
+        /// Null value means annotations determine the direction.
+        /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
+        /// <returns>A source that can allow you match more nodes.</returns>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
+        public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
+            (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship, string A, string R, string B)
+        {
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, A, R, B, null);
         }
 
         /// <summary>
@@ -985,7 +1153,32 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship, string R, string B, RelationshipDirection dir)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, dir);
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, null, R, B, dir);
+        }
+
+        /// <summary>
+        /// P = (A)-[R]-(B).
+        /// To omit any variable, pass empty string or null to it.
+        /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
+        /// </summary>
+        /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <typeparam name="TRel">The class of Relationship R. If annotated, information like its type could be gotten from this class.</typeparam>
+        /// <param name="source">Path object from the calling cypher clause</param>
+        /// <param name="beginRelationship">Selects the property that represent the to-many relationship in this pattern.
+        /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
+        /// The variable used in this expression automatically represents Node A.</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
+        /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
+        /// Null value means annotations determine the direction.
+        /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
+        /// <returns>A source that can allow you match more nodes.</returns>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
+        public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
+            (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship, string A, string R, string B, RelationshipDirection dir)
+        {
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, A, R, B, dir);
         }
 
 
@@ -1015,7 +1208,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, null);
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, null, null);
         }
 
         /// <summary>
@@ -1043,7 +1236,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship, RelationshipDirection dir)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, dir);
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, null, dir);
         }
 
         /// <summary>
@@ -1071,7 +1264,37 @@ namespace Neo4jClient.DataAnnotations//.Cypher
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship, string B)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, null);
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, B, null);
+        }
+
+        /// <summary>
+        /// P = (A)-[R]-(B).
+        /// To omit any variable, pass empty string or null to it.
+        /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
+        /// </summary>
+        /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <typeparam name="TRel">The class of Relationship R. If annotated, information like its type could be gotten from this class.</typeparam>
+        /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <param name="source">Path object from the calling cypher clause</param>
+        /// <param name="beginRelationship">Selects the property that represent the one-to-one relationship in this pattern.
+        /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
+        /// The variable used in this expression automatically represents Node A.</param>
+        /// <param name="endRelationship">Selects the property that connects the other node (Node B) of this one-to-one relationship in this pattern.
+        /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
+        /// The variable used in this expression automatically represents Relationship R.</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
+        /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
+        /// Null value means annotations determine the direction.
+        /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
+        /// <returns>A source that can allow you match more nodes.</returns>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
+        public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
+            (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship,
+            Expression<Func<TRel, TBNode>> endRelationship, string A, string R, string B)
+        {
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, A, R, B, null);
         }
 
         /// <summary>
@@ -1099,7 +1322,37 @@ namespace Neo4jClient.DataAnnotations//.Cypher
             (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship, string B, RelationshipDirection dir)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, dir);
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, B, dir);
+        }
+
+        /// <summary>
+        /// P = (A)-[R]-(B).
+        /// To omit any variable, pass empty string or null to it.
+        /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
+        /// </summary>
+        /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <typeparam name="TRel">The class of Relationship R. If annotated, information like its type could be gotten from this class.</typeparam>
+        /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <param name="source">Path object from the calling cypher clause</param>
+        /// <param name="beginRelationship">Selects the property that represent the one-to-one relationship in this pattern.
+        /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
+        /// The variable used in this expression automatically represents Node A.</param>
+        /// <param name="endRelationship">Selects the property that connects the other node (Node B) of this one-to-one relationship in this pattern.
+        /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
+        /// The variable used in this expression automatically represents Relationship R.</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
+        /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
+        /// Null value means annotations determine the direction.
+        /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
+        /// <returns>A source that can allow you match more nodes.</returns>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
+        public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
+            (this IPathBuilder source, Expression<Func<TANode, TRel>> beginRelationship,
+            Expression<Func<TRel, TBNode>> endRelationship, string A, string R, string B, RelationshipDirection dir)
+        {
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, A, R, B, dir);
         }
 
 
@@ -1129,7 +1382,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, null);
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, null, null);
         }
 
         /// <summary>
@@ -1157,7 +1410,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship, RelationshipDirection dir)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, dir);
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, null, dir);
         }
 
         /// <summary>
@@ -1185,7 +1438,37 @@ namespace Neo4jClient.DataAnnotations//.Cypher
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship, string B)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, null);
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, B, null);
+        }
+
+        /// <summary>
+        /// P = (A)-[R]-(B).
+        /// To omit any variable, pass empty string or null to it.
+        /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
+        /// </summary>
+        /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <typeparam name="TRel">The class of Relationship R. If annotated, information like its type could be gotten from this class.</typeparam>
+        /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <param name="source">Path object from the calling cypher clause</param>
+        /// <param name="beginRelationship">Selects the property that represent the to-many relationship in this pattern.
+        /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
+        /// The variable used in this expression automatically represents Node A.</param>
+        /// <param name="endRelationship">Selects the property that connects the other node (Node B) of this one-to-one relationship in this pattern.
+        /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
+        /// The variable used in this expression automatically represents Relationship R.</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
+        /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
+        /// Null value means annotations determine the direction.
+        /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
+        /// <returns>A source that can allow you match more nodes.</returns>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
+        public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
+            (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship,
+            Expression<Func<TRel, TBNode>> endRelationship, string A, string R, string B)
+        {
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, A, R, B, null);
         }
 
         /// <summary>
@@ -1213,7 +1496,37 @@ namespace Neo4jClient.DataAnnotations//.Cypher
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship,
             Expression<Func<TRel, TBNode>> endRelationship, string B, RelationshipDirection dir)
         {
-            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, dir);
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, null, B, dir);
+        }
+
+        /// <summary>
+        /// P = (A)-[R]-(B).
+        /// To omit any variable, pass empty string or null to it.
+        /// E.g. To omit the first node A in an incoming relationship, pass null to A, and you have ()&lt;-[R]-(B)
+        /// </summary>
+        /// <typeparam name="TANode">The class of Node A. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <typeparam name="TRel">The class of Relationship R. If annotated, information like its type could be gotten from this class.</typeparam>
+        /// <typeparam name="TBNode">The class of Node B. If annotated, information like labels could be gotten from this class.</typeparam>
+        /// <param name="source">Path object from the calling cypher clause</param>
+        /// <param name="beginRelationship">Selects the property that represent the to-many relationship in this pattern.
+        /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
+        /// The variable used in this expression automatically represents Node A.</param>
+        /// <param name="endRelationship">Selects the property that connects the other node (Node B) of this one-to-one relationship in this pattern.
+        /// The selected property returns, instead of a node class, a dedicated class that is used to represent this relationship.
+        /// The variable used in this expression automatically represents Relationship R.</param>
+        /// <param name="A">Variable for first node in pattern</param>
+        /// <param name="R">Variable for relationship</param>
+        /// <param name="B">Variable for last node in pattern</param>
+        /// <param name="dir">The direction of the relationship, i.e. how the arrow is placed.
+        /// Null value means annotations determine the direction.
+        /// If no annotations, it would default to <see cref="RelationshipDirection.Outgoing"/></param>
+        /// <returns>A source that can allow you match more nodes.</returns>
+        /// <exception cref="InvalidOperationException">Usually happens when all variables are null. In most cases, at least one variable should be named.</exception>
+        public static IPatternedPath<TANode, TRel, TBNode> Pattern<TANode, TRel, TBNode>
+            (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TRel>>> beginRelationship,
+            Expression<Func<TRel, TBNode>> endRelationship, string A, string R, string B, RelationshipDirection dir)
+        {
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, A, R, B, dir);
         }
         #endregion
 
@@ -2316,6 +2629,157 @@ namespace Neo4jClient.DataAnnotations//.Cypher
             (this IPatternedPath<TANode, TRel, TBNode> source, Type A, Type R, Type B)
         {
             return (IPatternedPath<TANode, TRel, TBNode>)SharedType(source, A, R, B);
+        }
+        #endregion
+
+        #region AlreadyBound
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath AlreadyBound
+            (this IPatternedPath source, bool? A)
+        {
+            return AlreadyBound(source, A, null);
+        }
+
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath AlreadyBound
+            (this IPatternedPath source, bool? A, bool? B)
+        {
+            return AlreadyBound(source, A, null, B);
+        }
+
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath AlreadyBound
+            (this IPatternedPath source, bool? A, bool? R, bool? B)
+        {
+            return SharedAlreadyBound(source, A, R, B);
+        }
+
+
+
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode> AlreadyBound<TANode>
+            (this IPatternedPath<TANode> source, bool? A)
+        {
+            return AlreadyBound(source, A, null);
+        }
+
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode> AlreadyBound<TANode>
+            (this IPatternedPath<TANode> source, bool? A, bool? B)
+        {
+            return AlreadyBound(source, A, null, B);
+        }
+
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode> AlreadyBound<TANode>
+            (this IPatternedPath<TANode> source, bool? A, bool? R, bool? B)
+        {
+            return (IPatternedPath<TANode>)SharedAlreadyBound(source, A, R, B);
+        }
+
+
+
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode, TBNode> AlreadyBound<TANode, TBNode>
+            (this IPatternedPath<TANode, TBNode> source, bool? A)
+        {
+            return AlreadyBound(source, A, null);
+        }
+
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode, TBNode> AlreadyBound<TANode, TBNode>
+            (this IPatternedPath<TANode, TBNode> source, bool? A, bool? B)
+        {
+            return AlreadyBound(source, A, null, B);
+        }
+
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode, TBNode> AlreadyBound<TANode, TBNode>
+            (this IPatternedPath<TANode, TBNode> source, bool? A, bool? R, bool? B)
+        {
+            return (IPatternedPath<TANode, TBNode>)SharedAlreadyBound(source, A, R, B);
+        }
+
+
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode, TRel, TBNode> AlreadyBound<TANode, TRel, TBNode>
+            (this IPatternedPath<TANode, TRel, TBNode> source, bool? A)
+        {
+            return AlreadyBound(source, A, null);
+        }
+
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode, TRel, TBNode> AlreadyBound<TANode, TRel, TBNode>
+            (this IPatternedPath<TANode, TRel, TBNode> source, bool? A, bool? B)
+        {
+            return AlreadyBound(source, A, null, B);
+        }
+
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPath<TANode, TRel, TBNode> AlreadyBound<TANode, TRel, TBNode>
+            (this IPatternedPath<TANode, TRel, TBNode> source, bool? A, bool? R, bool? B)
+        {
+            return (IPatternedPath<TANode, TRel, TBNode>)SharedAlreadyBound(source, A, R, B);
         }
         #endregion
 
@@ -3901,6 +4365,136 @@ namespace Neo4jClient.DataAnnotations//.Cypher
             (this IPatternedPathExtension<TANode, TRel, TBNode> source, Type R, Type B)
         {
             return (IPatternedPathExtension<TANode, TRel, TBNode>)SharedType(source, R, B);
+        }
+        #endregion
+
+        #region ExtensionAlreadyBound
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension AlreadyBound
+            (this IPatternedPathExtension source, bool? B)
+        {
+            return AlreadyBound(source, null, B);
+        }
+
+        //// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension AlreadyBound
+            (this IPatternedPathExtension source, bool? R, bool? B)
+        {
+            return SharedAlreadyBound(source, R, B);
+        }
+
+
+
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<TBNode> AlreadyBound<TBNode>
+            (this IPatternedPathExtension<TBNode> source, bool? B)
+        {
+            return AlreadyBound(source, null, B);
+        }
+
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<TBNode> AlreadyBound<TBNode>
+            (this IPatternedPathExtension<TBNode> source, bool? R, bool? B)
+        {
+            return (IPatternedPathExtension<TBNode>)SharedAlreadyBound(source, R, B);
+        }
+
+
+
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<TANode, TBNode> AlreadyBound<TANode, TBNode>
+            (this IPatternedPathExtension<TANode, TBNode> source, bool? B)
+        {
+            return AlreadyBound(source, null, B);
+        }
+
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<TANode, TBNode> AlreadyBound<TANode, TBNode>
+            (this IPatternedPathExtension<TANode, TBNode> source, bool? R, bool? B)
+        {
+            return (IPatternedPathExtension<TANode, TBNode>)SharedAlreadyBound(source, R, B);
+        }
+
+
+
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<CypherObject, TRel, TBNode> AlreadyBound<TRel, TBNode>
+            (this IPatternedPathExtension<CypherObject, TRel, TBNode> source, bool? B)
+        {
+            return AlreadyBound(source, null, B);
+        }
+
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<CypherObject, TRel, TBNode> AlreadyBound<TRel, TBNode>
+            (this IPatternedPathExtension<CypherObject, TRel, TBNode> source, bool? R, bool? B)
+        {
+            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)SharedAlreadyBound(source, R, B);
+        }
+
+
+
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<TANode, TRel, TBNode> AlreadyBound<TANode, TRel, TBNode>
+            (this IPatternedPathExtension<TANode, TRel, TBNode> source, bool? B)
+        {
+            return AlreadyBound(source, null, B);
+        }
+
+        /// <summary>
+        /// Instead of (A:Label1:Label2), you get (A). This is especially useful in MERGE statements.
+        /// Specifies that a variable is already bound in the query so as to skip its labels and properties in the pattern.
+        /// Assign <code>null</code> if you want the pattern to attempt to decide this for itself instead.
+        /// </summary>
+        /// <returns></returns>
+        public static IPatternedPathExtension<TANode, TRel, TBNode> AlreadyBound<TANode, TRel, TBNode>
+            (this IPatternedPathExtension<TANode, TRel, TBNode> source, bool? R, bool? B)
+        {
+            return (IPatternedPathExtension<TANode, TRel, TBNode>)SharedAlreadyBound(source, R, B);
         }
         #endregion
 

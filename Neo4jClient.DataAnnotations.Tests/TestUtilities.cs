@@ -283,5 +283,19 @@ namespace Neo4jClient.DataAnnotations.Tests
             .Hop(1) //not necessary, but for tests
             ;
         }
+
+        public static IPath BuildTestAlreadyBoundPath(IPathBuilder P)
+        {
+            return P
+            .Pattern<MovieNode, MovieActorRelationship, ActorNode>("greysAnatomy", "ellenPompeo")
+            .Label(new[] { "Series" }, new[] { "STARRED_IN" }, new[] { "Female" }, true, false, false)
+            .Constrain((movie) => movie.Title == "Grey's Anatomy" && movie.Year == 2017, null, (actor) =>
+                actor.Name == "Ellen Pompeo"
+                && actor.Born == CypherVariables.Get<ActorNode>("shondaRhimes").Born
+                && actor.Roles == new string[] { "Meredith Grey" })
+            .Hop(1) //not necessary, but for tests
+            .AlreadyBound(true, true, true)
+            ;
+        }
     }
 }

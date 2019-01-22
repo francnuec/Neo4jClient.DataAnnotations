@@ -98,7 +98,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
             {
                 return bVar ?? GetVariable("B", ref bVar, ref bVarIsAuto);
             }
-
             protected internal set
             {
                 if (value != bVar)
@@ -107,6 +106,13 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 bVar = !string.IsNullOrWhiteSpace(value) ? value : null;
             }
         }
+
+
+        public bool? AIsAlreadyBound { get; protected internal set; }
+
+        public bool? RIsAlreadyBound { get; protected internal set; }
+
+        public bool? BIsAlreadyBound { get; protected internal set; }
 
 
         public bool AVarIsAuto { get => AVariable != null && aVarIsAuto; }
@@ -242,7 +248,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                         //if all checks out, then continue
                         //try to find the nav prop between A and B types from their classes.
                         var navigationProp = GetNavigationPropertyBetweenTypes(ATypeInfo, BTypeInfo,
-                            out var inverseProp, assertColumnAttrHasName: true);
+                            out var inverseProp, knownNavProperty: null, assertColumnAttrHasName: true);
 
                         if (navigationProp != null)
                         {
@@ -290,7 +296,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
                         //try to find the nav prop between A and R types from their classes.
                         var navigationProperty = GetNavigationPropertyBetweenTypes(ATypeInfo, RTypeInfo,
-                            out var inverseProperty,
+                            out var inverseProperty, knownNavProperty: null,
                             assertColumnAttrHasName: false); //column with name is not necessary in this case
 
                         if (navigationProperty != null)
@@ -338,7 +344,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
                         //try to find the nav prop between R and B types from their classes.
                         var navigationProp = GetNavigationPropertyBetweenTypes(RTypeInfo, BTypeInfo,
-                            out var inverseProp, assertColumnAttrHasName: true);
+                            out var inverseProp, knownNavProperty: null,
+                            assertColumnAttrHasName: true);
 
                         if (navigationProp != null)
                         {
@@ -756,7 +763,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
                         var navigationProp =
                             GetNavigationPropertyBetweenTypes(otherTypeInfo, BTypeInfo,
-                            out var inverseProp, assertColumnAttrHasName: true);
+                            out var inverseProp, knownNavProperty: selectedProp,
+                            assertColumnAttrHasName: true);
 
                         if (navigationProp != null && inverseProp != null //our interest is in both properties here
                             && navigationProp == selectedProp //these must match
@@ -811,18 +819,18 @@ namespace Neo4jClient.DataAnnotations.Cypher
             if (!IsExtension)
             {
                 //Build A
-                A = BuildNode(this, aVar, aVarIsAuto, AVariable, ALabels, () => AFinalObject, () => AFinalProperties, () => AFinalPropertiesHasFunctions);
+                A = BuildNode(this, aVar, aVarIsAuto, AVariable, AIsAlreadyBound, ALabels, () => AFinalObject, () => AFinalProperties, () => AFinalPropertiesHasFunctions);
 
                 builder.Append(A);
             }
 
             //Build R
-            R = BuildRelationship(this, rVar, rVarIsAuto, RVariable, RTypes, RHops, () => RFinalObject, () => RFinalProperties, () => RFinalPropertiesHasFunctions);
+            R = BuildRelationship(this, rVar, rVarIsAuto, RVariable, RIsAlreadyBound, RTypes, RHops, () => RFinalObject, () => RFinalProperties, () => RFinalPropertiesHasFunctions);
             if (R == "[]")
                 R = null; //just omit the empty ones
 
             //Build B
-            B = BuildNode(this, bVar, bVarIsAuto, BVariable, BLabels, () => BFinalObject, () => BFinalProperties, () => BFinalPropertiesHasFunctions);
+            B = BuildNode(this, bVar, bVarIsAuto, BVariable, BIsAlreadyBound, BLabels, () => BFinalObject, () => BFinalProperties, () => BFinalPropertiesHasFunctions);
 
             if (IsExtension || R != null || HasBType || (B != null && B != "()"))
             {
@@ -973,23 +981,22 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         internal static string BuildNode(Pattern pattern,
             string variable, bool variableIsAuto, string Variable, //NOTE: this call order is important, and method signature should not be reshuffled.
-            IEnumerable<string> labels, Func<object> finalObjectGetter,
-            Func<JObject> finalPropertiesGetter, Func<bool> finalPropsHasFuncsGetter)
+            bool? isAlreadyBound, IEnumerable<string> labels,
+            Func<object> finalObjectGetter, Func<JObject> finalPropertiesGetter,
+            Func<bool> finalPropsHasFuncsGetter)
         {
             //e.g. (param:labels {finalProperties})
 
             StringBuilder builder = new StringBuilder();
 
-            bool alreadyBound = false;
-
             if (!variableIsAuto && variable != null)
             {
                 builder.Append(variable);
                 //don't continue is this is already bound
-                alreadyBound = IsAlreadyBound(pattern, variable);
+                isAlreadyBound = isAlreadyBound == null ? IsAlreadyBound(pattern, variable) : isAlreadyBound;
             }
 
-            if (!alreadyBound)
+            if (isAlreadyBound != true)
             {
                 if (labels?.Count() > 0)
                 {
@@ -1026,7 +1033,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         internal static string BuildRelationship(Pattern pattern,
             string variable, bool variableIsAuto, string Variable, //NOTE: this call order is important, and method signature should not be reshuffled.
-            IEnumerable<string> types, Tuple<int?, int?> hops,
+            bool? isAlreadyBound, IEnumerable<string> types, 
+            Tuple<int?, int?> hops,
             Func<object> finalObjectGetter,
             Func<JObject> finalPropertiesGetter,
             Func<bool> finalPropsHasFuncsGetter)
@@ -1067,14 +1075,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
             }
 
             bool hasHops = hopsText != null;
-            bool alreadyBound = false;
+            //bool isAlreadyBound = false;
 
             if (!variableIsAuto && variable != null)
             {
                 if (!hasHops)
                 {
                     builder.Append(variable);
-                    alreadyBound = IsAlreadyBound(pattern, variable);
+                    isAlreadyBound = isAlreadyBound == null ? IsAlreadyBound(pattern, variable) : isAlreadyBound;
                 }
                 else
                 {
@@ -1085,7 +1093,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 }
             }
 
-            if ((hasHops || !alreadyBound) && types?.Count() > 0) //add types even with hops. if the types needs to be skipped, the user should explicitly specify null types.
+            if ((hasHops || (isAlreadyBound != true)) && types?.Count() > 0) //add types even with hops. if the types needs to be skipped, the user should explicitly specify null types.
             {
                 builder.Append(":" + types.Aggregate((first, second) => $"{first}|{second}"));
             }
@@ -1095,7 +1103,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 builder.Append(hopsText);
             }
 
-            if ((hasHops || !alreadyBound) /*&& finalPropertiesGetter?.Count > 0*/) //add the properties even with hops.
+            if ((hasHops || (isAlreadyBound != true)) /*&& finalPropertiesGetter?.Count > 0*/) //add the properties even with hops.
             {
                 string properties = BuildProperties
                     (finalObjectGetter, finalPropertiesGetter, finalPropsHasFuncsGetter,
@@ -1237,7 +1245,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             return new Tuple<List<PropertyInfo>, List<ForeignKeyProperty>>(props, FKs);
         }
 
-        internal static PropertyInfo GetNavPropertyFromInverseProperty(EntityTypeInfo aTypeInfo,
+        internal static PropertyInfo GetNavPropertyFromInversePropertyAttribute(EntityTypeInfo aTypeInfo,
             List<PropertyInfo> aNavProps, Dictionary<Type, List<PropertyInfo>> aNavPropsDict,
             EntityTypeInfo bTypeInfo,
             List<PropertyInfo> bNavProps, Dictionary<Type, List<PropertyInfo>> bNavPropsDict,
@@ -1254,8 +1262,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
             PropertyInfo navigationProp = null, localInverseProp = null;
 
             //1.Matching inverse properties.
-            List<PropertyInfo> aInvProps = aNavPropsDict[Defaults.InversePropertyType],
-            bInvProps = bNavPropsDict[Defaults.InversePropertyType];
+            List<PropertyInfo> aInvProps = aNavPropsDict?[Defaults.InversePropertyType],
+            bInvProps = bNavPropsDict?[Defaults.InversePropertyType];
 
             if (aInvProps.Count > 0 && bInvProps.Count > 0)
             {
@@ -1395,8 +1403,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
             return navigationProp;
         }
 
-        internal static PropertyInfo GetNavPropertyFromNonInverseProperty(EntityTypeInfo typeInfo,
-            List<PropertyInfo> navProps, Dictionary<Type, List<PropertyInfo>> navPropsDict)
+        internal static PropertyInfo GetNavPropertyFromNonInversePropertyAttribute(EntityTypeInfo typeInfo,
+            List<PropertyInfo> navProps, Dictionary<Type, List<PropertyInfo>> navPropsDict,
+            PropertyInfo knownInverseProperty)
         {
             //Order
             //6.Foreign Key.
@@ -1404,10 +1413,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
             //8.Non-scalar key-attributed property or equivalent collection.
             //9.First non-scalar property or equivalent collection.
 
+            //If there is a known inverse prop, make sure they aren't on the same rank to avoid clashes later.
+
             PropertyInfo navigationProp = null;
+            bool hasKnownInverse = knownInverseProperty != null;
 
             //6.Foreign Key.
-            if (navigationProp == null)
+            bool knownInverseHasFk = hasKnownInverse && knownInverseProperty.IsDefined(Defaults.ForeignKeyType); //they must not be on the same rank
+            if (navigationProp == null && !knownInverseHasFk)
             {
                 //this would do quite unnecessary processing. but for the sakes of future refactoring, we do.
                 var props = MergeNavPropsWithFKs(typeInfo, navProps, navPropsDict, Defaults.ForeignKeyType);
@@ -1416,7 +1429,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             }
 
             //7.Non-scalar column-attributed property or equivalent collection.
-            if (navigationProp == null)
+            if (navigationProp == null && !(hasKnownInverse && knownInverseProperty.IsDefined(Defaults.ColumnType)))
             {
                 var props = MergeNavPropsWithFKs(typeInfo, navProps, navPropsDict, Defaults.ColumnType);
                 //first match wins
@@ -1429,19 +1442,23 @@ namespace Neo4jClient.DataAnnotations.Cypher
             }
 
             //8.Non-scalar key-attributed property or equivalent collection.
-            if (navigationProp == null)
+            if (navigationProp == null && !(hasKnownInverse && knownInverseProperty.IsDefined(Defaults.KeyType)))
             {
                 var props = MergeNavPropsWithFKs(typeInfo, navProps, navPropsDict, Defaults.KeyType);
                 //first match wins
                 navigationProp = props.Item1.FirstOrDefault();
             }
 
-            //9.First non-scalar property or equivalent collection.
+            //9.First non-scalar property or equivalent collection with no attributes of interest.
             //this is the last line of defence
             if (navigationProp == null)
             {
-                //all else has failed, just pick one.
-                navigationProp = navProps.FirstOrDefault();
+                //all else has failed, just pick one of the plain ones.
+                navigationProp = navProps
+                    .SkipWhile(i => i.IsDefined(Defaults.ForeignKeyType)
+                        || i.IsDefined(Defaults.ColumnType)
+                        || i.IsDefined(Defaults.KeyType))
+                    .FirstOrDefault();
             }
 
             return navigationProp;
@@ -1449,13 +1466,16 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         internal static PropertyInfo GetNavigationPropertyBetweenTypes(
             EntityTypeInfo aTypeInfo, EntityTypeInfo bTypeInfo,
-            out PropertyInfo inverseProperty,
+            out PropertyInfo inverseProperty, PropertyInfo knownNavProperty = null,
             bool assertColumnAttrHasName = true)
         {
             inverseProperty = null;
 
             //get the nav properties
-            var aNavProps = FilterNavProperties(aTypeInfo, bTypeInfo.Type, true);
+            var aNavProps = knownNavProperty != null ? 
+                new List<PropertyInfo>() { knownNavProperty } //make sure its the only one in the collection
+                : FilterNavProperties(aTypeInfo, bTypeInfo.Type, true);
+
             var bNavProps = FilterNavProperties(bTypeInfo, aTypeInfo.Type, true);
 
             var aNavPropsDict = SortNavPropsByAttribute(aNavProps);
@@ -1475,7 +1495,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             PropertyInfo navigationProp = null;
 
             //1 - 5
-            navigationProp = GetNavPropertyFromInverseProperty
+            navigationProp = GetNavPropertyFromInversePropertyAttribute
                 (aTypeInfo, aNavProps, aNavPropsDict, bTypeInfo, bNavProps, bNavPropsDict,
                 out inverseProperty,
                 assertColumnHasName: assertColumnAttrHasName);
@@ -1483,9 +1503,19 @@ namespace Neo4jClient.DataAnnotations.Cypher
             //6 - 9
             if (navigationProp == null)
             {
-                navigationProp = GetNavPropertyFromNonInverseProperty(aTypeInfo, aNavProps, aNavPropsDict);
+                if (knownNavProperty != null)
+                {
+                    navigationProp = knownNavProperty; //just accept what was sent in AS-IS
+                }
+                else
+                {
+                    navigationProp = GetNavPropertyFromNonInversePropertyAttribute
+                      (aTypeInfo, aNavProps, aNavPropsDict, knownInverseProperty: null);
+                }
+
                 //get the inverse too using same rules.
-                inverseProperty = GetNavPropertyFromNonInverseProperty(bTypeInfo, bNavProps, bNavPropsDict);
+                inverseProperty = GetNavPropertyFromNonInversePropertyAttribute
+                    (bTypeInfo, bNavProps, bNavPropsDict, knownInverseProperty: navigationProp);
             }
 
             return navigationProp;
@@ -1714,33 +1744,37 @@ namespace Neo4jClient.DataAnnotations.Cypher
         {
             //RELATIONSHIP DIRECTION
             //1. Direction as specified by user.
-            //2. ForeignKey Attribute on only one side of the relationship indicates outgoing.
+            //2. Explicit ForeignKey Attribute on only one side of the relationship indicates outgoing.
             //3. Navigation property on only one side of the relationship indicates outgoing.
             //4. Column Attribute with Name on only one side of the relationship indicates outgoing.
-            //5. Key attributed properties in a relationship class arranged in descending order of their position in the class indicates outgoing.
+            //5. Implicit ForeignKey Attribute on only one side of the relationship indicates outgoing.
+            //6. Key attributed properties in a relationship class arranged in descending order of their position in the class indicates outgoing.
             //   That is, the relationship arrow grows from the keyed property that appeared last in the class towards the one that appeared first.
             //   You can use an explicit column attribute order to rearrange this order, or to ensure an accurate arrangement in the first place.
             //   Column attribute order value must be 1 or greater.
-            //6. Foreign Key attributed properties in a relationship class arranged in descending order of their position in the class indicates outgoing.
-            //7. Navigation properties in a relationship class arranged in descending order of their position in the class indicates outgoing.
-            //8. Assume outgoing.
+            //7. Foreign Key attributed properties in a relationship class arranged in descending order of their position in the class indicates outgoing.
+            //8. Navigation properties in a relationship class arranged in descending order of their position in the class indicates outgoing.
+            //9. Assume outgoing.
 
             RelationshipDirection? dir = null;
 
             //get the nav props
             var aNavProp = pattern.ANavProperty; var bNavProp = pattern.BNavProperty;
 
-            //2-4
+            //2-5
             if (aNavProp != null || bNavProp != null)
             {
-                //2. ForeignKey Attribute on only one side of the relationship indicates outgoing.
-                object aObject = aNavProp != null ? pattern.ATypeInfo.ForeignKeyProperties
-                    .Where(fk => fk.NavigationProperty == aNavProp)
-                    .Select(fk => fk.Attribute).FirstOrDefault() : null;
+                //2. Explicit ForeignKey Attribute on only one side of the relationship indicates outgoing.
+                //first, get all matching foreign keys
+                var aFks = aNavProp != null ? pattern.ATypeInfo.ForeignKeyProperties
+                    .Where(fk => fk.NavigationProperty == aNavProp).ToList() : null;
 
-                object bObject = bNavProp != null ? pattern.BTypeInfo.ForeignKeyProperties
-                    .Where(fk => fk.NavigationProperty == bNavProp)
-                    .Select(fk => fk.Attribute).FirstOrDefault() : null;
+                var bFks = bNavProp != null ? pattern.BTypeInfo.ForeignKeyProperties
+                    .Where(fk => fk.NavigationProperty == bNavProp).ToList() : null;
+
+                //pick the explicitly specified fks first
+                object aObject = aFks?.Where(fk => !fk.IsAttributeAutoCreated).FirstOrDefault();
+                object bObject = bFks?.Where(fk => !fk.IsAttributeAutoCreated).FirstOrDefault();
 
                 Func<bool> foundSomething = () => aObject != bObject && (aObject == null || bObject == null);
 
@@ -1763,6 +1797,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
                         attr : null;
                 }
 
+                //5. Implicit ForeignKey Attribute on only one side of the relationship indicates outgoing.
+                if (!foundSomething())
+                {
+                    //try both implicit and explicit fks now
+                    aObject = aFks?.FirstOrDefault();
+                    bObject = bFks?.FirstOrDefault();
+                }
+
                 if (foundSomething())
                 {
                     //we need just one object
@@ -1771,7 +1813,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 }
             }
 
-            //5-7
+            //6-8
             if (dir == null && pattern.HasRType)
             {
                 var knownType = pattern.HasAType ? pattern.AType : (pattern.HasBType ? pattern.BType : null);
@@ -1791,7 +1833,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 }
             }
 
-            //8. Assume outgoing.
+            //9. Assume outgoing.
             if (dir == null)
             {
                 //all else failed

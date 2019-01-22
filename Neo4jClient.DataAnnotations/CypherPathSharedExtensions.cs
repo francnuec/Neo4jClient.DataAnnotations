@@ -33,13 +33,25 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         internal static IPatternedPath<TANode, TBNode> SharedPattern<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship, string R, string B, RelationshipDirection? dir)
         {
-            return (IPatternedPath<TANode, TBNode>)SharedPattern<TANode, CypherObject, TBNode>(source, relationship, R, B, dir);
+            return SharedPattern<TANode, TBNode>(source, relationship, null, R, B, dir);
+        }
+
+        internal static IPatternedPath<TANode, TBNode> SharedPattern<TANode, TBNode>
+            (this IPathBuilder source, Expression<Func<TANode, TBNode>> relationship, string A, string R, string B, RelationshipDirection? dir)
+        {
+            return (IPatternedPath<TANode, TBNode>)SharedPattern<TANode, CypherObject, TBNode>(source, relationship, A, R, B, dir);
         }
 
         internal static IPatternedPath<TANode, TBNode> SharedPattern<TANode, TBNode>
             (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string R, string B, RelationshipDirection? dir)
         {
-            return (IPatternedPath<TANode, TBNode>)SharedPattern<TANode, CypherObject, TBNode>(source, relationship, R, B, dir);
+            return SharedPattern<TANode, TBNode>(source, relationship, null, R, B, dir);
+        }
+
+        internal static IPatternedPath<TANode, TBNode> SharedPattern<TANode, TBNode>
+            (this IPathBuilder source, Expression<Func<TANode, IEnumerable<TBNode>>> relationship, string A, string R, string B, RelationshipDirection? dir)
+        {
+            return (IPatternedPath<TANode, TBNode>)SharedPattern<TANode, CypherObject, TBNode>(source, relationship, A, R, B, dir);
         }
 
 
@@ -102,7 +114,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         internal static IPatternedPath SharedPattern<TANode, TRel, TBNode>
-        (this IPathable source, LambdaExpression relationship, string R, string B, RelationshipDirection? dir,
+        (this IPathable source, LambdaExpression relationship, string A, string R, string B, RelationshipDirection? dir,
             bool testARBForNull = false)
         {
             //for the sake of our tests, leave this here, and don't fall for the VS intellisense refactoring bait.
@@ -111,7 +123,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
                 throw new ArgumentNullException(nameof(relationship));
             }
 
-            var path = SharedPattern<TANode, TRel, TBNode>(source, (string)null, R, B, dir, testARBForNull); //set the other properties
+            var path = SharedPattern<TANode, TRel, TBNode>(source, A, R, B, dir, testARBForNull); //set the other properties
 
             var pattern = path.Pattern as Pattern;
             pattern.ABSelector = relationship;
@@ -122,7 +134,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
 
         internal static IPatternedPath SharedPattern<TANode, TRel, TBNode>
             (this IPathable source, LambdaExpression beginRelationship,
-            LambdaExpression endRelationship, string R, string B, RelationshipDirection? dir,
+            LambdaExpression endRelationship, string A, string R, string B, RelationshipDirection? dir,
             bool testARBForNull = false)
         {
             //for the sake of our tests, leave this here, and don't fall for the VS intellisense refactoring bait.
@@ -131,7 +143,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
                 throw new ArgumentNullException(nameof(beginRelationship));
             }
 
-            var path = SharedPattern<TANode, TRel, TBNode>(source, (string)null, R, B, dir, testARBForNull); //set the other properties
+            var path = SharedPattern<TANode, TRel, TBNode>(source, A, R, B, dir, testARBForNull); //set the other properties
             var pattern = path.Pattern as Pattern;
 
             pattern.ARSelector = beginRelationship;
@@ -309,6 +321,26 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
         #endregion
 
+        #region AlreadyBound
+        internal static IPatternedPath SharedAlreadyBound
+            (this IPath source, bool? A, bool? R, bool? B)
+        {
+            var pattern = source.Pattern as Pattern;
+
+            pattern.AIsAlreadyBound = A;
+            pattern.RIsAlreadyBound = R;
+            pattern.BIsAlreadyBound = B;
+
+            return (IPatternedPath)source;
+        }
+
+        internal static IPatternedPathExtension SharedAlreadyBound
+            (this IPathExtension source, bool? R, bool? B)
+        {
+            return (IPatternedPathExtension)SharedAlreadyBound(source as IPath, null, R, B);
+        }
+        #endregion
+
         #region Extend
         internal static IPatternedPathExtension SharedExtend(this IPath source,
             string R, string B, RelationshipDirection? dir)
@@ -417,7 +449,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
             //pass it on to sharedpattern method
             return ProcessSharedExtend<TANode, TRel, TBNode>
                 (source, () => (Path)SharedPattern<TANode, TRel, TBNode>
-                (source, (string)null, R, B, dir, testARBForNull: false));
+                    (source, (string)null, R, B, dir, testARBForNull: false));
         }
 
         internal static IPatternedPathExtension SharedExtend<TANode, TRel, TBNode>
@@ -425,7 +457,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         {
             return ProcessSharedExtend<TANode, TRel, TBNode>
                 (source, () => (Path)SharedPattern<TANode, TRel, TBNode>
-                (source, relationship, R, B, dir, testARBForNull: false));
+                    (source, relationship, (string)null, R, B, dir, testARBForNull: false));
         }
 
         internal static IPatternedPathExtension SharedExtend<TANode, TRel, TBNode>
@@ -434,7 +466,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         {
             return ProcessSharedExtend<TANode, TRel, TBNode>
                 (source, () => (Path)SharedPattern<TANode, TRel, TBNode>
-                (source, beginRelationship, endRelationship, R, B, dir, testARBForNull: false));
+                    (source, beginRelationship, endRelationship, (string)null, R, B, dir, testARBForNull: false));
         }
         #endregion
 

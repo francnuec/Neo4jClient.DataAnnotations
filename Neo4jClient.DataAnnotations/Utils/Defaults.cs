@@ -43,6 +43,7 @@ namespace Neo4jClient.DataAnnotations.Utils
         public static readonly Type ConcreteEntitySetType = typeof(ConcreteEntitySet<>);
         public static readonly Type DictStringObjectType = typeof(Dictionary<string, object>);
         public static readonly Type NotMappedType = typeof(NotMappedAttribute);
+        public static readonly Type JsonIgnoreType = typeof(JsonIgnoreAttribute);
         #endregion
 
         public const BindingFlags MemberSearchBindingFlags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
@@ -53,6 +54,9 @@ namespace Neo4jClient.DataAnnotations.Utils
 
         [JsonProperty(PropertyName = MetadataPropertyName)]
         public static string DummyMetadataProperty { get; set; }
+
+        public static readonly PropertyInfo DummyMetadataPropertyInfo = typeof(Defaults).GetProperty("DummyMetadataProperty",
+                        BindingFlags.Static | BindingFlags.Public);
 
         internal static readonly PropertyInfo PropertyDummyPropertyInfo = PropertyDummyType.GetProperty("Property");
 

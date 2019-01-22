@@ -132,5 +132,29 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             Assert.Equal(expected, actual);
         }
+
+        [Theory]
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void PatternAlreadyBound_Build(string testContextName, TestContext testContext)
+        {
+            var query = testContext.Query;
+
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestAlreadyBoundPath(P)
+                .Extend(RelationshipDirection.Outgoing);
+
+            var pathBuilder = new PathBuilder(query, pathExpr);
+            pathBuilder.PatternBuildStrategy = PropertiesBuildStrategy.WithParams;
+
+            var path = pathBuilder.Path as Path;
+
+            var expected = "(greysAnatomy)" +
+                "<-[:STARRED_IN|ACTED_IN*1]-" +
+                "(ellenPompeo)" +
+                "-->()";
+
+            var actual = path.Build(ref query);
+
+            Assert.Equal(expected, actual);
+        }
     }
 }

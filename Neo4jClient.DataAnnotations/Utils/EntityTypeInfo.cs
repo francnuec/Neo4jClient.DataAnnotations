@@ -22,12 +22,15 @@ namespace Neo4jClient.DataAnnotations.Utils
         private List<PropertyInfo> navigationProps;
         private Dictionary<Type, List<ForeignKeyProperty>> attributedForeignKeys
             = new Dictionary<Type, List<ForeignKeyProperty>>();
-        private JsonObjectContract JsonContract { get; set; }
+        //private JsonObjectContract JsonContract { get; set; }
         private List<JsonProperty> _jsonProps = null;
         private List<PropertyInfo> notMappedProps;
 
+        private static MethodInfo CreatePropertyMethodInfo { get; } 
+            = typeof(DefaultContractResolver).GetMethod("CreateProperty",
+                BindingFlags.NonPublic | BindingFlags.Instance);
 
-        public EntityTypeInfo(Type type, DataAnnotations.EntityService service)
+        public EntityTypeInfo(Type type, EntityService service)
         {
             Type = type ?? throw new ArgumentNullException(nameof(type));
             EntityService = service ?? throw new ArgumentNullException(nameof(service));
@@ -261,11 +264,13 @@ namespace Neo4jClient.DataAnnotations.Utils
                     {
                         //something has changed
                         _jsonProps = value;
-                        ResolveJsonProperties();
+                        ProcessJsonProperties();
                     }
                 }
             }
         }
+
+        internal IEnumerable<PropertyInfo> PropertiesToIgnore => NavigationableProperties.Union(NotMappedProperties);
 
         internal Dictionary<MemberName, MemberInfo> JsonNamePropertyMap
         {
@@ -295,7 +300,7 @@ namespace Neo4jClient.DataAnnotations.Utils
             get { return GetForeignKeysWithAttribute(Defaults.ColumnType); }
         }
 
-        internal DefaultContractResolver JsonResolver { get; set; }
+        //internal DefaultContractResolver JsonResolver { get; set; }
 
         /// <summary>
         /// Gets properties that have specific attribute on either the scalar or nav property of a foreign key.
@@ -358,36 +363,58 @@ namespace Neo4jClient.DataAnnotations.Utils
             return props;
         }
 
-        internal void WithJsonResolver(DefaultContractResolver resolver)
+        //internal void WithJsonResolver(DefaultContractResolver resolver)
+        //{
+        //    lock (this)
+        //    {
+        //        if (JsonResolver != resolver && (resolver == null || JsonResolver?.GetType() != resolver.GetType()))
+        //        {
+        //            var contract = resolver?.ResolveContract(Type) as JsonObjectContract;
+
+        //            if (contract == null || contract.Properties == null || contract.Properties.Count == 0)
+        //            {
+        //                throw new InvalidOperationException(string.Format(Messages.NoContractResolvedError, Type.FullName));
+        //            }
+
+        //            JsonResolver = resolver;
+        //            JsonContract = contract;
+
+        //            JsonProperties = new List<JsonProperty>(contract.Properties);
+        //        }
+        //    }
+        //}
+
+        internal void ResolveJsonPropertiesUsing(DefaultContractResolver resolver)
         {
             lock (this)
             {
-                if (JsonResolver != resolver && (resolver == null || JsonResolver?.GetType() != resolver.GetType()))
+                var contract = resolver?.ResolveContract(Type) as JsonObjectContract;
+
+                if (contract == null || contract.Properties == null) //|| contract.Properties.Count == 0)
                 {
-                    var contract = resolver?.ResolveContract(Type) as JsonObjectContract;
+                    throw new InvalidOperationException(string.Format(Messages.NoContractResolvedError, Type.FullName));
+                }
 
-                    if (contract == null || contract.Properties == null || contract.Properties.Count == 0)
-                    {
-                        throw new InvalidOperationException(string.Format(Messages.NoContractResolvedError, Type.FullName));
-                    }
+                SerializationUtilities.ResolveEntityProperties
+                    (contract.Properties, Type, this, EntityService, resolver,
+                    (propInfo) => CreatePropertyMethodInfo.Invoke(resolver, new object[] { propInfo, contract.MemberSerialization }) as JsonProperty);
 
-                    JsonResolver = resolver;
-                    JsonContract = contract;
-
+                if (JsonProperties?.Count == 0)
+                {
                     JsonProperties = new List<JsonProperty>(contract.Properties);
                 }
             }
         }
 
-        internal void ResolveJsonProperties()
+        internal void ProcessJsonProperties()
         {
             lock (this)
             {
                 //map the properties
                 MapJsonProperties();
 
-                //ignore properties that have been marked with relevant attributes
-                IgnoreJsonProperties();
+                ////ignore properties that have been marked with relevant attributes
+                //IgnoreJsonProperties();
             }
         }
 
@@ -413,9 +440,7 @@ namespace Neo4jClient.DataAnnotations.Utils
             if (JsonProperties != null)
             {
                 //ignore all nav properties
-                var navProps = NavigationableProperties;
-                var notMappedProps = NotMappedProperties;
-                var allPropsToIgnore = new List<PropertyInfo>(navProps.Union(notMappedProps));
+                var allPropsToIgnore = PropertiesToIgnore.ToArray();
 
                 foreach (var property in JsonProperties)
                 {

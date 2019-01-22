@@ -188,7 +188,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var rTypes = pattern.RTypes;
 
             Assert.NotNull(rTypes);
-            Assert.Equal(1, rTypes.Count());
+            Assert.Single(rTypes);
             Assert.Equal("ACTED_IN", rTypes.Single());
         }
 
@@ -205,7 +205,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var rTypes = pattern.RTypes;
 
             Assert.NotNull(rTypes);
-            Assert.Equal(1, rTypes.Count());
+            Assert.Single(rTypes);
             Assert.Equal("WROTE", rTypes.Single());
         }
 
@@ -222,7 +222,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var rTypes = pattern.RTypes;
 
             Assert.NotNull(rTypes);
-            Assert.Equal(1, rTypes.Count());
+            Assert.Single(rTypes);
             Assert.Equal("DIRECTED", rTypes.Single());
         }
 
@@ -239,7 +239,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var rTypes = pattern.RTypes;
 
             Assert.NotNull(rTypes);
-            Assert.Equal(1, rTypes.Count());
+            Assert.Single(rTypes);
             Assert.Equal("Movies", rTypes.Single());
         }
 

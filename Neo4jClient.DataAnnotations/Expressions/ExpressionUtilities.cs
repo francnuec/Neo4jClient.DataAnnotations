@@ -934,7 +934,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 if (resolver != null)
                 {
                     //force the propertymap to be set
-                    entityInfo.WithJsonResolver(resolver);
+                    entityInfo.ResolveJsonPropertiesUsing(resolver);
                 }
 
                 var membersToUse = members.OrderBy(m => m.Value).ToArray();

@@ -15,11 +15,15 @@
 *Lots of breaking changes.
 *Introduced support for dependency containers through the IAnnotationsContext and IEntityService interfaces.
 *Complete rewrite of EntityExpressionVisitor.
-*Cleaned up many of the static methods.
-*Now respects the NotMappedAttribute during entire-object serializations.</PackageReleaseNotes>
-    <Version>2.0.2</Version>
-    <FileVersion>2.0.2.0</FileVersion>
-    <AssemblyVersion>2.0.2.0</AssemblyVersion>
+*Now skips null_props metadata when a property's type matches its value's reflected type.
+*Added 'A' variable parameter to patterns described by expressions.
+*Now allows you to specify an already-bound variable in patterns.
+*Fixed a bug in pattern direction determination that took implicit foreign keys into account too early.
+*Fixed bug that permitted some properties marked with JsonIgnoreAttribute or NotMappedAttribute.
+*Harmonized EntityResolver and EntityConverter codes. In future releases, both might be deprecated in favour of a simpler API.</PackageReleaseNotes>
+    <Version>2.1.0</Version>
+    <FileVersion>2.1.0.0</FileVersion>
+    <AssemblyVersion>2.1.0.0</AssemblyVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -34,6 +38,10 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.1.1" />
     <PackageReference Include="Neo4jClient" Version="3.0.1.21" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--<ProjectReference Include="..\..\..\Neo4jClient\Neo4jClient\Neo4jClient.csproj" />-->
   </ItemGroup>
 
 </Project>
