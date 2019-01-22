@@ -7,7 +7,7 @@ Get it on [Nuget](https://www.nuget.org/packages/Neo4jClient.DataAnnotations):
 
 ### Quick Intro ###
 ----------
-I use [Entity Framework](https://github.com/aspnet/EntityFramework) with SQL databases. So when I needed a no-sql databse like Neo4j, I always wanted something similar to and with the ease of Entity Framework, especially so I could reuse my existing models to make my Neo4j queries. Hence, this library follows the same annotations pattern as Entity Framework, and allows POCO models in Neo4j pattern descriptions. If you've ever used Entity Framework, understanding and integrating this library is a piece of cake.
+I use [Entity Framework](https://github.com/aspnet/EntityFramework) with SQL databases. So when I needed a no-sql database like Neo4j, I always wanted something similar to and with the ease of Entity Framework, especially so I could reuse my existing models to make my Neo4j queries. Hence, this library follows the same annotations pattern as Entity Framework, and allows POCO models in Neo4j pattern descriptions. If you've ever used Entity Framework, understanding and integrating this library is a piece of cake.
 
 For our quick introduction into this library, let's try to model the popular Neo4j actors-movies example with annotations. Here's our `ActorNode` model:
 
