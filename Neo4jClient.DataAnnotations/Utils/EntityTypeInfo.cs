@@ -46,13 +46,11 @@ namespace Neo4jClient.DataAnnotations.Utils
             {
                 var labels = LabelsWithTypeNameCatch;
 
-                if(labels.Count == 1)
+                if (labels.Count == 1
+                    && labels[0] == Type.Name //check if the single label is the type name
+                    )
                 {
-                    //check if the single label is the type name
-                    if(labels[0] == Type.Name)
-                    {
-                        return new List<string>();
-                    }
+                    return new List<string>();
                 }
 
                 return labels;
@@ -63,11 +61,14 @@ namespace Neo4jClient.DataAnnotations.Utils
         {
             get
             {
-                lock (this)
+                if (labelsWithTypeNameCatch == null)
                 {
-                    if (labelsWithTypeNameCatch == null)
+                    lock (this)
                     {
-                        labelsWithTypeNameCatch = Utils.Utilities.GetLabels(Type, useTypeNameIfEmpty: true);
+                        if (labelsWithTypeNameCatch == null)
+                        {
+                            labelsWithTypeNameCatch = Utils.Utilities.GetLabels(Type, useTypeNameIfEmpty: true);
+                        }
                     }
                 }
 

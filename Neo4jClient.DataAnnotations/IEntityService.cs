@@ -16,6 +16,7 @@ namespace Neo4jClient.DataAnnotations
         List<EntityTypeInfo> GetDerivedEntityTypeInfos(Type baseType, bool getFromEntityTypesToo = false);
         List<Type> GetDerivedEntityTypes(Type baseType);
         EntityTypeInfo GetEntityTypeInfo(Type type);
+        EntityTypeInfo GetEntityTypeInfo(Type type, bool addToEntityTypes = false);
         void RemoveEntityType(Type entityType);
     }
 }

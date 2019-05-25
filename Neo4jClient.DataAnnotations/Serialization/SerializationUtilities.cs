@@ -24,7 +24,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
             return JsonConvert.DeserializeObject<Metadata>(metadataJson);
         }
 
-        internal static void EnsureRightJObject(ref JObject valueJObject)
+        internal static void EnsureRightJObject(ref JObject valueJObject, out JObject valueMetadataJObject)
         {
             //the neo4jclient guys really messed things up here
             //so use heuristics to determine if we are passing the right data or not, and then get the right data
@@ -59,6 +59,8 @@ namespace Neo4jClient.DataAnnotations.Serialization
             } 
              */
 
+            valueMetadataJObject = null;
+
             var expectedProps = new Dictionary<string, JTokenType>()
             {
                 //{ "data", JTokenType.Object },
@@ -73,7 +75,42 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 //hopefully we are right
                 //replace the jObject with "data"
                 valueJObject = jObject["data"] as JObject;
+                valueMetadataJObject = jObject["metadata"] as JObject;
             }
+        }
+
+        internal static Type GetRightObjectType(Type objectType, JObject valueMetadataJObject, EntityService EntityService)
+        {
+            if (valueMetadataJObject != null
+                && valueMetadataJObject.TryGetValue("labels", out var labelsJToken)
+                && labelsJToken is JArray labelsJArray
+                && labelsJArray.Count > 0)
+            {
+                var derivedTypes = EntityService.GetDerivedEntityTypes(objectType);
+                if (derivedTypes?.Count > 0)
+                {
+                    //try find the right objecttype
+                    var entityInfo = EntityService.GetEntityTypeInfo(objectType);
+                    bool hasAllLabelsFunc(List<string> entityLabels) => labelsJArray.All(lt => entityLabels.Contains((string)lt));
+
+                    if (!hasAllLabelsFunc(entityInfo.LabelsWithTypeNameCatch))
+                    {
+                        //try find the derived type that has all the labels
+                        var matchingDerivedTypes = derivedTypes
+                            .Where(t => t != objectType
+                                && hasAllLabelsFunc(EntityService.GetEntityTypeInfo(t).LabelsWithTypeNameCatch))
+                            .ToArray();
+
+                        if (matchingDerivedTypes?.Length == 1)
+                        {
+                            //we found a perfect match
+                            objectType = matchingDerivedTypes.First();
+                        }
+                    }
+                }
+            }
+
+            return objectType;
         }
 
         internal static void EnsureSerializerInstance(ref JsonSerializer serializer)
