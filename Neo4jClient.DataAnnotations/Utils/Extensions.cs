@@ -162,7 +162,6 @@ namespace Neo4jClient.DataAnnotations.Utils
         public static bool IsEquivalentTo(this MemberInfo @this, string memberName, Type memberDeclaringType)
         {
             return @this?.Name == memberName && (@this?.DeclaringType?.IsAssignableFrom(memberDeclaringType) == true || memberDeclaringType.IsAssignableFrom(@this?.DeclaringType));
-
         }
 
         public static bool IsEquivalentTo(this MemberInfo @this, string memberName, Type memberDeclaringType, Type memberType)

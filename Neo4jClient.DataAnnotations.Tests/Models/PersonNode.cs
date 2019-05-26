@@ -15,6 +15,6 @@ namespace Neo4jClient.DataAnnotations.Tests.Models
         public int Born { get; set; }
 
         [JsonProperty(PropertyName = "NewAddressName")]
-        public Address Address { get; set; }
+        public virtual Address Address { get; set; }
     }
 }
