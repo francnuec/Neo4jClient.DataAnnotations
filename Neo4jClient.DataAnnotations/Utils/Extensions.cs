@@ -154,14 +154,14 @@ namespace Neo4jClient.DataAnnotations.Utils
         {
             Type memberType = (member as PropertyInfo)?.PropertyType 
                 ?? (member as FieldInfo)?.FieldType ?? (member as MethodInfo)?.ReturnType;
-
+       
             return @this == member || (memberType != null ? IsEquivalentTo(@this, member?.Name, member?.DeclaringType, memberType) //use the longer version 
                 : IsEquivalentTo(@this, member?.Name, member?.DeclaringType));
         }
 
         public static bool IsEquivalentTo(this MemberInfo @this, string memberName, Type memberDeclaringType)
         {
-            return @this?.Name == memberName && @this?.DeclaringType == memberDeclaringType;
+            return @this?.Name == memberName && (@this?.DeclaringType?.IsAssignableFrom(memberDeclaringType) == true || memberDeclaringType.IsAssignableFrom(@this?.DeclaringType));
         }
 
         public static bool IsEquivalentTo(this MemberInfo @this, string memberName, Type memberDeclaringType, Type memberType)
