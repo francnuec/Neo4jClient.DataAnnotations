@@ -190,7 +190,7 @@ namespace Neo4jClient.DataAnnotations
                     _converters.Remove(existingConverter);
                 }
 
-                //we may have to mix this two (resolver and conveter) eventually because of some choices of the neo4jclient team.
+                //we may have to mix this two (resolver and converter) eventually because of some choices of the neo4jclient team.
                 //entityConverter._canRead = true;
                 _converters.Add(converter);
             }

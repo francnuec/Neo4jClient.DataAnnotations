@@ -51,21 +51,21 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 || !entityResolverType.IsAssignableFrom(serializer.ContractResolver.GetType()))
                 throw new InvalidOperationException("EntityResolver instance is missing.");
 
+            //temporarily remove this converter from the main serializer to avoid an unending loop
+            List<Tuple<JsonConverter, int>> entityConverters;
+            SerializationUtilities.RemoveThisConverter(typeof(EntityResolverConverter), serializer, out entityConverters);
+
+            //now convert to JObject
+            var valueJObject = serializer.Deserialize<JObject>(reader);
+
+            SerializationUtilities.EnsureRightJObject(ref valueJObject, out var valueMetadataJObject);
+
+            objectType = SerializationUtilities.GetRightObjectType(objectType, valueMetadataJObject, EntityService);
+
             var value = existingValue ?? Utils.Utilities.CreateInstance(objectType);
 
             if (value != null)
             {
-                var valueType = objectType;
-
-                //temporarily remove this converter from the main serializer to avoid an unending loop
-                List<Tuple<JsonConverter, int>> entityConverters;
-                SerializationUtilities.RemoveThisConverter(typeof(EntityResolverConverter), serializer, out entityConverters);
-
-                //now convert to JObject
-                var valueJObject = serializer.Deserialize<JObject>(reader);
-
-                SerializationUtilities.EnsureRightJObject(ref valueJObject);
-
                 if (valueJObject == null || valueJObject.Type == JTokenType.Null)
                     return null;
 
@@ -76,6 +76,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
             }
             else
             {
+                SerializationUtilities.RestoreThisConverter(serializer, entityConverters);
                 value = serializer.Deserialize(reader, objectType);
             }
 

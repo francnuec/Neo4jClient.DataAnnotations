@@ -20,10 +20,11 @@
 *Now allows you to specify an already-bound variable in patterns.
 *Fixed a bug in pattern direction determination that took implicit foreign keys into account too early.
 *Fixed bug that permitted some properties marked with JsonIgnoreAttribute or NotMappedAttribute.
-*Harmonized EntityResolver and EntityConverter codes. In future releases, both might be deprecated in favour of a simpler API.</PackageReleaseNotes>
-    <Version>2.1.0</Version>
-    <FileVersion>2.1.0.0</FileVersion>
-    <AssemblyVersion>2.1.0.0</AssemblyVersion>
+*Harmonized EntityResolver and EntityConverter codes. In future releases, both might be deprecated in favour of a simpler API.
+*Now uses labels in Neo4j metadata response to select the right type in an inheritance heirarchy to deserialize into.</PackageReleaseNotes>
+    <Version>2.1.1</Version>
+    <FileVersion>2.1.1.0</FileVersion>
+    <AssemblyVersion>2.1.1.0</AssemblyVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

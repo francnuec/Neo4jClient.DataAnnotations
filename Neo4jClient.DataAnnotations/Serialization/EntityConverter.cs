@@ -34,26 +34,36 @@ namespace Neo4jClient.DataAnnotations.Serialization
         {
             SerializationUtilities.EnsureSerializerInstance(ref serializer);
 
-            var value = existingValue ?? Utils.Utilities.CreateInstance(objectType);
+            var valueType = objectType;
+
+            var entityInfo = EntityService.GetEntityTypeInfo(valueType);
+
+            //set necessarily things
+            InitializeEntityInfo(entityInfo, serializer);
+
+            //temporarily remove this converter from the main serializer to avoid an unending loop
+            List<Tuple<JsonConverter, int>> entityConverters;
+            SerializationUtilities.RemoveThisConverter(typeof(EntityConverter), serializer, out entityConverters);
+
+            //now convert to JObject
+            var valueJObject = serializer.Deserialize<JObject>(reader);
+
+            SerializationUtilities.EnsureRightJObject(ref valueJObject, out var valueMetadataJObject);
+
+            valueType = SerializationUtilities.GetRightObjectType(valueType, valueMetadataJObject, EntityService); //this ensures we have the right type to deserialize into
+
+            if (valueType != objectType)
+            {
+                //reinitialize entity info
+                entityInfo = EntityService.GetEntityTypeInfo(valueType);
+                //set necessarily things
+                InitializeEntityInfo(entityInfo, serializer);
+            }
+
+            var value = existingValue ?? Utils.Utilities.CreateInstance(valueType);
 
             if (value != null)
             {
-                var valueType = objectType;
-
-                var entityInfo = EntityService.GetEntityTypeInfo(valueType);
-
-                //set necessarily things
-                InitializeEntityInfo(entityInfo, serializer);
-
-                //temporarily remove this converter from the main serializer to avoid an unending loop
-                List<Tuple<JsonConverter, int>> entityConverters;
-                SerializationUtilities.RemoveThisConverter(typeof(EntityConverter), serializer, out entityConverters);
-
-                //now convert to JObject
-                var valueJObject = serializer.Deserialize<JObject>(reader);
-
-                SerializationUtilities.EnsureRightJObject(ref valueJObject);
-
                 if (valueJObject == null || valueJObject.Type == JTokenType.Null)
                     return null;
 
@@ -64,6 +74,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
             }
             else
             {
+                SerializationUtilities.RestoreThisConverter(serializer, entityConverters);
                 value = serializer.Deserialize(reader, objectType);
             }
 
