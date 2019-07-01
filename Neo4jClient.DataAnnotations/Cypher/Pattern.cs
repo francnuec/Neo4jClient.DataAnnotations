@@ -182,7 +182,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                             prop = GetR(BTypeInfo, ATypeInfo, findingA: true, dir: ref direction2);
                         }
 
-                        rType = prop?.Item2;
+                        rType = prop?.Item2 ?? rType;
                     }
                 }
 
@@ -797,17 +797,17 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
             ResolveInternalUtilities(this);
 
-            if (AType != Defaults.CypherObjectType)
+            if (HasAType)
             {
                 AnnotationsContext.EntityService.AddEntityType(AType);
             }
 
-            if (RType != Defaults.CypherObjectType)
+            if (HasRType)
             {
                 AnnotationsContext.EntityService.AddEntityType(RType);
             }
 
-            if (BType != Defaults.CypherObjectType)
+            if (HasBType)
             {
                 AnnotationsContext.EntityService.AddEntityType(BType);
             }
