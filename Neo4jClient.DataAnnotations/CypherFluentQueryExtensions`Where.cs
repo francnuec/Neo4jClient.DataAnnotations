@@ -109,7 +109,90 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         {
             return SharedProjectionQuery<object>(query, expression, "OR", isOutputQuery: false, applyResultFormat: false);
         }
+        public static ICypherFluentQuery AnnotatedOrWhere(this ICypherFluentQuery query, Expression<Func<object>> expression)
+        {
+            return SharedOrWhere(query, expression);
+        }
 
+        public static ICypherFluentQuery AnnotatedOrWhere<T1>(this ICypherFluentQuery query, Expression<Func<T1, object>> expression)
+        {
+            return SharedOrWhere(query, expression);
+        }
+
+        public static ICypherFluentQuery AnnotatedOrWhere<T1, T2>(this ICypherFluentQuery query, Expression<Func<T1, T2, object>> expression)
+        {
+            return SharedOrWhere(query, expression);
+        }
+
+        public static ICypherFluentQuery AnnotatedOrWhere<T1, T2, T3>(this ICypherFluentQuery query, Expression<Func<T1, T2, T3, object>> expression)
+        {
+            return SharedOrWhere(query, expression);
+        }
+
+        public static ICypherFluentQuery AnnotatedOrWhere<T1, T2, T3, T4>(this ICypherFluentQuery query, Expression<Func<T1, T2, T3, T4, object>> expression)
+        {
+            return SharedOrWhere(query, expression);
+        }
+
+        public static ICypherFluentQuery AnnotatedOrWhere<T1, T2, T3, T4, T5>(this ICypherFluentQuery query, Expression<Func<T1, T2, T3, T4, T5, object>> expression)
+        {
+            return SharedOrWhere(query, expression);
+        }
+
+        public static ICypherFluentQuery AnnotatedOrWhere<T1, T2, T3, T4, T5, T6>(this ICypherFluentQuery query, Expression<Func<T1, T2, T3, T4, T5, T6, object>> expression)
+        {
+            return SharedOrWhere(query, expression);
+        }
+
+        public static ICypherFluentQuery AnnotatedOrWhere<T1, T2, T3, T4, T5, T6, T7>(this ICypherFluentQuery query, Expression<Func<T1, T2, T3, T4, T5, T6, T7, object>> expression)
+        {
+            return SharedOrWhere(query, expression);
+        }
+
+        public static ICypherFluentQuery AnnotatedOrWhere<T1, T2, T3, T4, T5, T6, T7, T8>(this ICypherFluentQuery query, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, object>> expression)
+        {
+            return SharedOrWhere(query, expression);
+        }
+
+        public static ICypherFluentQuery AnnotatedOrWhere<T1, T2, T3, T4, T5, T6, T7, T8, T9>(this ICypherFluentQuery query, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, object>> expression)
+        {
+            return SharedOrWhere(query, expression);
+        }
+
+        public static ICypherFluentQuery AnnotatedOrWhere<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(this ICypherFluentQuery query, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, object>> expression)
+        {
+            return SharedOrWhere(query, expression);
+        }
+
+        public static ICypherFluentQuery AnnotatedOrWhere<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(this ICypherFluentQuery query, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, object>> expression)
+        {
+            return SharedOrWhere(query, expression);
+        }
+
+        public static ICypherFluentQuery AnnotatedOrWhere<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(this ICypherFluentQuery query, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, object>> expression)
+        {
+            return SharedOrWhere(query, expression);
+        }
+
+        public static ICypherFluentQuery AnnotatedOrWhere<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(this ICypherFluentQuery query, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, object>> expression)
+        {
+            return SharedOrWhere(query, expression);
+        }
+
+        public static ICypherFluentQuery AnnotatedOrWhere<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(this ICypherFluentQuery query, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, object>> expression)
+        {
+            return SharedOrWhere(query, expression);
+        }
+
+        public static ICypherFluentQuery AnnotatedOrWhere<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(this ICypherFluentQuery query, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, object>> expression)
+        {
+            return SharedOrWhere(query, expression);
+        }
+
+        public static ICypherFluentQuery AnnotatedOrWhere<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(this ICypherFluentQuery query, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, object>> expression)
+        {
+            return SharedOrWhere(query, expression);
+        }
         #endregion
 
         #region Where

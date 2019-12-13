@@ -230,7 +230,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 .Set((ActorNode actor) =>
                 actor.Name == "Ellen Pompeo"
                 && actor.Born == 1969
-                && actor.Roles == new string[] { "Meredith Grey" },  out var setParam).Query.QueryText;
+                && actor.Roles == new string[] { "Meredith Grey" }, out var setParam).Query.QueryText;
 
             //When using Set predicate, WithParams strategy is the same as WithParamsForValues
             var expected = $"SET actor.Name = ${setParam}.Name, actor.Born = ${setParam}.Born, actor.Roles = ${setParam}.Roles";
@@ -299,10 +299,10 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = query.UsingBuildStrategy(PropertiesBuildStrategy.WithParamsForValues)
                 .Set("movie", () => new MovieNode()
-            {
-                Title = "Grey's Anatomy",
-                Year = 2017
-            }, out var setParam).Query.QueryText;
+                {
+                    Title = "Grey's Anatomy",
+                    Year = 2017
+                }, out var setParam).Query.QueryText;
 
             var expected = $"SET movie = {{ Title: ${setParam}.Title, Year: ${setParam}.Year }}";
 
@@ -315,7 +315,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            var actual = query.SetAdd((MovieNode movie) => movie.Title == "Grey's Anatomy" 
+            var actual = query.SetAdd((MovieNode movie) => movie.Title == "Grey's Anatomy"
             && movie.Year == 2017, setParameter: out var setParam).Query.QueryText;
 
             var expected = $"SET movie += ${setParam}";
@@ -629,6 +629,83 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             Assert.Equal(expected, actual);
         }
+
+        [Theory]
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void WhereMultipleParams(string testContextName, TestContext testContext)
+        {
+            var query = testContext.Query;
+
+            var cypherQuery = query
+                .AnnotatedWhere((MovieNode movie1, MovieNode movie2) => movie1.Title == movie2.Title)
+                .Query;
+
+            var actual = cypherQuery.QueryText;
+            var expected = "WHERE movie1.Title = movie2.Title";
+            Assert.Equal(expected, actual);
+        }
+        [Theory]
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void Where(string testContextName, TestContext testContext)
+        {
+            var query = testContext.Query;
+
+            var cypherQuery = query
+                .AnnotatedWhere((MovieNode movie1) => movie1.Title == "1")
+                .Query;
+
+            var actual = cypherQuery.DebugQueryText;
+            var expected = "WHERE movie1.Title = \"1\"";
+            Assert.Equal(expected, actual);
+        }
+        [Theory]
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void AndWhere(string testContextName, TestContext testContext)
+        {
+            var query = testContext.Query;
+
+            var cypherQuery = query
+                .AnnotatedWhere((MovieNode movie1, MovieNode movie2) => movie1.Title == movie2.Title)
+                .AnnotatedAndWhere((MovieNode movie1, MovieNode movie2) => movie1.Title != movie2.Title)
+                .Query;
+
+            var actual = cypherQuery.QueryText;
+            var expected = "WHERE movie1.Title = movie2.Title\r\nAND movie1.Title <> movie2.Title";
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void OrWhere(string testContextName, TestContext testContext)
+        {
+            var query = testContext.Query;
+
+            var cypherQuery = query
+                .AnnotatedWhere((MovieNode movie1, MovieNode movie2) => movie1.Title == movie2.Title)
+                .AnnotatedOrWhere((MovieNode movie1, MovieNode movie2) => movie1.Title != movie2.Title)
+                .Query;
+
+            var actual = cypherQuery.QueryText;
+            var expected = "WHERE movie1.Title = movie2.Title\r\nOR movie1.Title <> movie2.Title";
+            Assert.Equal(expected, actual);
+        }
+        [Theory]
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void ComposedWhere(string testContextName, TestContext testContext)
+        {
+            var query = testContext.Query;
+
+            var cypherQuery = query
+                .AnnotatedWhere((MovieNode movie1, MovieNode movie2) => movie1.Title == "1" && movie2.Title == "2")
+                .Query;
+
+            var actual = cypherQuery.DebugQueryText;
+            var expected = "WHERE (movie1.Title = \"1\") AND (movie2.Title = \"2\")";
+            Assert.Equal(expected, actual);
+        }
+
+
+
 
         [Theory]
         [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
