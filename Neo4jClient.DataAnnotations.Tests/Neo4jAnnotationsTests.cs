@@ -10,18 +10,17 @@ namespace Neo4jClient.DataAnnotations.Tests
 {
     public class Neo4jAnnotationsTests
     {
-        [Fact]
-        public void EntityTypesAtStart_NotNull()
+        [Theory]
+        [MemberData(nameof(TestUtilities.TestContextData), MemberType = typeof(TestUtilities))]
+        public void EntityTypesAtStart_NotNull(string testContextName, TestContext testContext)
         {
-            Assert.NotNull(new ResolverTestContext().AnnotationsContext.EntityService.EntityTypes);
-            Assert.NotNull(new ConverterTestContext().AnnotationsContext.EntityService.EntityTypes);
+            Assert.NotNull(testContext.AnnotationsContext.EntityService.EntityTypes);
         }
 
-        [Fact]
-        public void RegisterWithResolverImplict()
+        [Theory]
+        [MemberData(nameof(TestUtilities.TestResolverContextData), MemberType = typeof(TestUtilities))]
+        public void RegisterWithResolverImplict(string testContextName, TestContext testContext)
         {
-            var testContext = new ResolverTestContext();
-
             Assert.All(TestUtilities.EntityTypes, (type) => Assert.True(testContext.AnnotationsContext.EntityService.EntityTypes.Contains(type)));
 
             Assert.Equal(typeof(EntityResolver), testContext.QueryContext.Client.JsonContractResolver.GetType());
@@ -29,11 +28,10 @@ namespace Neo4jClient.DataAnnotations.Tests
             Assert.Contains(testContext.QueryContext.Client.JsonConverters, c => typeof(EntityResolverConverter) == c.GetType());
         }
 
-        [Fact]
-        public void RegisterWithConverterImplicit()
+        [Theory]
+        [MemberData(nameof(TestUtilities.TestConverterContextData), MemberType = typeof(TestUtilities))]
+        public void RegisterWithConverterImplicit(string testContextName, TestContext testContext)
         {
-            var testContext = new ConverterTestContext();
-
             Assert.All(TestUtilities.EntityTypes, (type) => Assert.True(testContext.AnnotationsContext.EntityService.EntityTypes.Contains(type)));
 
             Assert.Contains(testContext.QueryContext.Client.JsonConverters, c => typeof(EntityConverter) == c.GetType());
@@ -41,11 +39,10 @@ namespace Neo4jClient.DataAnnotations.Tests
             //Assert.Equal(typeof(EntityConverter), client.JsonConverters.Last().GetType());
         }
 
-        [Fact]
-        public void RegisterWithResolver()
+        [Theory]
+        [MemberData(nameof(TestUtilities.TestResolverContextData), MemberType = typeof(TestUtilities))]
+        public void RegisterWithResolver(string testContextName, TestContext testContext)
         {
-            var testContext = new ResolverTestContext();
-
             Assert.All(TestUtilities.EntityTypes, (type) => Assert.True(testContext.AnnotationsContext.EntityService.EntityTypes.Contains(type)));
 
             Assert.True(testContext.QueryContext.Client.JsonContractResolver == testContext.AnnotationsContext.EntityResolver);
@@ -53,11 +50,10 @@ namespace Neo4jClient.DataAnnotations.Tests
             Assert.Contains(testContext.QueryContext.Client.JsonConverters, c => typeof(EntityResolverConverter) == c.GetType());
         }
 
-        [Fact]
-        public void RegisterWithConverter()
+        [Theory]
+        [MemberData(nameof(TestUtilities.TestConverterContextData), MemberType = typeof(TestUtilities))]
+        public void RegisterWithConverter(string testContextName, TestContext testContext)
         {
-            var testContext = new ConverterTestContext();
-
             Assert.All(TestUtilities.EntityTypes, (type) => Assert.True(testContext.AnnotationsContext.EntityService.EntityTypes.Contains(type)));
 
             Assert.True(testContext.QueryContext.Client.JsonConverters.Last() == testContext.AnnotationsContext.EntityConverter);

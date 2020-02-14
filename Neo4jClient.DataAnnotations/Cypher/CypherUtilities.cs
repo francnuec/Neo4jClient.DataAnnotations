@@ -1089,7 +1089,19 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
             var client = (query as IAttachedReference)?.Client;
 
-            var _serializer = client?.Serializer ?? new CustomJsonSerializer()
+            ISerializer _serializer = null;
+
+            try
+            {
+                //try obtain serializer from client first
+                //we put this in a try catch because .Serializer has been deprecated in the Bolt client.
+                _serializer = client.Serializer;
+            }
+            catch
+            {
+            }
+
+            _serializer = _serializer ?? new CustomJsonSerializer()
             {
                 JsonContractResolver = client?.JsonContractResolver ?? GraphClient.DefaultJsonContractResolver,
                 JsonConverters = client?.JsonConverters ?? (IEnumerable<JsonConverter>)GraphClient.DefaultJsonConverters

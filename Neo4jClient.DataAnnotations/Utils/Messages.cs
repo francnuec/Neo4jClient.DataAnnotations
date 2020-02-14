@@ -58,5 +58,9 @@ namespace Neo4jClient.DataAnnotations.Utils
         public const string MemberAssignmentError = "Could not successfully assign member. Member: {0}, Json Name: {1}.";
 
         public const string DuplicateProjectionKeyError = "Projection results in duplicate keys. Expression: {0}, Key: {1}.";
+
+        public const string ClientIsNotConnectedError = "GraphClient is required to be connected to properly set it up.";
+
+        public const string ClientHasNoDriverError = "GraphClient has no Neo4j Driver set up.";
     }
 }

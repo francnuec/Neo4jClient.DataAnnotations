@@ -11,5 +11,6 @@ namespace Neo4jClient.DataAnnotations
         EntityResolverConverter EntityResolverConverter { get; }
         EntityConverter EntityConverter { get; }
         ICypherFluentQuery Cypher { get; }
+        bool IsBoltClient { get; }
     }
 }

@@ -38,7 +38,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
             var entityInfo = EntityService.GetEntityTypeInfo(valueType);
 
-            //set necessarily things
+            //set necessary things
             InitializeEntityInfo(entityInfo, serializer);
 
             //temporarily remove this converter from the main serializer to avoid an unending loop
@@ -48,7 +48,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
             //now convert to JObject
             var valueJObject = serializer.Deserialize<JObject>(reader);
 
-            SerializationUtilities.EnsureRightJObject(ref valueJObject, out var valueMetadataJObject);
+            SerializationUtilities.EnsureRightJObject(AnnotationsContext, ref valueJObject, out var valueMetadataJObject);
 
             valueType = SerializationUtilities.GetRightObjectType(valueType, valueMetadataJObject, EntityService); //this ensures we have the right type to deserialize into
 
@@ -91,7 +91,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
                 var entityInfo = EntityService.GetEntityTypeInfo(valueType);
 
-                //set necessarily things
+                //set necessary things
                 InitializeEntityInfo(entityInfo, serializer);
 
                 //temporarily remove this converter from the main serializer to avoid an unending loop

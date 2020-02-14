@@ -6,6 +6,8 @@ using Newtonsoft.Json;
 using System.Reflection;
 using Neo4jClient.DataAnnotations.Serialization;
 using Neo4jClient.Cypher;
+using Neo4jClient.DataAnnotations.Extensions.Driver;
+using Neo4j.Driver.V1;
 
 namespace Neo4jClient.DataAnnotations
 {
@@ -63,9 +65,9 @@ namespace Neo4jClient.DataAnnotations
         }
 
         protected AnnotationsContext(
-            IGraphClient graphClient, 
-            EntityResolver resolver, 
-            EntityConverter converter, 
+            IGraphClient graphClient,
+            EntityResolver resolver,
+            EntityConverter converter,
             EntityService entityService)
         {
             GraphClient = graphClient ?? throw new ArgumentNullException(nameof(graphClient));
@@ -130,6 +132,8 @@ namespace Neo4jClient.DataAnnotations
         /// A shortcut to the <see cref="ICypherGraphClient.Cypher"/> property.
         /// </summary>
         public ICypherFluentQuery Cypher => GraphClient?.Cypher;
+
+        public bool IsBoltClient => GraphClient is IBoltGraphClient;
 
         protected static void Attach
             (AnnotationsContext context, IGraphClient graphClient,
@@ -200,13 +204,66 @@ namespace Neo4jClient.DataAnnotations
                 try
                 {
                     //try reflection to set the converters in the original array
-                    Utils.Utilities.GetBackingField(graphClient.GetType() //typeof(IGraphClient)
+                    Utils.Utilities.GetBackingField(graphClient.GetType()
                         .GetProperty("JsonConverters", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
                         .SetValue(graphClient, _converters);
                 }
                 catch
                 {
 
+                }
+            }
+
+            if (graphClient is IBoltGraphClient)
+            {
+                if (!graphClient.IsConnected)
+                {
+                    //connection is required at this point for bolt clients
+                    throw new InvalidOperationException(Messages.ClientIsNotConnectedError);
+                }
+
+                dynamic driverMemberInfo = null;
+
+                PropertyInfo driverProperty = graphClient
+                    .GetType()
+                    .GetProperty("Driver", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+
+                if (driverProperty != null && !driverProperty.CanWrite)
+                {
+                    FieldInfo driverBackingField = null;
+
+                    try
+                    {
+                        //try reflection to set the converters in the original array
+                        driverBackingField = Utils.Utilities.GetBackingField(driverProperty);
+                        driverMemberInfo = driverBackingField;
+                    }
+                    catch
+                    {
+                    }
+                }
+                else
+                {
+                    driverMemberInfo = driverProperty;
+                }
+
+                var driver = driverMemberInfo?.GetValue(graphClient) as IDriver;
+                if (driver == null)
+                {
+                    //this isn't supposed to happen
+                    throw new InvalidOperationException(Messages.ClientHasNoDriverError);
+                }
+
+                //now wrap the driver with our wrappers
+                driver = new DriverWrapper(driver);
+
+                try
+                {
+                    //replace the driver
+                    driverMemberInfo?.SetValue(graphClient, driver);
+                }
+                catch
+                {
                 }
             }
         }

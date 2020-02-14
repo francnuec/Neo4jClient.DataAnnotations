@@ -33,7 +33,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         protected ISerializer Serializer => QueryContext?.ISerializer;
         protected Func<object, string> SerializerFunc => QueryContext?.SerializeCallback;
         protected IGraphClient Client => QueryContext?.Client;
-        protected Func<ICypherFluentQuery, QueryWriter> QueryWriterGetter => QueryContext.QueryWriterGetter;
+        protected Func<ICypherFluentQuery, QueryWriterWrapper> QueryWriterGetter => QueryContext.QueryWriterGetter;
         protected QueryContext QueryContext { get; set; }
 
         public IPathExtent Path { get; protected internal set; }
