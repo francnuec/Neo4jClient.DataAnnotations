@@ -1,12 +1,11 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
-using Neo4jClient.DataAnnotations.Utils;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Newtonsoft.Json.Serialization;
 using System.Reflection;
+using Neo4jClient.DataAnnotations.Utils;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace Neo4jClient.DataAnnotations.Serialization
 {
@@ -24,7 +23,8 @@ namespace Neo4jClient.DataAnnotations.Serialization
             return JsonConvert.DeserializeObject<Metadata>(metadataJson);
         }
 
-        internal static void EnsureRightJObject(AnnotationsContext context, ref JObject valueJObject, out JObject valueMetadataJObject)
+        internal static void EnsureRightJObject(AnnotationsContext context, ref JObject valueJObject,
+            out JObject valueMetadataJObject)
         {
             //the neo4jclient guys really messed things up here
             //so use heuristics to determine if we are passing the right data or not, and then get the right data
@@ -62,11 +62,11 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
             valueMetadataJObject = null;
 
-            var expectedProps = new Dictionary<string, JTokenType>()
+            var expectedProps = new Dictionary<string, JTokenType>
             {
                 //{ "data", JTokenType.Object },
-                { "metadata", JTokenType.Object },
-                { "self", JTokenType.String },
+                {"metadata", JTokenType.Object},
+                {"self", JTokenType.String}
             };
 
             var _valueJObject = valueJObject;
@@ -84,12 +84,10 @@ namespace Neo4jClient.DataAnnotations.Serialization
             {
                 //most likely using bolt client
                 if (hasDataJToken && _valueJObject.Count == 1)
-                {
                     //for bolt clients, the data property has to be the only child
                     valueJObject = dataJObject;
-                }
 
-                if (dataJObject != null 
+                if (dataJObject != null
                     && dataJObject.TryGetValue(Defaults.BoltMetadataPropertyName, out var boltMetadata)
                     && boltMetadata is JObject boltMetadataJObject)
                 {
@@ -100,16 +98,15 @@ namespace Neo4jClient.DataAnnotations.Serialization
             }
         }
 
-        internal static Type GetRightObjectType(Type objectType, JObject valueMetadataJObject, EntityService EntityService)
+        internal static Type GetRightObjectType(Type objectType, JObject valueMetadataJObject,
+            EntityService EntityService)
         {
             if (valueMetadataJObject != null)
             {
                 var labelsJArray = valueMetadataJObject["labels"] as JArray ?? new JArray();
                 if (labelsJArray.Count == 0 && valueMetadataJObject["type"] is JToken typeJToken)
-                {
                     //i.e. it is a relationship
                     labelsJArray.Add(typeJToken);
-                }
 
                 if (labelsJArray.Count > 0)
                 {
@@ -118,21 +115,24 @@ namespace Neo4jClient.DataAnnotations.Serialization
                     {
                         //try find the right objecttype
                         var entityInfo = EntityService.GetEntityTypeInfo(objectType);
-                        bool hasAllLabelsFunc(List<string> entityLabels) => labelsJArray.All(lt => entityLabels.Contains((string)lt));
+
+                        bool hasAllLabelsFunc(List<string> entityLabels)
+                        {
+                            return labelsJArray.All(lt => entityLabels.Contains((string)lt));
+                        }
 
                         if (!hasAllLabelsFunc(entityInfo.LabelsWithTypeNameCatch))
                         {
                             //try find the derived type that has all the labels
                             var matchingDerivedTypes = derivedTypes
                                 .Where(t => t != objectType
-                                    && hasAllLabelsFunc(EntityService.GetEntityTypeInfo(t).LabelsWithTypeNameCatch))
+                                            && hasAllLabelsFunc(EntityService.GetEntityTypeInfo(t)
+                                                .LabelsWithTypeNameCatch))
                                 .ToArray();
 
                             if (matchingDerivedTypes?.Length == 1)
-                            {
                                 //we found a perfect match
                                 objectType = matchingDerivedTypes.First();
-                            }
                         }
                     }
                 }
@@ -146,9 +146,8 @@ namespace Neo4jClient.DataAnnotations.Serialization
             IContractResolver resolver = null)
         {
             if (serializer == null)
-            {
                 //this is strange, but the Neo4jClient folks forgot to pass a serializer to this method
-                serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings()
+                serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings
                 {
                     Converters = converters ?? GraphClient.DefaultJsonConverters?.Reverse().ToList(),
                     ContractResolver = resolver ?? GraphClient.DefaultJsonContractResolver,
@@ -156,10 +155,10 @@ namespace Neo4jClient.DataAnnotations.Serialization
                     NullValueHandling = NullValueHandling.Include,
                     DefaultValueHandling = DefaultValueHandling.Include
                 });
-            }
         }
 
-        internal static void RemoveThisConverter(Type converterType, JsonSerializer serializer, out List<Tuple<JsonConverter, int>> convertersRemoved)
+        internal static void RemoveThisConverter(Type converterType, JsonSerializer serializer,
+            out List<Tuple<JsonConverter, int>> convertersRemoved)
         {
             convertersRemoved = new List<Tuple<JsonConverter, int>>();
 
@@ -167,22 +166,17 @@ namespace Neo4jClient.DataAnnotations.Serialization
             {
                 var converter = serializer.Converters[i];
                 if (converterType.IsAssignableFrom(converter.GetType()))
-                {
                     convertersRemoved.Add(new Tuple<JsonConverter, int>(converter, i));
-                }
             }
 
-            foreach (var converter in convertersRemoved)
-            {
-                serializer.Converters.Remove(converter.Item1);
-            }
+            foreach (var converter in convertersRemoved) serializer.Converters.Remove(converter.Item1);
         }
 
-        internal static void RestoreThisConverter(JsonSerializer serializer, List<Tuple<JsonConverter, int>> convertersRemoved,
+        internal static void RestoreThisConverter(JsonSerializer serializer,
+            List<Tuple<JsonConverter, int>> convertersRemoved,
             bool clearConvertersRemovedList = true)
         {
             foreach (var converter in convertersRemoved)
-            {
                 try
                 {
                     serializer.Converters.Insert(converter.Item2, converter.Item1);
@@ -191,13 +185,12 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 {
                     serializer.Converters.Add(converter.Item1);
                 }
-            }
 
             if (clearConvertersRemovedList)
                 convertersRemoved.Clear();
         }
 
-        internal static bool ResolveEntityProperties(IList<JsonProperty> jsonProperties, 
+        internal static bool ResolveEntityProperties(IList<JsonProperty> jsonProperties,
             Type entityType, EntityTypeInfo entityTypeInfo,
             EntityService entityService, DefaultContractResolver resolver,
             Func<PropertyInfo, JsonProperty> createPropertyFunc)
@@ -205,7 +198,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
             if (entityService.ContainsEntityType(entityType))
             {
                 if (jsonProperties.Any(jp => jp.PropertyName == Defaults.MetadataPropertyName
-                    && jp.UnderlyingName == Defaults.DummyMetadataPropertyInfo.Name))
+                                             && jp.UnderlyingName == Defaults.DummyMetadataPropertyInfo.Name))
                     return false; //if we ever find the metadata property there, assume it has been resolved.
 
                 var _properties = new JsonPropertyCollection(entityType);
@@ -218,14 +211,13 @@ namespace Neo4jClient.DataAnnotations.Serialization
                     if (isComplex)
                     {
                         jsonProp.NullValueHandling = NullValueHandling.Include; //we need null values for complex types
-                        jsonProp.DefaultValueHandling = DefaultValueHandling.Include; //we need all properties serialized
+                        jsonProp.DefaultValueHandling =
+                            DefaultValueHandling.Include; //we need all properties serialized
                     }
 
                     if (!jsonProp.Ignored
                         && propertiesToIgnore.Any(np => np.Name == jsonProp.UnderlyingName))
-                    {
                         jsonProp.Ignored = true;
-                    }
 
                     _properties.Add(jsonProp);
                 }
@@ -241,24 +233,23 @@ namespace Neo4jClient.DataAnnotations.Serialization
                     {
                         //filter to complexproperties
                         var filteredJsonProperties = _properties?
-                        .Select(p => new
-                        {
-                            JsonProperty = p,
-                            PropertyInfo = complexTypedProperties.Where(pi => pi.Name == p.UnderlyingName).FirstOrDefault()
-                        })
-                        .Where(np => np.PropertyInfo != null)
-                        .ToDictionary(np => np.JsonProperty, np => np.PropertyInfo);
+                            .Select(p => new
+                            {
+                                JsonProperty = p,
+                                PropertyInfo = complexTypedProperties.Where(pi => pi.Name == p.UnderlyingName)
+                                    .FirstOrDefault()
+                            })
+                            .Where(np => np.PropertyInfo != null)
+                            .ToDictionary(np => np.JsonProperty, np => np.PropertyInfo);
 
-                        Func<Type, IList<JsonProperty>> getResolvedPropertiesFunc = (t) =>
+                        Func<Type, IList<JsonProperty>> getResolvedPropertiesFunc = t =>
                         {
                             var contract = resolver.ResolveContract(t) as JsonObjectContract;
 
                             if (contract.Properties?.Count > 0)
-                            {
                                 ResolveEntityProperties
-                                    (contract.Properties, t, entityService.GetEntityTypeInfo(t),
+                                (contract.Properties, t, entityService.GetEntityTypeInfo(t),
                                     entityService, resolver, createPropertyFunc);
-                            }
 
                             return contract.Properties;
                         };
@@ -268,19 +259,21 @@ namespace Neo4jClient.DataAnnotations.Serialization
                         {
                             //get the complexTypedProperty's own jsonproperties
                             //include derived classes
-                            var derivedTypes = entityService.GetDerivedEntityTypes(complexTypedJsonProp.Key.PropertyType)?
+                            var derivedTypes = entityService
+                                .GetDerivedEntityTypes(complexTypedJsonProp.Key.PropertyType)?
                                 .Where(t => t.IsComplex()).ToList();
 
                             if (derivedTypes == null || derivedTypes.Count == 0)
                             {
                                 entityService.AddEntityType(complexTypedJsonProp.Key.PropertyType);
-                                derivedTypes = new List<Type>() { complexTypedJsonProp.Key.PropertyType };
+                                derivedTypes = new List<Type> { complexTypedJsonProp.Key.PropertyType };
                             }
 
                             var childProperties = derivedTypes
-                                .SelectMany(dt => 
-                                    getResolvedPropertiesFunc(dt)?.Where
-                                        (p => /*!p.Ignored &&*/ p.PropertyName != Defaults.MetadataPropertyName) ?? new JsonProperty[0],
+                                .SelectMany(dt =>
+                                        getResolvedPropertiesFunc(dt)?.Where
+                                            (p => /*!p.Ignored &&*/ p.PropertyName != Defaults.MetadataPropertyName) ??
+                                        new JsonProperty[0],
                                     (dt, property) => new
                                     {
                                         DerivedType = dt,
@@ -292,12 +285,11 @@ namespace Neo4jClient.DataAnnotations.Serialization
                                 .ToList();
 
                             foreach (var childProp in childProperties)
-                            {
                                 //add the child to this type's properties
                                 try
                                 {
                                     var newChildProp = GetComplexTypedPropertyChild
-                                        (childProp.DerivedType, complexTypedJsonProp.Key,
+                                    (childProp.DerivedType, complexTypedJsonProp.Key,
                                         complexTypedJsonProp.Value, childProp.Property);
 
                                     _properties.AddProperty(newChildProp);
@@ -307,33 +299,29 @@ namespace Neo4jClient.DataAnnotations.Serialization
                                 {
                                     //for some reason member already exists and is duplicate
                                 }
-                            }
 
                             //ignore all complex typed properties
                             complexTypedJsonProp.Key.Ignored = true;
                         }
                     }
 
-                    int nextIdx = -1;
+                    var nextIdx = -1;
 
                     //clear and re-add these properties
                     jsonProperties.Clear();
 
                     var orderedProperties = _properties.OrderBy(p => p.Order ?? nextIdx++);
 
-                    foreach (var prop in orderedProperties)
-                    {
-                        jsonProperties.Add(prop);
-                    }
+                    foreach (var prop in orderedProperties) jsonProperties.Add(prop);
 
                     //create metadata property and add it last
                     var metadataJsonProperty = createPropertyFunc(Defaults.DummyMetadataPropertyInfo);
                     metadataJsonProperty.PropertyName = Defaults.MetadataPropertyName;
                     metadataJsonProperty.ValueProvider = new MetadataValueProvider(entityType, complexJsonProperties);
-                    metadataJsonProperty.ShouldSerialize = (instance) =>
+                    metadataJsonProperty.ShouldSerialize = instance =>
                     {
                         return !(metadataJsonProperty.ValueProvider as MetadataValueProvider)
-                        .BuildMetadata(instance).IsEmpty();
+                            .BuildMetadata(instance).IsEmpty();
                     };
                     metadataJsonProperty.Order = int.MaxValue; //try to make it the last serialized
 
@@ -361,41 +349,46 @@ namespace Neo4jClient.DataAnnotations.Serialization
             var newChild = GetJsonPropertyDuplicate(child);
 
             if (complexTypedJsonProperty.Ignored)
-                newChild.Ignored = true; //this ensures that when a complex field is ignored, all its children are ignored too.
+                newChild.Ignored =
+                    true; //this ensures that when a complex field is ignored, all its children are ignored too.
 
             //set complex name
             newChild.SimplePropertyName = child.PropertyName;
-            newChild.PropertyName = $"{complexTypedJsonProperty.PropertyName}{Defaults.ComplexTypeNameSeparator}{child.PropertyName}";
-            newChild.ComplexUnderlyingName = $"{complexTypedJsonProperty.GetComplexOrSimpleUnderlyingName()}{Defaults.ComplexTypeNameSeparator}{child.UnderlyingName}";
+            newChild.PropertyName =
+                $"{complexTypedJsonProperty.PropertyName}{Defaults.ComplexTypeNameSeparator}{child.PropertyName}";
+            newChild.ComplexUnderlyingName =
+                $"{complexTypedJsonProperty.GetComplexOrSimpleUnderlyingName()}{Defaults.ComplexTypeNameSeparator}{child.UnderlyingName}";
 
             //set new value provider
             newChild.ValueProvider = new ComplexTypedPropertyValueProvider
-                (complexTypedJsonProperty.UnderlyingName, complexTypedJsonProperty.PropertyType,
+            (complexTypedJsonProperty.UnderlyingName, complexTypedJsonProperty.PropertyType,
                 complexTypedJsonProperty.DeclaringType, complexTypedJsonProperty.ValueProvider,
                 child.PropertyType, child.ValueProvider);
 
             //do this to avoid enclosing the jsonproperties in the closures.
             var parentActualName = complexTypedJsonProperty.UnderlyingName;
-            var parentType = (child.ValueProvider as ComplexTypedPropertyValueProvider)?.DeclaringType ?? child.DeclaringType;
+            var parentType = (child.ValueProvider as ComplexTypedPropertyValueProvider)?.DeclaringType ??
+                             child.DeclaringType;
             var parentReflectedType = complexType;
 
             var childShouldSerialize = child.ShouldSerialize;
             //var childShouldDeserialize = child.ShouldDeserialize;
 
             //set a shouldserialize and shoulddeserialize
-            newChild.ShouldSerialize = (entity) =>
+            newChild.ShouldSerialize = entity =>
             {
                 var propertyInfo = entity.GetType().GetProperty(parentActualName);
                 var parentValue = propertyInfo.GetValue(entity);
 
-                Utils.Utilities.CheckIfComplexTypeInstanceIsNull(parentValue, parentActualName, propertyInfo.DeclaringType);
+                Utils.Utilities.CheckIfComplexTypeInstanceIsNull(parentValue, parentActualName,
+                    propertyInfo.DeclaringType);
 
                 var parentValueType = parentValue.GetType();
 
                 var isAssignable = parentType.IsGenericAssignableFrom(parentValueType);
                 isAssignable = isAssignable || parentReflectedType == parentValueType;
 
-                return isAssignable && (childShouldSerialize == null || childShouldSerialize(parentValue) == true);
+                return isAssignable && (childShouldSerialize == null || childShouldSerialize(parentValue));
             };
 
             return newChild;

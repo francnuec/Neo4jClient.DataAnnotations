@@ -1,11 +1,7 @@
-﻿using Newtonsoft.Json.Serialization;
-using System;
-using Neo4jClient.DataAnnotations.Utils;
+﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json;
-using System.Linq;
-using System.Reflection;
+using Newtonsoft.Json.Serialization;
 
 namespace Neo4jClient.DataAnnotations.Serialization
 {
@@ -16,9 +12,9 @@ namespace Neo4jClient.DataAnnotations.Serialization
             DeserializeConverter = new EntityResolverConverter(this);
         }
 
-        public virtual AnnotationsContext AnnotationsContext { get; internal set; }
-
         public virtual EntityResolverConverter DeserializeConverter { get; }
+
+        public virtual AnnotationsContext AnnotationsContext { get; internal set; }
 
         public EntityService EntityService => AnnotationsContext.EntityService;
 
@@ -144,8 +140,9 @@ namespace Neo4jClient.DataAnnotations.Serialization
         {
             var props = base.CreateProperties(type, memberSerialization);
 
-            SerializationUtilities.ResolveEntityProperties(props, type, EntityService.GetEntityTypeInfo(type), EntityService, this, 
-                (propInfo) => CreateProperty(propInfo, memberSerialization));
+            SerializationUtilities.ResolveEntityProperties(props, type, EntityService.GetEntityTypeInfo(type),
+                EntityService, this,
+                propInfo => CreateProperty(propInfo, memberSerialization));
 
             return props;
         }

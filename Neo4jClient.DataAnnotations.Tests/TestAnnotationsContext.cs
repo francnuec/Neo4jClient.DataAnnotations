@@ -1,8 +1,4 @@
-﻿using System;
-using Neo4jClient.DataAnnotations.Utils;
-using System.Collections.Generic;
-using System.Text;
-using Neo4jClient.DataAnnotations.Serialization;
+﻿using Neo4jClient.DataAnnotations.Serialization;
 using Neo4jClient.DataAnnotations.Tests.Models;
 
 namespace Neo4jClient.DataAnnotations.Tests
@@ -11,7 +7,7 @@ namespace Neo4jClient.DataAnnotations.Tests
     {
         public TestAnnotationsContext(
             IGraphClient graphClient,
-            EntityResolver resolver): base(graphClient, resolver)
+            EntityResolver resolver) : base(graphClient, resolver)
         {
         }
 

@@ -1,5 +1,5 @@
-﻿using System.Reflection;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Reflection;
 
 namespace Neo4jClient.DataAnnotations.Utils
 {

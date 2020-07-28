@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Neo4j.Driver;
-using Neo4jClient.Transactions;
 
 namespace Neo4jClient.DataAnnotations.Extensions.Driver
 {
@@ -11,7 +8,6 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
     {
         public AsyncTransactionWrapper(IAsyncTransaction item) : base(item)
         {
-
         }
 
         public async Task<IResultCursor> RunAsync(string query)

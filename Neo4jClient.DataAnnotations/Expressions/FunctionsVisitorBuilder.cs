@@ -1,23 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 
 namespace Neo4jClient.DataAnnotations.Expressions
 {
     public class FunctionsVisitorBuilder
     {
+        public FunctionsVisitorBuilder(FunctionExpressionVisitor visitor)
+        {
+            Visitor = visitor ?? throw new ArgumentNullException(nameof(visitor));
+        }
+
         protected StringBuilder ActualBuilder { get; } = new StringBuilder();
 
         public List<Monitor> Monitors { get; } = new List<Monitor>();
 
         public FunctionExpressionVisitor Visitor { get; }
-
-        public FunctionsVisitorBuilder(FunctionExpressionVisitor visitor)
-        {
-            Visitor = visitor ?? throw new ArgumentNullException(nameof(visitor));
-        }
 
         private IEnumerable<Monitor> GetMonitorsOfInterest(Expression node)
         {
@@ -33,45 +32,37 @@ namespace Neo4jClient.DataAnnotations.Expressions
             //});
 
             foreach (var m in Monitors)
-            {
                 if (m.Node != node)
+                {
                     yield return m;
+                }
                 else
                 {
                     yield return m;
                     yield break;
                 }
-            }
         }
 
         public void Append(dynamic value, Expression callerNode)
         {
             var targetMonitors = GetMonitorsOfInterest(callerNode);
 
-            foreach (var m in targetMonitors)
-            {
-                m.WillAppend?.Invoke(this, callerNode, value);
-            }
+            foreach (var m in targetMonitors) m.WillAppend?.Invoke(this, callerNode, value);
 
             if (value is null)
-            {
                 ActualBuilder.Append((object)null);
-            }
             else
                 ActualBuilder.Append(value);
 
 
-            foreach (var m in targetMonitors)
-            {
-                m.DidAppend?.Invoke(this, callerNode, value);
-            }
+            foreach (var m in targetMonitors) m.DidAppend?.Invoke(this, callerNode, value);
         }
 
         public void Clear()
         {
-            Monitors.ForEach((m) => m.WillClearAll?.Invoke(this));
+            Monitors.ForEach(m => m.WillClearAll?.Invoke(this));
             ActualBuilder.Clear();
-            Monitors.ForEach((m) => m.DidClearAll?.Invoke(this));
+            Monitors.ForEach(m => m.DidClearAll?.Invoke(this));
         }
 
         public override string ToString()

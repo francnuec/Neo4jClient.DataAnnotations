@@ -1,13 +1,11 @@
 ﻿using System;
-using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text;
 
 namespace Neo4jClient.DataAnnotations.Cypher
 {
     /// <summary>
-    /// (A)-[R]-(B)
+    ///     (A)-[R]-(B)
     /// </summary>
     public interface IPattern : IAnnotated
     {
@@ -47,7 +45,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         LambdaExpression BConstraints { get; }
 
         RelationshipDirection? Direction { get; }
-        
+
         bool IsExtension { get; }
     }
 }
