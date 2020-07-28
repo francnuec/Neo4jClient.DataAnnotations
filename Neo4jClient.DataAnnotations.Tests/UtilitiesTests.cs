@@ -13,7 +13,13 @@ namespace Neo4jClient.DataAnnotations.Tests
 {
     public class UtilitiesTests
     {
-        public static List<object[]> VarsData = new List<object[]>()
+        private static List<object[]> _varsData = null;
+        public static List<object[]> VarsData {
+            get
+            {
+                if (_varsData == null)
+                {
+                    var data = new object[][]
         {
             new object[] { (Expression<Func<ActorNode>>)(() => CypherVariables.Get<ActorNode>("actor")), "actor" },
 
@@ -204,7 +210,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             //type
             //properties
             //this is purely for testing and not necessarily a good example for use in code
-            new object[] { (Expression<Func<object>>)(() => 
+            new object[] { (Expression<Func<object>>)(() =>
                 CypherFunctions.Properties(
                 CypherFunctions._AsList(
                 CypherFunctions._AsList(
@@ -277,7 +283,23 @@ namespace Neo4jClient.DataAnnotations.Tests
                 "* + atan2(aInt, 2.76457687)" },
         };
 
-        public static List<object[]> FinalPropertiesData = new List<object[]>()
+                    _varsData = TestUtilities.TestContextData
+                        .SelectMany(cd => data.Select(pd => pd.Union(cd).ToArray()))
+                        .ToList();
+                }
+
+                return _varsData;
+            }
+        } //add the testcontexts
+
+        private static List<object[]> _finalPropsData = null;
+        public static List<object[]> FinalPropertiesData
+        {
+            get
+            {
+                if (_finalPropsData == null)
+                {
+                    var data = new object[][]
         {
             new object[] {
                 new Dictionary<string, dynamic>()
@@ -574,30 +596,34 @@ namespace Neo4jClient.DataAnnotations.Tests
                 })
             },
         };
+                    //add the testcontexts
+                    _finalPropsData = TestUtilities.TestContextData.SelectMany(cd => data.Select(pd =>
+                    {
+                        IEnumerable<object> pEnum = pd;
+                        if (pd.Length == 2)
+                        {
+                            //add defaults for expectedExceptionType and expectedExceptionMessage
+                            pEnum = pEnum.Append(null).Append(null);
+                        }
+                        foreach (var item in cd)
+                        {
+                            pEnum = pEnum.Append(item);
+                        }
 
-        [Theory]
-        [MemberData(nameof(VarsData), MemberType = typeof(UtilitiesTests))]
-        public void VarsSerializationWithConverter<T>(Expression<Func<T>> expression, string expectedText)
-        {
-            var testContext = new ConverterTestContext();
+                        return pEnum.ToArray();
+                    })).ToList();
+                }
 
-            var retrievedMembers = ExpressionUtilities.GetSimpleMemberAccessStretch
-                (testContext.AnnotationsContext.EntityService, expression.Body, out var val);
-
-            Assert.True(Utils.Utilities.HasVars(retrievedMembers));
-
-            var expressionVisitor = new FunctionExpressionVisitor(testContext.QueryContext);
-            expressionVisitor.Visit(expression.Body);
-            var varText = expressionVisitor.Builder.ToString();
-
-            Assert.Equal(expectedText, varText);
+                return _finalPropsData;
+            }
         }
 
         [Theory]
         [MemberData(nameof(VarsData), MemberType = typeof(UtilitiesTests))]
-        public void VarsSerializationWithResolver<T>(Expression<Func<T>> expression, string expectedText)
+        public void VarsSerialization<T>(Expression<Func<T>> expression, string expectedText,
+            string testContextName, TestContext testContext)
         {
-            var testContext = new ResolverTestContext();
+            //var testContext = new ConverterTestContext();
 
             var retrievedMembers = ExpressionUtilities.GetSimpleMemberAccessStretch
                 (testContext.AnnotationsContext.EntityService, expression.Body, out var val);
@@ -613,41 +639,13 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         [Theory]
         [MemberData(nameof(FinalPropertiesData), MemberType = typeof(UtilitiesTests))]
-        public void FinalPropertiesResolutionWithConverter(Dictionary<string, dynamic> expected, LambdaExpression expression,
-            Type expectedExceptionType = null, string expectedExceptionMessage = null)
+        public void FinalPropertiesResolution(Dictionary<string, dynamic> expected, LambdaExpression expression,
+            Type expectedExceptionType, string expectedExceptionMessage,
+            string testContextName, TestContext testContext)
         {
-            //expression = (((expression.Body as MethodCallExpression)?
-            //    .Arguments.LastOrDefault() as UnaryExpression)?.Operand as LambdaExpression) ?? expression;
-
-            var testContext = new ConverterTestContext();
-
-            //var result = CypherUtilities.GetFinalProperties(expression, testContext.QueryContext, out var hasFuncsInProps);
-
             Func<JObject> action = () => CypherUtilities.GetFinalProperties
                     (expression, testContext.QueryContext, out var hasFuncs);
 
-            FinalPropertiesResolution(action, testContext.Serializer,
-                expected, expectedExceptionType, expectedExceptionMessage);
-        }
-
-        [Theory]
-        [MemberData(nameof(FinalPropertiesData), MemberType = typeof(UtilitiesTests))]
-        public void FinalPropertiesResolutionWithResolver(Dictionary<string, dynamic> expected, LambdaExpression expression,
-            Type expectedExceptionType = null, string expectedExceptionMessage = null)
-        {
-            var testContext = new ResolverTestContext();
-
-            Func<JObject> action = () => CypherUtilities.GetFinalProperties
-                    (expression, testContext.QueryContext, out var hasFuncs);
-
-            FinalPropertiesResolution(action, testContext.Serializer,
-                expected, expectedExceptionType, expectedExceptionMessage);
-        }
-
-        private void FinalPropertiesResolution(Func<JObject> action, Func<object, string> serializer,
-            Dictionary<string, dynamic> expected, Type expectedExceptionType = null,
-            string expectedExceptionMessage = null)
-        {
             if (expectedExceptionType != null)
             {
                 var exception = Assert.Throws(expectedExceptionType, () => action.Invoke());
@@ -658,7 +656,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             else
             {
                 var finalPropsObj = action.Invoke();
-                TestUtilities.TestFinalPropertiesForEquality(serializer, expected, finalPropsObj);
+                TestUtilities.TestFinalPropertiesForEquality(testContext.Serializer, expected, finalPropsObj);
             }
         }
     }

@@ -32,7 +32,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var expected = "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
+                "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [" + Environment.NewLine + "  \"Meredith Grey\"" + Environment.NewLine + "] })" +
                 "-->()";
 
             var actual = path.Build(ref query);
@@ -100,10 +100,10 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var pathBuilder = new PathBuilder(query, pathExpr);
 
-            var expected = "P=" + 
+            var expected = "P=" +
                 "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
+                "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [" + Environment.NewLine + "  \"Meredith Grey\"" + Environment.NewLine + "] })" +
                 "-->()";
 
             var actual = pathBuilder.Build(ref query);
@@ -122,10 +122,10 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var pathBuilder = new PathBuilder(query, pathExpr);
 
-            var expected = "P=shortestPath(" + 
+            var expected = "P=shortestPath(" +
                 "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })" +
+                "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [" + Environment.NewLine + "  \"Meredith Grey\"" + Environment.NewLine + "] })" +
                 ")";
 
             var actual = pathBuilder.Build(ref query);

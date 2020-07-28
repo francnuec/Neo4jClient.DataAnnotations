@@ -42,7 +42,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.6" />
     <PackageReference Include="Neo4j.Driver.Signed" Version="4.1.0" />
-    <PackageReference Include="Neo4jClient" Version="4.2020.205.8" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
   </ItemGroup>
 

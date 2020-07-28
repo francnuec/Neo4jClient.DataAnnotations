@@ -38,16 +38,16 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var cypherQuery = query.AsAnnotatedQuery()
                 .Where((MovieNode movie, ActorNode actor) => (movie.Title == "Grey's Anatomy" && movie.Year == 2017)
-                || ((actor.Address as AddressThirdLevel).Location.Longitude == 0.1 
+                || ((actor.Address as AddressThirdLevel).Location.Longitude == 0.1
                 && (actor.Address as AddressThirdLevel).ComplexProperty.Property == 5))
                 .AsCypherQuery()
                 .Query;
 
             var actual = cypherQuery.QueryText;
 
-            var expected = $"WHERE (((movie.Title = ${cypherQuery.QueryParameters.ElementAt(0).Key})" 
-                + $" AND (movie.Year = ${cypherQuery.QueryParameters.ElementAt(1).Key}))" 
-                + $" OR ((actor.NewAddressName_Location_Longitude = ${cypherQuery.QueryParameters.ElementAt(2).Key})" 
+            var expected = $"WHERE (((movie.Title = ${cypherQuery.QueryParameters.ElementAt(0).Key})"
+                + $" AND (movie.Year = ${cypherQuery.QueryParameters.ElementAt(1).Key}))"
+                + $" OR ((actor.NewAddressName_Location_Longitude = ${cypherQuery.QueryParameters.ElementAt(2).Key})"
                 + $" AND (actor.NewAddressName_ComplexProperty_Property = ${cypherQuery.QueryParameters.ElementAt(3).Key})))";
 
             Assert.Equal(expected, actual);
@@ -67,8 +67,8 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = cypherQuery.QueryText;
 
-            var expected = $"WHERE (movie.Title = ${cypherQuery.QueryParameters.First().Key})" + 
-                $"\r\nAND (movie.Year = ${cypherQuery.QueryParameters.Last().Key})";
+            var expected = $"WHERE (movie.Title = ${cypherQuery.QueryParameters.First().Key})" +
+                            Environment.NewLine + $"AND (movie.Year = ${cypherQuery.QueryParameters.Last().Key})";
 
             Assert.Equal(expected, actual);
         }
@@ -88,7 +88,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var actual = cypherQuery.QueryText;
 
             var expected = $"WHERE (movie.Title = ${cypherQuery.QueryParameters.First().Key})" +
-                $"\r\nOR (movie.Year = ${cypherQuery.QueryParameters.Last().Key})";
+                          Environment.NewLine + $"OR (movie.Year = ${cypherQuery.QueryParameters.Last().Key})";
 
             Assert.Equal(expected, actual);
         }
@@ -148,7 +148,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = cypherQuery.QueryText;
 
-            var expected = "WITH actor.NewAddressName_ComplexProperty_Property" 
+            var expected = "WITH actor.NewAddressName_ComplexProperty_Property"
                 + ", actor.NewAddressName_SomeOtherProperty"
                 + ", actor.NewAddressName_Location_Latitude"
                 + ", actor.NewAddressName_Location_Longitude"
@@ -226,12 +226,12 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = cypherQuery.QueryText;
 
-            var expected = "WITH movie.Title AS title, movie.Year AS Year" 
-                + ", { ComplexProperty_Property: actor.NewAddressName_ComplexProperty_Property" 
-                + ", SomeOtherProperty: actor.NewAddressName_SomeOtherProperty" 
-                + ", Location_Latitude: actor.NewAddressName_Location_Latitude" 
-                + ", Location_Longitude: actor.NewAddressName_Location_Longitude" 
-                + ", AddressLine: actor.NewAddressName_AddressLine, City: actor.NewAddressName_City" 
+            var expected = "WITH movie.Title AS title, movie.Year AS Year"
+                + ", { ComplexProperty_Property: actor.NewAddressName_ComplexProperty_Property"
+                + ", SomeOtherProperty: actor.NewAddressName_SomeOtherProperty"
+                + ", Location_Latitude: actor.NewAddressName_Location_Latitude"
+                + ", Location_Longitude: actor.NewAddressName_Location_Longitude"
+                + ", AddressLine: actor.NewAddressName_AddressLine, City: actor.NewAddressName_City"
                 + ", State: actor.NewAddressName_State, Country: actor.NewAddressName_Country } AS lg"
                 + ", actor.NewAddressName_ComplexProperty_Property AS Property, count(something) AS something_count";
 

@@ -1,4 +1,5 @@
 ﻿using Neo4jClient.Cypher;
+using Neo4jClient.Cypher;
 using Neo4jClient.DataAnnotations.Cypher;
 using Neo4jClient.DataAnnotations.Serialization;
 using Neo4jClient.Serialization;
@@ -20,7 +21,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
 
         private IGraphClient client;
-        protected virtual IGraphClient Client
+        protected internal virtual IGraphClient Client
         {
             get
             {
@@ -39,6 +40,10 @@ namespace Neo4jClient.DataAnnotations.Tests
                             JsonConverters = client.JsonConverters
                         };
                     });
+
+                    client.IsConnected.Returns(true);
+                    client.ServerVersion.Returns(new Version(3, 0));
+                    client.CypherCapabilities.Returns(CypherCapabilities.Cypher23);
                 }
 
                 return client;
@@ -232,17 +237,6 @@ namespace Neo4jClient.DataAnnotations.Tests
                 Resolver = null;
             }
         }
-
-        //public override QueryContext QueryContext
-        //{
-        //    get
-        //    {
-        //        var qContext = base.QueryContext;
-        //        qContext.Resolver = Resolver;
-        //        return qContext;
-        //    }
-        //    set => base.QueryContext = value;
-        //}
     }
 
     public class ConverterTestContext : TestContext
@@ -310,16 +304,5 @@ namespace Neo4jClient.DataAnnotations.Tests
                 Converter = null;
             }
         }
-
-        //public override QueryContext QueryContext
-        //{
-        //    get
-        //    {
-        //        var qContext = base.QueryContext;
-        //        qContext.Converter = Converter;
-        //        return qContext;
-        //    }
-        //    set => base.QueryContext = value;
-        //}
     }
 }
