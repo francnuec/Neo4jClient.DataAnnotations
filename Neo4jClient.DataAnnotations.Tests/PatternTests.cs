@@ -317,7 +317,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             {
                 { "Name", "\"Ellen Pompeo\"" },
                 { "Born", "shondaRhimes.Born" },
-                { "Roles", "[\r\n  \"Meredith Grey\"\r\n]" },
+                { "Roles", "[" + Environment.NewLine + "  \"Meredith Grey\"" + Environment.NewLine + "]" },
                 { "Age", "\"47\"" }, //because we assigned a 47 string and not a 47 int.
             };
 
@@ -351,7 +351,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             {
                 { "Name", "\"Ellen Pompeo\"" },
                 { "Born", "shondaRhimes.Born" },
-                { "Roles", "[\r\n  \"Meredith Grey\"\r\n]" }
+                { "Roles", $"[{Environment.NewLine}  \"Meredith Grey\"{Environment.NewLine}]" }
             };
 
             TestUtilities.TestFinalPropertiesForEquality((instance) => client.Serializer.Serialize(instance), expected, aFinalProperties);
@@ -374,7 +374,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var expectedMain = "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [\r\n  \"Meredith Grey\"\r\n] })";
+                "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [" + Environment.NewLine + "  \"Meredith Grey\"" + Environment.NewLine + "] })";
             var expectedExt = "-->()";
 
             var actualMain = path.Patterns[0].Build(ref query);
