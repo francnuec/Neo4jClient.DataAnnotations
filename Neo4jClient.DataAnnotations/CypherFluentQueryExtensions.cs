@@ -213,7 +213,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         /// <param name="expressions"></param>
         /// <param name="values"></param>
         /// <returns></returns>
-        public static ICypherFluentQuery WithExpression<T>(this ICypherFluentQuery query, 
+        public static ICypherFluentQuery WithExpression<T>(this ICypherFluentQuery query,
             Expression<Func<T, object>> expressions, out string[] values)
         {
             return WithExpression(query, expressions, out values, null);
@@ -296,15 +296,15 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         /// <param name="defaultBuildStrategy">Set a build strategy in the event that it unexpectedly encounters a constant expression.</param>
         /// <returns></returns>
         internal static ICypherFluentQuery WithExpression<T>(this ICypherFluentQuery query,
-            Expression<Func<T, object>> expressions, out string[] values, bool isMemberAccess, 
+            Expression<Func<T, object>> expressions, out string[] values, bool isMemberAccess,
             string variable, PropertiesBuildStrategy defaultBuildStrategy)
         {
             var queryContext = CypherUtilities.GetQueryContext(query);
 
-            queryContext.CurrentBuildStrategy = 
+            queryContext.CurrentBuildStrategy =
                 queryContext.CurrentBuildStrategy ?? defaultBuildStrategy;
 
-            values = ExpressionUtilities.GetVariableExpressions(expressions, queryContext, 
+            values = ExpressionUtilities.GetVariableExpressions(expressions, queryContext,
                 isMemberAccess: isMemberAccess, variable: variable);
 
             return query;
@@ -327,7 +327,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         {
             return query.WithParam(Defaults.QueryBuildStrategyKey, buildStrategy);
         }
-        
+
         internal static PropertiesBuildStrategy? GetBuildStrategy(this ICypherFluentQuery query)
         {
             query.Query.QueryParameters.TryGetValue(Defaults.QueryBuildStrategyKey, out var strategy);
@@ -380,7 +380,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         /// </summary>
         public static ICypherFluentQuery Create(this ICypherFluentQuery query, params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
-            return WithPattern(query, out var pattern, PropertiesBuildStrategy.WithParams, patternDescriptions).Create(pattern);
+            return WithPattern(query, out var pattern, PropertiesBuildStrategy.WithParamsForValues, patternDescriptions).Create(pattern);
         }
         #endregion
 
@@ -416,7 +416,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         /// <returns></returns>
         public static ICypherFluentQuery Set(this ICypherFluentQuery query, string variable, Expression<Func<object>> properties, out string setParameter)
         {
-            return SharedSet(query, variable, properties, PropertiesBuildStrategy.WithParams, out setParameter, add: false);
+            return SharedSet(query, variable, properties, PropertiesBuildStrategy.WithParamsForValues, out setParameter, add: false);
         }
 
 
@@ -901,7 +901,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
 
 
 
-        internal static ICypherFluentQuery SharedConstraint<T>(this ICypherFluentQuery query, string clause, 
+        internal static ICypherFluentQuery SharedConstraint<T>(this ICypherFluentQuery query, string clause,
             string assertFormat, Expression<Func<T, object>> properties, bool isRelationship)
         {
             query = query.WithExpression(properties, out var propNames, isMemberAccess: true);

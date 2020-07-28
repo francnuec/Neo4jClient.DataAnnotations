@@ -24,7 +24,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
             return JsonConvert.DeserializeObject<Metadata>(metadataJson);
         }
 
-        internal static void EnsureRightJObject(ref JObject valueJObject, out JObject valueMetadataJObject)
+        internal static void EnsureRightJObject(AnnotationsContext context, ref JObject valueJObject, out JObject valueMetadataJObject)
         {
             //the neo4jclient guys really messed things up here
             //so use heuristics to determine if we are passing the right data or not, and then get the right data
@@ -38,7 +38,8 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 "id": 176,
                 "labels": [
                   "IdentityUser"
-                ]
+                ],
+                "type": "INTEREST" //only for relationships
               },
               "paged_traverse": "http://localhost:7474/db/data/node/176/paged/traverse/{returnType}{?pageSize,leaseTime}",
               "outgoing_relationships": "http://localhost:7474/db/data/node/176/relationships/out",
@@ -68,43 +69,70 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 { "self", JTokenType.String },
             };
 
-            var jObject = valueJObject;
+            var _valueJObject = valueJObject;
+            var hasDataJToken = _valueJObject.TryGetValue("data", out var dataJToken);
+            var dataJObject = dataJToken as JObject;
 
-            if (expectedProps.All(prop => jObject[prop.Key]?.Type == prop.Value))
+            if (expectedProps.All(prop => _valueJObject[prop.Key]?.Type == prop.Value))
             {
                 //hopefully we are right
                 //replace the jObject with "data"
-                valueJObject = jObject["data"] as JObject;
-                valueMetadataJObject = jObject["metadata"] as JObject;
+                valueJObject = dataJObject;
+                valueMetadataJObject = _valueJObject["metadata"] as JObject;
+            }
+            else if (hasDataJToken || context.IsBoltClient)
+            {
+                //most likely using bolt client
+                if (hasDataJToken && _valueJObject.Count == 1)
+                {
+                    //for bolt clients, the data property has to be the only child
+                    valueJObject = dataJObject;
+                }
+
+                if (dataJObject != null 
+                    && dataJObject.TryGetValue(Defaults.BoltMetadataPropertyName, out var boltMetadata)
+                    && boltMetadata is JObject boltMetadataJObject)
+                {
+                    //extract the metadata
+                    dataJObject.Remove(Defaults.BoltMetadataPropertyName);
+                    valueMetadataJObject = boltMetadataJObject;
+                }
             }
         }
 
         internal static Type GetRightObjectType(Type objectType, JObject valueMetadataJObject, EntityService EntityService)
         {
-            if (valueMetadataJObject != null
-                && valueMetadataJObject.TryGetValue("labels", out var labelsJToken)
-                && labelsJToken is JArray labelsJArray
-                && labelsJArray.Count > 0)
+            if (valueMetadataJObject != null)
             {
-                var derivedTypes = EntityService.GetDerivedEntityTypes(objectType);
-                if (derivedTypes?.Count > 0)
+                var labelsJArray = valueMetadataJObject["labels"] as JArray ?? new JArray();
+                if (labelsJArray.Count == 0 && valueMetadataJObject["type"] is JToken typeJToken)
                 {
-                    //try find the right objecttype
-                    var entityInfo = EntityService.GetEntityTypeInfo(objectType);
-                    bool hasAllLabelsFunc(List<string> entityLabels) => labelsJArray.All(lt => entityLabels.Contains((string)lt));
+                    //i.e. it is a relationship
+                    labelsJArray.Add(typeJToken);
+                }
 
-                    if (!hasAllLabelsFunc(entityInfo.LabelsWithTypeNameCatch))
+                if (labelsJArray.Count > 0)
+                {
+                    var derivedTypes = EntityService.GetDerivedEntityTypes(objectType);
+                    if (derivedTypes?.Count > 0)
                     {
-                        //try find the derived type that has all the labels
-                        var matchingDerivedTypes = derivedTypes
-                            .Where(t => t != objectType
-                                && hasAllLabelsFunc(EntityService.GetEntityTypeInfo(t).LabelsWithTypeNameCatch))
-                            .ToArray();
+                        //try find the right objecttype
+                        var entityInfo = EntityService.GetEntityTypeInfo(objectType);
+                        bool hasAllLabelsFunc(List<string> entityLabels) => labelsJArray.All(lt => entityLabels.Contains((string)lt));
 
-                        if (matchingDerivedTypes?.Length == 1)
+                        if (!hasAllLabelsFunc(entityInfo.LabelsWithTypeNameCatch))
                         {
-                            //we found a perfect match
-                            objectType = matchingDerivedTypes.First();
+                            //try find the derived type that has all the labels
+                            var matchingDerivedTypes = derivedTypes
+                                .Where(t => t != objectType
+                                    && hasAllLabelsFunc(EntityService.GetEntityTypeInfo(t).LabelsWithTypeNameCatch))
+                                .ToArray();
+
+                            if (matchingDerivedTypes?.Length == 1)
+                            {
+                                //we found a perfect match
+                                objectType = matchingDerivedTypes.First();
+                            }
                         }
                     }
                 }
@@ -113,15 +141,17 @@ namespace Neo4jClient.DataAnnotations.Serialization
             return objectType;
         }
 
-        internal static void EnsureSerializerInstance(ref JsonSerializer serializer)
+        internal static void EnsureSerializerInstance(ref JsonSerializer serializer,
+            List<JsonConverter> converters = null,
+            IContractResolver resolver = null)
         {
             if (serializer == null)
             {
                 //this is strange, but the Neo4jClient folks forgot to pass a serializer to this method
                 serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings()
                 {
-                    Converters = GraphClient.DefaultJsonConverters?.Reverse().ToList(),
-                    ContractResolver = GraphClient.DefaultJsonContractResolver,
+                    Converters = converters ?? GraphClient.DefaultJsonConverters?.Reverse().ToList(),
+                    ContractResolver = resolver ?? GraphClient.DefaultJsonContractResolver,
                     ObjectCreationHandling = ObjectCreationHandling.Auto,
                     NullValueHandling = NullValueHandling.Include,
                     DefaultValueHandling = DefaultValueHandling.Include

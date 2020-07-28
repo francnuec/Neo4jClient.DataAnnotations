@@ -91,5 +91,7 @@ namespace Neo4jClient.DataAnnotations.Utils
 
 
         public static string ComplexTypeNameSeparator = "_";
+
+        public const string BoltMetadataPropertyName = "__bolt_metadata__";
     }
 }

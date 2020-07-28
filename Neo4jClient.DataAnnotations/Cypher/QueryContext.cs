@@ -2,6 +2,7 @@
 using Neo4jClient.DataAnnotations.Serialization;
 using Neo4jClient.Serialization;
 using System;
+using System.Collections.Concurrent;
 using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Text;
@@ -45,16 +46,16 @@ namespace Neo4jClient.DataAnnotations.Cypher
         /// <summary>
         /// Note that this query writer is useless against subsequent <see cref="ICypherFluentQuery"/> calls when the query object changes
         /// </summary>
-        public QueryWriter CurrentQueryWriter { get; set; }
+        public QueryWriterWrapper CurrentQueryWriter { get; set; }
         /// <summary>
         /// Note that this build strategy might be is useless against subsequent <see cref="ICypherFluentQuery"/> calls when the query object changes
         /// </summary>
         public PropertiesBuildStrategy? CurrentBuildStrategy { get; set; }
 
-        public static Func<ICypherFluentQuery, QueryWriter> QueryWriterGetter { get; } = (q) =>
+        public static Func<ICypherFluentQuery, QueryWriterWrapper> QueryWriterGetter { get; } = (q) =>
         {
             QueryWriter qw = Defaults.QueryWriterInfo.GetValue(q) as QueryWriter;
-            return qw;
+            return qw != null ? new QueryWriterWrapper(qw, q.GetAnnotationsContext()) : null;
         };
 
         public static Func<ICypherFluentQuery, PropertiesBuildStrategy?> BuildStrategyGetter { get; } = (q) =>
@@ -68,12 +69,12 @@ namespace Neo4jClient.DataAnnotations.Cypher
             return null;
         };
 
-        private Dictionary<Expression, (Expression NewNode, string Build)> funcsCachedBuilds;
-        public Dictionary<Expression, (Expression NewNode, string Build)> FuncsCachedBuilds => 
-            funcsCachedBuilds ?? (funcsCachedBuilds = new Dictionary<Expression, (Expression NewNode, string Build)>());
+        private ConcurrentDictionary<Expression, (Expression NewNode, string Build)> funcsCachedBuilds;
+        public ConcurrentDictionary<Expression, (Expression NewNode, string Build)> FuncsCachedBuilds =>
+            funcsCachedBuilds ?? (funcsCachedBuilds = new ConcurrentDictionary<Expression, (Expression NewNode, string Build)>());
 
-        private Dictionary<Expression, JToken> funcsCachedJTokens;
-        public Dictionary<Expression, JToken> FuncsCachedJTokens =>
-            funcsCachedJTokens ?? (funcsCachedJTokens = new Dictionary<Expression, JToken>());
+        private ConcurrentDictionary<Expression, JToken> funcsCachedJTokens;
+        public ConcurrentDictionary<Expression, JToken> FuncsCachedJTokens =>
+            funcsCachedJTokens ?? (funcsCachedJTokens = new ConcurrentDictionary<Expression, JToken>());
     }
 }

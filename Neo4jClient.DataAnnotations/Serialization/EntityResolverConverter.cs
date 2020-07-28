@@ -58,7 +58,7 @@ namespace Neo4jClient.DataAnnotations.Serialization
             //now convert to JObject
             var valueJObject = serializer.Deserialize<JObject>(reader);
 
-            SerializationUtilities.EnsureRightJObject(ref valueJObject, out var valueMetadataJObject);
+            SerializationUtilities.EnsureRightJObject(AnnotationsContext, ref valueJObject, out var valueMetadataJObject);
 
             objectType = SerializationUtilities.GetRightObjectType(objectType, valueMetadataJObject, EntityService);
 

@@ -70,9 +70,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         public bool CamelCaseProperties { get; }
 
-        protected Func<ICypherFluentQuery, QueryWriter> QueryWriterGetter => QueryContext.QueryWriterGetter;
+        protected Func<ICypherFluentQuery, QueryWriterWrapper> QueryWriterGetter => QueryContext.QueryWriterGetter;
 
-        protected QueryWriter QueryWriter { get { return QueryWriterGetter.Invoke(CypherQuery); } }
+        protected QueryWriterWrapper QueryWriter { get { return QueryWriterGetter.Invoke(CypherQuery); } }
 
         protected EntityConverter Converter => QueryContext?.Converter;
 
@@ -114,7 +114,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         protected void ReplaceQueryWriterText(ICypherFluentQuery newQuery, string newText)
         {
-            var queryWriter = QueryWriterGetter.Invoke(newQuery) as QueryWriter;
+            var queryWriter = QueryWriterGetter.Invoke(newQuery).QueryWriter;// as QueryWriter;
             var qwBuilderInfo = queryWriter.GetType().GetField("queryTextBuilder",
                 BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
             var qwBuilder = qwBuilderInfo.GetValue(queryWriter) as StringBuilder;
