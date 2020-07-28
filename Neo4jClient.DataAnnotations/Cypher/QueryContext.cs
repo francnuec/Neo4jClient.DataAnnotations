@@ -2,6 +2,7 @@
 using Neo4jClient.DataAnnotations.Serialization;
 using Neo4jClient.Serialization;
 using System;
+using System.Collections.Concurrent;
 using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Text;
@@ -68,12 +69,12 @@ namespace Neo4jClient.DataAnnotations.Cypher
             return null;
         };
 
-        private Dictionary<Expression, (Expression NewNode, string Build)> funcsCachedBuilds;
-        public Dictionary<Expression, (Expression NewNode, string Build)> FuncsCachedBuilds =>
-            funcsCachedBuilds ?? (funcsCachedBuilds = new Dictionary<Expression, (Expression NewNode, string Build)>());
+        private ConcurrentDictionary<Expression, (Expression NewNode, string Build)> funcsCachedBuilds;
+        public ConcurrentDictionary<Expression, (Expression NewNode, string Build)> FuncsCachedBuilds =>
+            funcsCachedBuilds ?? (funcsCachedBuilds = new ConcurrentDictionary<Expression, (Expression NewNode, string Build)>());
 
-        private Dictionary<Expression, JToken> funcsCachedJTokens;
-        public Dictionary<Expression, JToken> FuncsCachedJTokens =>
-            funcsCachedJTokens ?? (funcsCachedJTokens = new Dictionary<Expression, JToken>());
+        private ConcurrentDictionary<Expression, JToken> funcsCachedJTokens;
+        public ConcurrentDictionary<Expression, JToken> FuncsCachedJTokens =>
+            funcsCachedJTokens ?? (funcsCachedJTokens = new ConcurrentDictionary<Expression, JToken>());
     }
 }
