@@ -111,7 +111,5 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
         {
             return WrappedItem.RollbackAsync();
         }
-
-        public TransactionConfig TransactionConfig => WrappedItem.TransactionConfig;
     }
 }
