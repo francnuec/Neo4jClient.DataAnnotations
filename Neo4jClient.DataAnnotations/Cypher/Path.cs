@@ -1,11 +1,7 @@
 ﻿using System;
-using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
-using System.Text;
-using System.Collections;
-using System.Threading.Tasks;
 using System.Linq;
-using Neo4jClient.Cypher;
+using System.Text;
 
 namespace Neo4jClient.DataAnnotations.Cypher
 {
@@ -48,6 +44,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         public List<Pattern> Patterns { get; } = new List<Pattern>();
 
+        public IPathExtent Current => this;
+
         public IPattern Pattern => Patterns.Count > 0 ? Patterns[Patterns.Count - 1] : null;
 
         public IPathExtension Extension => this;
@@ -56,13 +54,12 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         public IPathBuilder Builder { get; }
 
-        public IPathExtent Current => this;
-
         protected override string InternalBuild()
         {
             var builder = new StringBuilder();
 
-            var patternText = Patterns.Select(p => p.Build(ref CypherQuery)).Aggregate((pattern, extension) => pattern + extension);
+            var patternText = Patterns.Select(p => p.Build(ref CypherQuery))
+                .Aggregate((pattern, extension) => pattern + extension);
 
             builder.Append(patternText);
 
@@ -93,7 +90,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Init();
         }
 
-        void Init()
+        private void Init()
         {
             //Add a new pattern
             Patterns.Add(new Pattern(CypherQuery, this, AnnotationsContext));

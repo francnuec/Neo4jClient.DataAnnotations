@@ -1,11 +1,6 @@
-﻿using Neo4jClient.DataAnnotations.Cypher;
-using Neo4jClient.DataAnnotations.Serialization;
-using Neo4jClient.DataAnnotations.Tests.Models;
-using System;
-using Neo4jClient.DataAnnotations.Utils;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
 using System.Linq;
+using Neo4jClient.DataAnnotations.Tests.Models;
 using Xunit;
 
 namespace Neo4jClient.DataAnnotations.Tests
@@ -25,7 +20,8 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = cypherQuery.QueryText;
 
-            var expected = $"WHERE ((movie.Title = ${cypherQuery.QueryParameters.First().Key}) AND (movie.Year = ${cypherQuery.QueryParameters.Last().Key}))";
+            var expected =
+                $"WHERE ((movie.Title = ${cypherQuery.QueryParameters.First().Key}) AND (movie.Year = ${cypherQuery.QueryParameters.Last().Key}))";
 
             Assert.Equal(expected, actual);
         }
@@ -37,18 +33,20 @@ namespace Neo4jClient.DataAnnotations.Tests
             var query = testContext.Query;
 
             var cypherQuery = query.AsAnnotatedQuery()
-                .Where((MovieNode movie, ActorNode actor) => (movie.Title == "Grey's Anatomy" && movie.Year == 2017)
-                || ((actor.Address as AddressThirdLevel).Location.Longitude == 0.1
-                && (actor.Address as AddressThirdLevel).ComplexProperty.Property == 5))
+                .Where((MovieNode movie, ActorNode actor) => movie.Title == "Grey's Anatomy" && movie.Year == 2017
+                                                             || (actor.Address as AddressThirdLevel).Location
+                                                             .Longitude == 0.1
+                                                             && (actor.Address as AddressThirdLevel).ComplexProperty
+                                                             .Property == 5)
                 .AsCypherQuery()
                 .Query;
 
             var actual = cypherQuery.QueryText;
 
             var expected = $"WHERE (((movie.Title = ${cypherQuery.QueryParameters.ElementAt(0).Key})"
-                + $" AND (movie.Year = ${cypherQuery.QueryParameters.ElementAt(1).Key}))"
-                + $" OR ((actor.NewAddressName_Location_Longitude = ${cypherQuery.QueryParameters.ElementAt(2).Key})"
-                + $" AND (actor.NewAddressName_ComplexProperty_Property = ${cypherQuery.QueryParameters.ElementAt(3).Key})))";
+                           + $" AND (movie.Year = ${cypherQuery.QueryParameters.ElementAt(1).Key}))"
+                           + $" OR ((actor.NewAddressName_Location_Longitude = ${cypherQuery.QueryParameters.ElementAt(2).Key})"
+                           + $" AND (actor.NewAddressName_ComplexProperty_Property = ${cypherQuery.QueryParameters.ElementAt(3).Key})))";
 
             Assert.Equal(expected, actual);
         }
@@ -68,7 +66,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var actual = cypherQuery.QueryText;
 
             var expected = $"WHERE (movie.Title = ${cypherQuery.QueryParameters.First().Key})" +
-                            Environment.NewLine + $"AND (movie.Year = ${cypherQuery.QueryParameters.Last().Key})";
+                           Environment.NewLine + $"AND (movie.Year = ${cypherQuery.QueryParameters.Last().Key})";
 
             Assert.Equal(expected, actual);
         }
@@ -88,7 +86,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var actual = cypherQuery.QueryText;
 
             var expected = $"WHERE (movie.Title = ${cypherQuery.QueryParameters.First().Key})" +
-                          Environment.NewLine + $"OR (movie.Year = ${cypherQuery.QueryParameters.Last().Key})";
+                           Environment.NewLine + $"OR (movie.Year = ${cypherQuery.QueryParameters.Last().Key})";
 
             Assert.Equal(expected, actual);
         }
@@ -149,11 +147,11 @@ namespace Neo4jClient.DataAnnotations.Tests
             var actual = cypherQuery.QueryText;
 
             var expected = "WITH actor.NewAddressName_ComplexProperty_Property"
-                + ", actor.NewAddressName_SomeOtherProperty"
-                + ", actor.NewAddressName_Location_Latitude"
-                + ", actor.NewAddressName_Location_Longitude"
-                + ", actor.NewAddressName_AddressLine, actor.NewAddressName_City"
-                + ", actor.NewAddressName_State, actor.NewAddressName_Country";
+                           + ", actor.NewAddressName_SomeOtherProperty"
+                           + ", actor.NewAddressName_Location_Latitude"
+                           + ", actor.NewAddressName_Location_Longitude"
+                           + ", actor.NewAddressName_AddressLine, actor.NewAddressName_City"
+                           + ", actor.NewAddressName_State, actor.NewAddressName_Country";
 
             Assert.Equal(expected, actual);
         }
@@ -169,7 +167,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 {
                     title = movie.As<MovieNode>().Title,
                     movie.As<MovieNode>().Year
-                }, addedWithText: "*")
+                }, "*")
                 .AsCypherQuery()
                 .Query;
 
@@ -200,7 +198,8 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = cypherQuery.QueryText;
 
-            var expected = "WITH movie.Title AS title, movie.Year AS Year, actor.NewAddressName_Location_Longitude AS lg"
+            var expected =
+                "WITH movie.Title AS title, movie.Year AS Year, actor.NewAddressName_Location_Longitude AS lg"
                 + ", actor.NewAddressName_ComplexProperty_Property AS Property, count(something) AS something_count";
 
             Assert.Equal(expected, actual);
@@ -227,13 +226,13 @@ namespace Neo4jClient.DataAnnotations.Tests
             var actual = cypherQuery.QueryText;
 
             var expected = "WITH movie.Title AS title, movie.Year AS Year"
-                + ", { ComplexProperty_Property: actor.NewAddressName_ComplexProperty_Property"
-                + ", SomeOtherProperty: actor.NewAddressName_SomeOtherProperty"
-                + ", Location_Latitude: actor.NewAddressName_Location_Latitude"
-                + ", Location_Longitude: actor.NewAddressName_Location_Longitude"
-                + ", AddressLine: actor.NewAddressName_AddressLine, City: actor.NewAddressName_City"
-                + ", State: actor.NewAddressName_State, Country: actor.NewAddressName_Country } AS lg"
-                + ", actor.NewAddressName_ComplexProperty_Property AS Property, count(something) AS something_count";
+                           + ", { ComplexProperty_Property: actor.NewAddressName_ComplexProperty_Property"
+                           + ", SomeOtherProperty: actor.NewAddressName_SomeOtherProperty"
+                           + ", Location_Latitude: actor.NewAddressName_Location_Latitude"
+                           + ", Location_Longitude: actor.NewAddressName_Location_Longitude"
+                           + ", AddressLine: actor.NewAddressName_AddressLine, City: actor.NewAddressName_City"
+                           + ", State: actor.NewAddressName_State, Country: actor.NewAddressName_Country } AS lg"
+                           + ", actor.NewAddressName_ComplexProperty_Property AS Property, count(something) AS something_count";
 
             Assert.Equal(expected, actual);
         }
@@ -275,11 +274,11 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             //doesn't make cypher sense but for tests
             var expected = "RETURN { ComplexProperty_Property: actor.NewAddressName_ComplexProperty_Property"
-                + ", SomeOtherProperty: actor.NewAddressName_SomeOtherProperty"
-                + ", Location_Latitude: actor.NewAddressName_Location_Latitude"
-                + ", Location_Longitude: actor.NewAddressName_Location_Longitude"
-                + ", AddressLine: actor.NewAddressName_AddressLine, City: actor.NewAddressName_City"
-                + ", State: actor.NewAddressName_State, Country: actor.NewAddressName_Country }";
+                           + ", SomeOtherProperty: actor.NewAddressName_SomeOtherProperty"
+                           + ", Location_Latitude: actor.NewAddressName_Location_Latitude"
+                           + ", Location_Longitude: actor.NewAddressName_Location_Longitude"
+                           + ", AddressLine: actor.NewAddressName_AddressLine, City: actor.NewAddressName_City"
+                           + ", State: actor.NewAddressName_State, Country: actor.NewAddressName_Country }";
 
             Assert.Equal(expected, actual);
         }
@@ -304,7 +303,8 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = cypherQuery.QueryText;
 
-            var expected = "RETURN movie.Title AS title, movie.Year AS Year, actor.NewAddressName_Location_Longitude AS lg"
+            var expected =
+                "RETURN movie.Title AS title, movie.Year AS Year, actor.NewAddressName_Location_Longitude AS lg"
                 + ", actor.NewAddressName_ComplexProperty_Property AS Property, count(something) AS something_count";
 
             Assert.Equal(expected, actual);
@@ -352,7 +352,8 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = cypherQuery.QueryText;
 
-            var expected = "RETURN DISTINCT movie.Title AS title, movie.Year AS Year, actor.NewAddressName_Location_Longitude AS lg"
+            var expected =
+                "RETURN DISTINCT movie.Title AS title, movie.Year AS Year, actor.NewAddressName_Location_Longitude AS lg"
                 + ", actor.NewAddressName_ComplexProperty_Property AS Property, count(something) AS something_count";
 
             Assert.Equal(expected, actual);

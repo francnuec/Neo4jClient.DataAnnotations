@@ -1,24 +1,15 @@
-﻿using Newtonsoft.Json.Serialization;
-using System;
-using Neo4jClient.DataAnnotations.Utils;
-using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
+﻿using System;
 using System.Linq;
+using System.Reflection;
+using Neo4jClient.DataAnnotations.Utils;
+using Newtonsoft.Json.Serialization;
 
 namespace Neo4jClient.DataAnnotations.Serialization
 {
     public class ComplexTypedPropertyValueProvider : IValueProvider
     {
-        public string Name { get; protected set; }
-        public Type Type { get; protected set; }
-        public IValueProvider ValueProvider { get; protected set; }
-        public Type DeclaringType { get; protected set; }
-        public Type ChildType { get; protected set; }
-        public IValueProvider ChildValueProvider { get; protected set; }
-
         public ComplexTypedPropertyValueProvider
-            (string name, Type type, Type declaringType, IValueProvider valueProvider,
+        (string name, Type type, Type declaringType, IValueProvider valueProvider,
             Type childType, IValueProvider childValueProvider)
         {
             Name = name;
@@ -30,6 +21,13 @@ namespace Neo4jClient.DataAnnotations.Serialization
             ChildType = childType;
             ChildValueProvider = childValueProvider;
         }
+
+        public string Name { get; protected set; }
+        public Type Type { get; protected set; }
+        public IValueProvider ValueProvider { get; protected set; }
+        public Type DeclaringType { get; protected set; }
+        public Type ChildType { get; protected set; }
+        public IValueProvider ChildValueProvider { get; protected set; }
 
         public object GetValue(object target)
         {
@@ -47,17 +45,15 @@ namespace Neo4jClient.DataAnnotations.Serialization
             var instance = ValueProvider.GetValue(target);
 
             instance = GetComplexTypeInstance(Name, ref type, DeclaringType, instance, out var isNew,
-                hasComplexChild: childComplexProvider != null, 
-                childName: childComplexProvider?.Name, childType: childComplexProvider?.Type,
-                childDeclaringType: childComplexProvider?.DeclaringType);
+                childComplexProvider != null,
+                childComplexProvider?.Name, childComplexProvider?.Type,
+                childComplexProvider?.DeclaringType);
 
             Utils.Utilities.CheckIfComplexTypeInstanceIsNull(instance, Name, DeclaringType);
 
             if (isNew)
-            {
                 //set the value
                 ValueProvider.SetValue(target, instance);
-            }
 
             ChildValueProvider.SetValue(instance, value);
         }
@@ -82,7 +78,8 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
             if (!isNew && hasComplexChild)
             {
-                var members = instance.GetType().GetMembers(Defaults.MemberSearchBindingFlags).Where(m => m is FieldInfo || m is PropertyInfo);
+                var members = instance.GetType().GetMembers(Defaults.MemberSearchBindingFlags)
+                    .Where(m => m is FieldInfo || m is PropertyInfo);
 
                 //check if the instance has the child as a member
                 if (members?.Where(m => m.IsEquivalentTo(childName, childDeclaringType,
@@ -108,7 +105,6 @@ namespace Neo4jClient.DataAnnotations.Serialization
                         }
                         catch
                         {
-
                         }
                     }
                 }

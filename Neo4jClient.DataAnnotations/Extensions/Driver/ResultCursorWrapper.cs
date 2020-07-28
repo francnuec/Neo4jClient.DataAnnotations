@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Neo4j.Driver;
 
 namespace Neo4jClient.DataAnnotations.Extensions.Driver
@@ -21,15 +18,6 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
         {
             return WrappedItem.ConsumeAsync();
         }
-        protected internal static IRecord GetRecord(IRecord record)
-        {
-            if (record != null && !(record is RecordWrapper))
-            {
-                return new RecordWrapper(record);
-            }
-
-            return record;
-        }
 
         public async Task<IRecord> PeekAsync()
         {
@@ -42,5 +30,12 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
         }
 
         public IRecord Current => GetRecord(WrappedItem.Current);
+
+        protected internal static IRecord GetRecord(IRecord record)
+        {
+            if (record != null && !(record is RecordWrapper)) return new RecordWrapper(record);
+
+            return record;
+        }
     }
 }

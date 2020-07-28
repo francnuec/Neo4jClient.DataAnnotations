@@ -1,26 +1,29 @@
-﻿using Neo4jClient.Cypher;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Neo4jClient.Cypher;
 using Neo4jClient.DataAnnotations.Cypher;
 using Neo4jClient.DataAnnotations.Serialization;
 using Neo4jClient.Serialization;
 using Newtonsoft.Json;
 using NSubstitute;
-using System;
-using Neo4jClient.DataAnnotations.Utils;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Neo4jClient.DataAnnotations.Tests
 {
     public abstract class TestContext
     {
-        public TestContext()
-        {
-
-        }
-
         private IGraphClient client;
+
+        private Func<string, Type, object> deserializer;
+
+        private JsonSerializerSettings deserializerSettings;
+
+        private ICypherFluentQuery query;
+
+        private QueryContext queryContext;
+
+        private Func<object, string> serializer;
+
         protected internal virtual IGraphClient Client
         {
             get
@@ -29,12 +32,13 @@ namespace Neo4jClient.DataAnnotations.Tests
                 {
                     client = Substitute.For<IRawGraphClient>();
 
-                    client.JsonConverters.Returns(GraphClient.DefaultJsonConverters?.ToList() ?? new List<JsonConverter>());
+                    client.JsonConverters.Returns(GraphClient.DefaultJsonConverters?.ToList() ??
+                                                  new List<JsonConverter>());
                     client.JsonContractResolver.Returns(GraphClient.DefaultJsonContractResolver);
 
-                    client.Serializer.Returns((info) =>
+                    client.Serializer.Returns(info =>
                     {
-                        return new CustomJsonSerializer()
+                        return new CustomJsonSerializer
                         {
                             JsonContractResolver = client.JsonContractResolver,
                             JsonConverters = client.JsonConverters
@@ -48,10 +52,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
                 return client;
             }
-            set
-            {
-                client = value;
-            }
+            set => client = value;
         }
 
         public abstract AnnotationsContext AnnotationsContext { get; set; }
@@ -61,25 +62,17 @@ namespace Neo4jClient.DataAnnotations.Tests
 
         public abstract JsonSerializerSettings SerializerSettings { get; set; }
 
-        private JsonSerializerSettings deserializerSettings;
         public virtual JsonSerializerSettings DeserializerSettings
         {
             get
             {
-                if (deserializerSettings == null)
-                {
-                    deserializerSettings = SerializerSettings;
-                }
+                if (deserializerSettings == null) deserializerSettings = SerializerSettings;
 
                 return deserializerSettings;
             }
-            set
-            {
-                deserializerSettings = value;
-            }
+            set => deserializerSettings = value;
         }
 
-        private Func<object, string> serializer;
         public virtual Func<object, string> Serializer
         {
             get
@@ -87,18 +80,14 @@ namespace Neo4jClient.DataAnnotations.Tests
                 if (serializer == null)
                 {
                     Attach();
-                    serializer = (entity) => JsonConvert.SerializeObject(entity, SerializerSettings);
+                    serializer = entity => JsonConvert.SerializeObject(entity, SerializerSettings);
                 }
 
                 return serializer;
             }
-            set
-            {
-                serializer = value;
-            }
+            set => serializer = value;
         }
 
-        private Func<string, Type, object> deserializer;
         public virtual Func<string, Type, object> Deserializer
         {
             get
@@ -111,13 +100,9 @@ namespace Neo4jClient.DataAnnotations.Tests
 
                 return deserializer;
             }
-            set
-            {
-                deserializer = value;
-            }
+            set => deserializer = value;
         }
 
-        private ICypherFluentQuery query;
         public virtual ICypherFluentQuery Query
         {
             get
@@ -130,13 +115,9 @@ namespace Neo4jClient.DataAnnotations.Tests
 
                 return query;
             }
-            set
-            {
-                query = value;
-            }
+            set => query = value;
         }
 
-        private QueryContext queryContext;
         public virtual QueryContext QueryContext
         {
             get
@@ -144,7 +125,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 if (queryContext == null)
                 {
                     Attach();
-                    queryContext = new QueryContext()
+                    queryContext = new QueryContext
                     {
                         AnnotationsContext = AnnotationsContext,
                         Client = Client,
@@ -154,10 +135,7 @@ namespace Neo4jClient.DataAnnotations.Tests
 
                 return queryContext;
             }
-            set
-            {
-                queryContext = value;
-            }
+            set => queryContext = value;
         }
 
         protected void Attach()
@@ -169,20 +147,17 @@ namespace Neo4jClient.DataAnnotations.Tests
 
     public class ResolverTestContext : TestContext
     {
-        public ResolverTestContext()
-        {
-
-        }
+        private AnnotationsContext annotationsContext;
 
         private EntityResolver resolver;
+
+        private JsonSerializerSettings serializerSettings;
+
         protected EntityResolver Resolver
         {
             get
             {
-                if (resolver == null)
-                {
-                    resolver = AnnotationsContext.EntityResolver; //new EntityResolver();
-                }
+                if (resolver == null) resolver = AnnotationsContext.EntityResolver; //new EntityResolver();
 
                 return resolver;
             }
@@ -196,38 +171,30 @@ namespace Neo4jClient.DataAnnotations.Tests
             }
         }
 
-        private JsonSerializerSettings serializerSettings;
         public override JsonSerializerSettings SerializerSettings
         {
             get
             {
                 if (serializerSettings == null)
-                {
-                    serializerSettings = new JsonSerializerSettings()
+                    serializerSettings = new JsonSerializerSettings
                     {
-                        Converters = new List<JsonConverter>() { Resolver.DeserializeConverter },
+                        Converters = new List<JsonConverter> { Resolver.DeserializeConverter },
                         ContractResolver = Resolver,
-                        ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                        ReferenceLoopHandling = ReferenceLoopHandling.Ignore
                     };
-                }
 
                 return serializerSettings;
             }
-            set
-            {
-                serializerSettings = value;
-            }
+            set => serializerSettings = value;
         }
 
-        private AnnotationsContext annotationsContext;
         public override AnnotationsContext AnnotationsContext
         {
             get
             {
                 if (annotationsContext == null)
-                {
-                    annotationsContext = Client.WithAnnotations<TestAnnotationsContext, EntityResolver>().GetAnnotationsContext(); //new TestAnnotationsContext(Client, Resolver);
-                }
+                    annotationsContext = Client.WithAnnotations<TestAnnotationsContext, EntityResolver>()
+                        .GetAnnotationsContext(); //new TestAnnotationsContext(Client, Resolver);
 
                 return annotationsContext;
             }
@@ -241,11 +208,12 @@ namespace Neo4jClient.DataAnnotations.Tests
 
     public class ConverterTestContext : TestContext
     {
-        public ConverterTestContext()
-        {
-        }
+        private AnnotationsContext annotationsContext;
 
         private EntityConverter converter;
+
+        private JsonSerializerSettings serializerSettings;
+
         protected EntityConverter Converter
         {
             get
@@ -264,37 +232,29 @@ namespace Neo4jClient.DataAnnotations.Tests
             }
         }
 
-        private JsonSerializerSettings serializerSettings;
         public override JsonSerializerSettings SerializerSettings
         {
             get
             {
                 if (serializerSettings == null)
-                {
-                    serializerSettings = new JsonSerializerSettings()
+                    serializerSettings = new JsonSerializerSettings
                     {
-                        Converters = new List<JsonConverter>() { Converter },
-                        ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                        Converters = new List<JsonConverter> { Converter },
+                        ReferenceLoopHandling = ReferenceLoopHandling.Ignore
                     };
-                }
 
                 return serializerSettings;
             }
-            set
-            {
-                serializerSettings = value;
-            }
+            set => serializerSettings = value;
         }
 
-        private AnnotationsContext annotationsContext;
         public override AnnotationsContext AnnotationsContext
         {
             get
             {
                 if (annotationsContext == null)
-                {
-                    annotationsContext = Client.WithAnnotationsConverter<TestAnnotationsContext, EntityConverter>().GetAnnotationsContext(); //new TestAnnotationsContext(Client, Converter);
-                }
+                    annotationsContext = Client.WithAnnotationsConverter<TestAnnotationsContext, EntityConverter>()
+                        .GetAnnotationsContext(); //new TestAnnotationsContext(Client, Converter);
 
                 return annotationsContext;
             }

@@ -1,15 +1,15 @@
-﻿using Neo4jClient.DataAnnotations.Expressions;
-using Newtonsoft.Json.Linq;
-using System;
-using Neo4jClient.DataAnnotations.Utils;
+﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Text;
 using Neo4jClient.Cypher;
-using Newtonsoft.Json;
+using Neo4jClient.DataAnnotations.Expressions;
+using Neo4jClient.DataAnnotations.Utils;
 using Neo4jClient.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Neo4jClient.DataAnnotations.Cypher
 {
@@ -537,7 +537,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
                 //visit the expressions
                 var entityVisitor = new EntityExpressionVisitor
-                    (queryContext, sourceParameter: lambdaExpr.Parameters.FirstOrDefault());
+                    (queryContext, lambdaExpr.Parameters.FirstOrDefault());
 
                 var instanceExpr = entityVisitor.Visit(lambdaExpr.Body.UncastBox(out var typeRemoved));
 
@@ -548,10 +548,11 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
                 //now resolve instance
                 var instanceJson = serializer(instance);
-                JObject instanceJObject = JObject.Parse(instanceJson);
+                var instanceJObject = JObject.Parse(instanceJson);
 
                 //now do the pending assignments
-                var funcsVisitor = new FunctionExpressionVisitor(entityVisitor.QueryContext, new FunctionVisitorContext());
+                var funcsVisitor =
+                    new FunctionExpressionVisitor(entityVisitor.QueryContext, new FunctionVisitorContext());
                 DoPendingAssignments(funcsVisitor, instanceJObject, pendingAssignments, out hasFunctionsInProperties);
 
                 return instanceJObject;
@@ -569,7 +570,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
             hasFunctionsInProperties = false;
 
             if (pendingAssignments?.Count > 0)
-            {
                 foreach (var pendingAssignment in pendingAssignments)
                 {
                     var key = pendingAssignment.Key;
@@ -578,7 +578,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
                     var token = instanceJObject[key.ComplexJsonName];
 
                     if (value != null)
-                    {
                         try
                         {
                             JToken result = null;
@@ -589,7 +588,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
                             {
                                 case MemberAssignment memberAssignment:
                                     {
-                                        result = GetJValueFromExpression(funcsVisitor, memberAssignment.Expression, out var memHasFunctionsInProperties);
+                                        result = GetJValueFromExpression(funcsVisitor, memberAssignment.Expression,
+                                            out var memHasFunctionsInProperties);
                                         hasFunctionsInProperties = hasFunctionsInProperties || memHasFunctionsInProperties;
                                         break;
                                     }
@@ -603,21 +603,24 @@ namespace Neo4jClient.DataAnnotations.Cypher
                                         arrayExpressions = newArrayExpression.Expressions;
                                         break;
                                     }
-                                case ListInitExpression listInitExpression when (!listInitExpression.Type.IsDictionaryType()):
+                                case ListInitExpression listInitExpression
+                                    when !listInitExpression.Type.IsDictionaryType():
                                     {
                                         arrayExpressions = listInitExpression.Initializers.SelectMany(i => i.Arguments);
                                         break;
                                     }
                                 case Expression expression:
                                     {
-                                        result = GetJValueFromExpression(funcsVisitor, expression, out var exprHasFunctionsInProperties);
+                                        result = GetJValueFromExpression(funcsVisitor, expression,
+                                            out var exprHasFunctionsInProperties);
                                         hasFunctionsInProperties = hasFunctionsInProperties || exprHasFunctionsInProperties;
                                         break;
                                     }
                                 default:
                                     {
                                         //this is an error
-                                        throw new InvalidOperationException(string.Format(Messages.AmbiguousExpressionError, value));
+                                        throw new InvalidOperationException(string.Format(Messages.AmbiguousExpressionError,
+                                            value));
                                     }
                             }
 
@@ -626,25 +629,21 @@ namespace Neo4jClient.DataAnnotations.Cypher
                                 var array = new JArray();
                                 foreach (var expr in arrayExpressions)
                                 {
-                                    var exprResult = GetJValueFromExpression(funcsVisitor, expr, out var exprHasFunctionsInProperties);
+                                    var exprResult = GetJValueFromExpression(funcsVisitor, expr,
+                                        out var exprHasFunctionsInProperties);
                                     hasFunctionsInProperties = hasFunctionsInProperties || exprHasFunctionsInProperties;
 
                                     array.Add(exprResult);
                                 }
 
                                 if (array.Count > 0)
-                                {
                                     if (token is JArray tokenArray)
                                     {
                                         //append the values to the existing token
-                                        foreach (var item in array)
-                                        {
-                                            tokenArray.Add(item);
-                                        }
+                                        foreach (var item in array) tokenArray.Add(item);
 
                                         array = tokenArray;
                                     }
-                                }
 
                                 result = array;
                             }
@@ -655,26 +654,24 @@ namespace Neo4jClient.DataAnnotations.Cypher
                                 var allPossibleNames = key.GetAllPossibleComplexJsonNames();
                                 var resultJProps = resultJObject.Properties();
 
-                                var matchingProps = allPossibleNames.Select(n => resultJProps.FirstOrDefault(p => p.Name == n));
+                                var matchingProps =
+                                    allPossibleNames.Select(n => resultJProps.FirstOrDefault(p => p.Name == n));
                                 var actualProp = matchingProps.FirstOrDefault();
                                 if (actualProp != null && actualProp.Type == JTokenType.Property)
-                                {
                                     result = actualProp.Value;
-                                }
                             }
 
                             token = result;
                         }
                         catch (Exception e)
                         {
-                            throw new InvalidOperationException(string.Format(Messages.MemberAssignmentError, key.Name, key.ComplexJsonName), e);
+                            throw new InvalidOperationException(
+                                string.Format(Messages.MemberAssignmentError, key.Name, key.ComplexJsonName), e);
                         }
-                    }
 
                     hasFunctionsInProperties = hasFunctionsInProperties || token is JRaw;
                     instanceJObject[key.ComplexJsonName] = token;
                 }
-            }
         }
 
         private static JToken GetJValueFromExpression(
@@ -690,9 +687,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Exception exception = null;
 
             if (ExpressionUtilities.IsSpecialNode(funcsVisitor, expression, out var executedValue,
-                out var hasVars, out bool hasFunctions, out var hasDummy)
+                    out var hasVars, out var hasFunctions, out var hasDummy)
                 && !(executedValue is JValue))
-            {
                 //try functions visitor
                 try
                 {
@@ -710,9 +706,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 {
                     exception = e;
                 }
-            }
             else
-            {
                 try
                 {
                     if (!(executedValue is JToken jtoken))
@@ -728,14 +722,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 {
                     exception = e;
                 }
-            }
 
             //there is a problem
-            throw exception ?? new InvalidOperationException(string.Format(Messages.AmbiguousExpressionError, expression));
+            throw exception ??
+                  new InvalidOperationException(string.Format(Messages.AmbiguousExpressionError, expression));
         }
 
         internal static Dictionary<MemberName, MemberInfo> FilterPropertyMap
-            (string _baseActualName, string _baseJsonName,
+        (string _baseActualName, string _baseJsonName,
             IEnumerable<KeyValuePair<MemberName, MemberInfo>> _jsonNamePropertyMap)
         {
             _baseActualName = _baseActualName ?? _baseJsonName;
@@ -744,12 +738,12 @@ namespace Neo4jClient.DataAnnotations.Cypher
             if (_jsonNamePropertyMap != null
                 && !string.IsNullOrWhiteSpace(_baseActualName)
                 && !string.IsNullOrWhiteSpace(_baseJsonName))
-            {
                 //filter for only the ones that have the base json name
                 return _jsonNamePropertyMap
-                    .Where(jm => jm.Key.ComplexActual.StartsWith(_baseActualName) || jm.Key.ComplexJson.StartsWith(_baseJsonName))
+                    .Where(jm =>
+                        jm.Key.ComplexActual.StartsWith(_baseActualName) ||
+                        jm.Key.ComplexJson.StartsWith(_baseJsonName))
                     .ToDictionary(jm => jm.Key, jm => jm.Value);
-            }
 
             return null;
         }
@@ -914,7 +908,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         //        var assignmentKeyInfos = assignmentKey as List<MemberInfo>;
 
         //        MemberInfo assignmentKeyInfo = null; //assignmentKeyInfos?.FirstOrDefault(); //assume it's only one member in the list at first. this should be more than one if it is a complex assignment
-                
+
         //        if (assignmentKeyInfos?.Count > 0)
         //        {
         //            string lastJsonName = null;
@@ -1064,17 +1058,15 @@ namespace Neo4jClient.DataAnnotations.Cypher
             IEnumerable<Expression<Func<IPathBuilder, IPathExtent>>> pathBuildExpressions,
             PropertiesBuildStrategy patternBuildStrategy)
         {
-            StringBuilder stringBuilder = new StringBuilder();
+            var stringBuilder = new StringBuilder();
 
             var pathBuilds = new List<string>();
 
             foreach (var pathExpr in pathBuildExpressions)
-            {
                 pathBuilds.Add(new PathBuilder(query, pathExpr)
                 {
                     PatternBuildStrategy = patternBuildStrategy
                 }.Build(ref query));
-            }
 
             var pathsText = pathBuilds.Aggregate((first, second) => $"{first}, {second}");
 
@@ -1101,10 +1093,11 @@ namespace Neo4jClient.DataAnnotations.Cypher
             {
             }
 
-            _serializer = _serializer ?? new CustomJsonSerializer()
+            _serializer = _serializer ?? new CustomJsonSerializer
             {
                 JsonContractResolver = client?.JsonContractResolver ?? GraphClient.DefaultJsonContractResolver,
-                JsonConverters = client?.JsonConverters ?? (IEnumerable<JsonConverter>)GraphClient.DefaultJsonConverters
+                JsonConverters = client?.JsonConverters ??
+                                 (IEnumerable<JsonConverter>)GraphClient.DefaultJsonConverters
             };
 
             var customJsonSerializer = _serializer as CustomJsonSerializer;
@@ -1122,8 +1115,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             Func<object, string> actualSerializer = null;
 
             if (_serializer != null)
-            {
-                actualSerializer = (obj) =>
+                actualSerializer = obj =>
                 {
                     NullValueHandling? nullHandling = null;
                     if (customJsonSerializer != null)
@@ -1139,13 +1131,10 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
                     return serialized;
                 };
-            }
             else
-            {
                 actualSerializer = null;
-            }
 
-            return new QueryContext()
+            return new QueryContext
             {
                 Client = client,
                 //Converter = converter,
@@ -1167,10 +1156,10 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 var newParamCastExpr = Expression.Convert(newParamExpr, p.Type);
 
                 //change the params to match
-                var visitor = new ParameterReplacerVisitor(new Dictionary<string, Expression>()
-                        {
-                            { p.Name, newParamCastExpr }
-                        });
+                var visitor = new ParameterReplacerVisitor(new Dictionary<string, Expression>
+                {
+                    {p.Name, newParamCastExpr}
+                });
                 try
                 {
                     var body = visitor.Visit(constraints.Body);
@@ -1178,7 +1167,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 }
                 catch
                 {
-
                 }
             }
 
@@ -1192,9 +1180,10 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
         internal static string BuildWithParamsForValues(JObject finalProperties, Func<object, string> serializer,
-            Func<string, string> getKey, string separator, Func<string, string> getValue, out bool hasRaw, out JObject newFinalProperties)
+            Func<string, string> getKey, string separator, Func<string, string> getValue, out bool hasRaw,
+            out JObject newFinalProperties)
         {
-            bool _hasRaw = false;
+            var _hasRaw = false;
             JObject _newFinalProperties = null;
 
             var value = finalProperties.Properties()
@@ -1232,7 +1221,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
             finalProperties = null;
 
             if (buildStrategy == PropertiesBuildStrategy.WithParams)
-            {
                 try
                 {
                     //try to get the object first to see if we can defer its serialization
@@ -1241,25 +1229,22 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 catch
                 {
                 }
-            }
 
             if (finalObject == null)
             {
                 finalObject = finalProperties = finalPropertiesGetter();
 
                 if (buildStrategy == PropertiesBuildStrategy.WithParams && finalPropsHasFuncsGetter())
-                {
                     //finalObjectGetter should have returned an error so we check here
                     //if it has functions, the best way is the withParamsForValues
                     buildStrategy = PropertiesBuildStrategy.WithParamsForValues;
-                }
             }
         }
 
         internal static string BuildFinalProperties
-            (QueryContext queryContext,
+        (QueryContext queryContext,
             string variable,
-            LambdaExpression properties, 
+            LambdaExpression properties,
             ref PropertiesBuildStrategy buildStrategy,
             out string parameter,
             out JObject newFinalProperties,
@@ -1274,28 +1259,24 @@ namespace Neo4jClient.DataAnnotations.Cypher
             var _finalPropsHasFunctions = finalPropsHasFunctions = false;
 
             var value = BuildFinalProperties(queryContext, variable, () =>
-            {
-                if (properties != null)
                 {
-                    try
-                    {
-                        return (properties as Expression<Func<object>>)?.Compile().Invoke(); //ExecuteExpression<object>();
-                    }
-                    catch
-                    {
+                    if (properties != null)
+                        try
+                        {
+                            return (properties as Expression<Func<object>>)?.Compile()
+                                .Invoke(); //ExecuteExpression<object>();
+                        }
+                        catch
+                        {
+                        }
 
-                    }
-                }
-
-                return null;
-            }, () =>
-            {
-                return GetFinalProperties(properties, queryContext, out _finalPropsHasFunctions);
-            }, () => _finalPropsHasFunctions, ref buildStrategy, out parameter, out newFinalProperties,
-            separator: separator, parameterSeed: parameterSeed,
-            useVariableMemberAccessAsKey: useVariableMemberAccessAsKey,
-            useVariableAsValueParameter: useVariableAsParameter,
-            wrapValueInJsonObjectNotation: wrapValueInJsonObjectNotation);
+                    return null;
+                }, () => { return GetFinalProperties(properties, queryContext, out _finalPropsHasFunctions); },
+                () => _finalPropsHasFunctions, ref buildStrategy, out parameter, out newFinalProperties,
+                separator, parameterSeed,
+                useVariableMemberAccessAsKey,
+                useVariableAsParameter,
+                wrapValueInJsonObjectNotation);
 
             finalPropsHasFunctions = _finalPropsHasFunctions;
 
@@ -1303,7 +1284,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
         internal static string BuildFinalProperties
-            (QueryContext queryContext,
+        (QueryContext queryContext,
             string variable,
             Func<object> finalObjectGetter,
             Func<JObject> finalPropertiesGetter,
@@ -1320,10 +1301,12 @@ namespace Neo4jClient.DataAnnotations.Cypher
             newFinalProperties = null;
 
             ResolveFinalObjectProperties
-                (finalObjectGetter, finalPropertiesGetter, finalPropsHasFuncsGetter,
+            (finalObjectGetter, finalPropertiesGetter, finalPropsHasFuncsGetter,
                 ref buildStrategy, out var finalObject, out var finalProperties);
 
-            string param = !useVariableAsValueParameter ? Utils.Utilities.GetRandomVariableFor(parameterSeed ?? variable) : variable;
+            var param = !useVariableAsValueParameter
+                ? Utils.Utilities.GetRandomVariableFor(parameterSeed ?? variable)
+                : variable;
             parameter = param;
 
             string value = null;
@@ -1339,34 +1322,38 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
                             value = "$" + param;
 
-                            if (buildStrategy == PropertiesBuildStrategy.WithParamsForValues || useVariableMemberAccessAsKey)
+                            if (buildStrategy == PropertiesBuildStrategy.WithParamsForValues ||
+                                useVariableMemberAccessAsKey)
                             {
                                 value = BuildWithParamsForValues(finalProperties, queryContext.SerializeCallback,
-                                    getKey: (propertyName) => useVariableMemberAccessAsKey ? $"{variable}.{propertyName}" : propertyName,
-                                    separator: separator,
-                                    getValue: (propertyName) => $"${param}.{propertyName}",
-                                    hasRaw: out var hasRaw, newFinalProperties: out newFinalProperties);
+                                    propertyName =>
+                                        useVariableMemberAccessAsKey ? $"{variable}.{propertyName}" : propertyName,
+                                    separator,
+                                    propertyName => $"${param}.{propertyName}",
+                                    out var hasRaw, out newFinalProperties);
 
                                 _finalProperties = newFinalProperties ?? _finalProperties;
                             }
 
                             queryContext.CurrentQueryWriter.CreateParameter
-                                (param, finalObject != null && _finalProperties == finalProperties ? finalObject : _finalProperties);
+                            (param,
+                                finalObject != null && _finalProperties == finalProperties
+                                    ? finalObject
+                                    : _finalProperties);
                             break;
                         }
                     case PropertiesBuildStrategy.NoParams:
                         {
                             value = finalProperties.Properties()
-                                    .Select(jp => $"{(useVariableMemberAccessAsKey ? $"{variable}.{jp.Name}" : jp.Name)}{separator}{queryContext.SerializeCallback(jp.Value)}")
-                                    .Aggregate((first, second) => $"{first}, {second}");
+                                .Select(jp =>
+                                    $"{(useVariableMemberAccessAsKey ? $"{variable}.{jp.Name}" : jp.Name)}{separator}{queryContext.SerializeCallback(jp.Value)}")
+                                .Aggregate((first, second) => $"{first}, {second}");
                             break;
                         }
                 }
 
                 if (wrapValueInJsonObjectNotation && value != null)
-                {
                     value = value?.StartsWith("$") != true ? $"{{ {value} }}" : value;
-                }
             }
 
             return value;

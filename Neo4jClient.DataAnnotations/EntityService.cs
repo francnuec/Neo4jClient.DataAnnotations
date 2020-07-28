@@ -1,29 +1,31 @@
 ﻿using System;
-using Neo4jClient.DataAnnotations.Utils;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Collections.Concurrent;
+using Neo4jClient.DataAnnotations.Utils;
 
 namespace Neo4jClient.DataAnnotations
 {
     /// <summary>
-    /// This class provides entity information.
+    ///     This class provides entity information.
     /// </summary>
     public sealed class EntityService : IEntityService
     {
-        private ConcurrentDictionary<Type, EntityTypeInfo> entityTypeInfos { get; set; }
-            = new ConcurrentDictionary<Type, EntityTypeInfo>();
-
-        private ConcurrentDictionary<Type, List<Type>> entityTypeToCovariantTypes
+        private readonly ConcurrentDictionary<Type, List<Type>> entityTypeToCovariantTypes
             = new ConcurrentDictionary<Type, List<Type>>();
 
-        internal ConcurrentDictionary<Type, bool> processedScalarTypes { get; }
-        = new ConcurrentDictionary<Type, bool>();
+        private readonly List<Type> knownNonScalars = new List<Type>();
+
+        private readonly List<Type> knownScalars = new List<Type>
+        {
+            typeof(string), typeof(Uri), typeof(Guid),
+            typeof(DateTime), typeof(DateTimeOffset), typeof(TimeSpan),
+            typeof(decimal), typeof(IntPtr), typeof(Version)
+        };
 
         internal EntityService()
         {
-
         }
 
         internal EntityService(IEnumerable<Type> entityTypes) : this()
@@ -31,36 +33,58 @@ namespace Neo4jClient.DataAnnotations
             AddEntityTypes(entityTypes);
         }
 
-        private List<Type> knownScalars = new List<Type>()
+        private ConcurrentDictionary<Type, EntityTypeInfo> entityTypeInfos { get; }
+            = new ConcurrentDictionary<Type, EntityTypeInfo>();
+
+        internal ConcurrentDictionary<Type, bool> processedScalarTypes { get; }
+            = new ConcurrentDictionary<Type, bool>();
+
+        public List<Type> KnownScalarTypes
         {
-            typeof(string), typeof(Uri), typeof(Guid),
-            typeof(DateTime), typeof(DateTimeOffset), typeof(TimeSpan),
-            typeof(decimal), typeof(IntPtr), typeof(Version)
-        };
-        public List<Type> KnownScalarTypes { get { lock (this) { return knownScalars; } } }
-
-        private List<Type> knownNonScalars = new List<Type>();
-        public List<Type> KnownNonScalarTypes { get { lock (this) { return knownNonScalars; } } }
-
-        public ICollection<Type> EntityTypes { get { lock (this) { return entityTypeToCovariantTypes.Keys; } } }
-
-        public void AddEntityTypes(IEnumerable<Type> types)
-        {
-            if (types != null)
+            get
             {
                 lock (this)
                 {
-                    foreach (var type in types)
-                    {
-                        AddEntityType(type);
-                    }
+                    return knownScalars;
                 }
             }
         }
 
+        public List<Type> KnownNonScalarTypes
+        {
+            get
+            {
+                lock (this)
+                {
+                    return knownNonScalars;
+                }
+            }
+        }
+
+        public ICollection<Type> EntityTypes
+        {
+            get
+            {
+                lock (this)
+                {
+                    return entityTypeToCovariantTypes.Keys;
+                }
+            }
+        }
+
+        public void AddEntityTypes(IEnumerable<Type> types)
+        {
+            if (types != null)
+                lock (this)
+                {
+                    foreach (var type in types) AddEntityType(type);
+                }
+        }
+
         /// <summary>
-        /// Registers a <see cref="System.Type"/> with Neo4jClient.DataAnnotations.
-        /// This method also autmatically adds contained complex types. However, derived and/or base types must be added independently.
+        ///     Registers a <see cref="System.Type" /> with Neo4jClient.DataAnnotations.
+        ///     This method also autmatically adds contained complex types. However, derived and/or base types must be added
+        ///     independently.
         /// </summary>
         /// <param name="entityType"></param>
         public void AddEntityType(Type entityType)
@@ -78,12 +102,8 @@ namespace Neo4jClient.DataAnnotations
                         .Where(t => t.IsComplex());
 
                     if (complexTypes != null)
-                    {
                         foreach (var complexType in complexTypes)
-                        {
                             AddEntityType(complexType);
-                        }
-                    }
 
                     //auto add base class too
                     if (entityType.GetTypeInfo().BaseType is Type baseType
@@ -92,12 +112,11 @@ namespace Neo4jClient.DataAnnotations
                     {
                         AddEntityType(baseType);
 
-                        if (entityTypeToCovariantTypes.TryGetValue(baseType, out var derivedList) && derivedList != null)
-                        {
+                        if (entityTypeToCovariantTypes.TryGetValue(baseType, out var derivedList) &&
+                            derivedList != null)
                             //add it as a derived type for base type if already calculated
                             if (!derivedList.Contains(entityType))
                                 derivedList.Add(entityType);
-                        }
                     }
                 }
             }
@@ -108,9 +127,7 @@ namespace Neo4jClient.DataAnnotations
             lock (this)
             {
                 if (EntityTypes.Contains(entityType ?? throw new ArgumentNullException(nameof(entityType))))
-                {
                     entityTypeToCovariantTypes.TryRemove(entityType, out var val);
-                }
             }
         }
 
@@ -119,17 +136,19 @@ namespace Neo4jClient.DataAnnotations
             lock (this)
             {
                 var ret = EntityTypes.Contains(entityType ?? throw new ArgumentNullException(nameof(entityType)))
-                || entityType.GetTypeInfo().IsGenericType && EntityTypes.Contains(entityType.GetGenericTypeDefinition()) //search generics too
-                || (includeBaseClasses && EntityTypes.Any(baseType => baseType.IsAssignableFrom(entityType)
-                || baseType.IsGenericAssignableFrom(entityType))) //optional
-                ;
+                          || entityType.GetTypeInfo().IsGenericType &&
+                          EntityTypes.Contains(entityType.GetGenericTypeDefinition()) //search generics too
+                          || includeBaseClasses && EntityTypes.Any(baseType => baseType.IsAssignableFrom(entityType)
+                                                                               || baseType.IsGenericAssignableFrom(
+                                                                                   entityType)) //optional
+                    ;
 
                 return ret;
             }
         }
 
         /// <summary>
-        /// Retrieves all types that can be assigned to the particular baseType (and not just its direct subclasses).
+        ///     Retrieves all types that can be assigned to the particular baseType (and not just its direct subclasses).
         /// </summary>
         /// <param name="baseType"></param>
         /// <returns></returns>
@@ -140,16 +159,14 @@ namespace Neo4jClient.DataAnnotations
 
             lock (this)
             {
-                if (!entityTypeToCovariantTypes.TryGetValue(baseType, out var derivedTypes) 
+                if (!entityTypeToCovariantTypes.TryGetValue(baseType, out var derivedTypes)
                     || derivedTypes == null)
                 {
-                    derivedTypes = EntityTypes.Where(type => type != baseType 
-                        && (baseType.IsAssignableFrom(type) || baseType.IsGenericAssignableFrom(type)))?.ToList();
+                    derivedTypes = EntityTypes.Where(type => type != baseType
+                                                             && (baseType.IsAssignableFrom(type) ||
+                                                                 baseType.IsGenericAssignableFrom(type)))?.ToList();
 
-                    if (derivedTypes != null)
-                    {
-                        entityTypeToCovariantTypes[baseType] = derivedTypes;
-                    }
+                    if (derivedTypes != null) entityTypeToCovariantTypes[baseType] = derivedTypes;
                 }
 
                 derivedTypes = new List<Type>(derivedTypes); //protect the original copy
@@ -160,7 +177,9 @@ namespace Neo4jClient.DataAnnotations
 
                 if (list != null)
                     //sort them
-                    list.Sort((x, y) => x.IsGenericAssignableFrom(y) ? -1 : (y.IsGenericAssignableFrom(x) ? 1 : (x.Name.CompareTo(y.Name))));
+                    list.Sort((x, y) =>
+                        x.IsGenericAssignableFrom(y) ? -1 :
+                        y.IsGenericAssignableFrom(x) ? 1 : x.Name.CompareTo(y.Name));
 
                 return list;
             }
@@ -197,31 +216,30 @@ namespace Neo4jClient.DataAnnotations
             lock (this)
             {
                 var existing = entityTypeInfos.Where(pair => baseType.IsAssignableFrom(pair.Key)
-                || baseType.IsGenericAssignableFrom(pair.Key)).ToDictionary(pair => pair.Key, pair => pair.Value);
+                                                             || baseType.IsGenericAssignableFrom(pair.Key))
+                    .ToDictionary(pair => pair.Key, pair => pair.Value);
 
                 existing = existing ?? new Dictionary<Type, EntityTypeInfo>();
 
                 if (existing.Count == 0 || !existing.ContainsKey(baseType))
-                {
                     existing[baseType] = GetEntityTypeInfo(baseType);
-                }
 
                 if (getFromEntityTypesToo)
                 {
                     //check entity types
                     var derivedTypes = GetDerivedEntityTypes(baseType);
                     foreach (var derivedType in derivedTypes)
-                    {
                         if (!existing.ContainsKey(derivedType))
                             existing[derivedType] = GetEntityTypeInfo(derivedType);
-                    }
                 }
 
                 var list = existing.Values.ToList();
 
                 if (list != null)
                     //sort them
-                    list.Sort((x, y) => x.Type.IsGenericAssignableFrom(y.Type) ? -1 : (y.Type.IsGenericAssignableFrom(x.Type) ? 1 : (x.Type.Name.CompareTo(y.Type.Name))));
+                    list.Sort((x, y) =>
+                        x.Type.IsGenericAssignableFrom(y.Type) ? -1 :
+                        y.Type.IsGenericAssignableFrom(x.Type) ? 1 : x.Type.Name.CompareTo(y.Type.Name));
 
                 return list;
             }

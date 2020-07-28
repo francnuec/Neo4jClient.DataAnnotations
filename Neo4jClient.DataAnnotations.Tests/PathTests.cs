@@ -1,18 +1,7 @@
-﻿using Neo4jClient.Cypher;
-using Neo4jClient.DataAnnotations.Cypher;
-using Neo4jClient.DataAnnotations.Tests.Models;
-using Neo4jClient.Serialization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using NSubstitute;
-using System;
-using Neo4jClient.DataAnnotations.Utils;
-using System.Collections.Generic;
-using System.Text;
-using Xunit;
-using System.Reflection;
+﻿using System;
 using System.Linq.Expressions;
-using Neo4jClient.DataAnnotations.Serialization;
+using Neo4jClient.DataAnnotations.Cypher;
+using Xunit;
 
 namespace Neo4jClient.DataAnnotations.Tests
 {
@@ -24,16 +13,17 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = P => TestUtilities.BuildTestPath(P)
                 .Extend(RelationshipDirection.Outgoing);
 
             var pathBuilder = new PathBuilder(query, pathExpr);
             var path = pathBuilder.Path as Path;
 
             var expected = "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
-                "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [" + Environment.NewLine + "  \"Meredith Grey\"" + Environment.NewLine + "] })" +
-                "-->()";
+                           "<-[:STARRED_IN|ACTED_IN*1]-" +
+                           "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [" +
+                           Environment.NewLine + "  \"Meredith Grey\"" + Environment.NewLine + "] })" +
+                           "-->()";
 
             var actual = path.Build(ref query);
 
@@ -46,7 +36,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPathMixed(P)
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = P => TestUtilities.BuildTestPathMixed(P)
                 .Extend(RelationshipDirection.Outgoing);
 
             var pathBuilder = new PathBuilder(query, pathExpr);
@@ -55,9 +45,9 @@ namespace Neo4jClient.DataAnnotations.Tests
             var path = pathBuilder.Path as Path;
 
             var expected = "(greysAnatomy:Series $greysAnatomy)" +
-                "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
-                "-->()";
+                           "<-[:STARRED_IN|ACTED_IN*1]-" +
+                           "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
+                           "-->()";
 
             var actual = path.Build(ref query);
 
@@ -70,7 +60,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = P => TestUtilities.BuildTestPath(P)
                 .Extend(RelationshipDirection.Outgoing);
 
             var pathBuilder = new PathBuilder(query, pathExpr);
@@ -79,9 +69,9 @@ namespace Neo4jClient.DataAnnotations.Tests
             var path = pathBuilder.Path as Path;
 
             var expected = "(greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
-                "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
-                "-->()";
+                           "<-[:STARRED_IN|ACTED_IN*1]-" +
+                           "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
+                           "-->()";
 
             var actual = path.Build(ref query);
 
@@ -94,17 +84,18 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = P => TestUtilities.BuildTestPath(P)
                 .Extend(RelationshipDirection.Outgoing)
                 .Assign(); //assigns path parameter
 
             var pathBuilder = new PathBuilder(query, pathExpr);
 
             var expected = "P=" +
-                "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
-                "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [" + Environment.NewLine + "  \"Meredith Grey\"" + Environment.NewLine + "] })" +
-                "-->()";
+                           "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
+                           "<-[:STARRED_IN|ACTED_IN*1]-" +
+                           "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [" +
+                           Environment.NewLine + "  \"Meredith Grey\"" + Environment.NewLine + "] })" +
+                           "-->()";
 
             var actual = pathBuilder.Build(ref query);
 
@@ -117,16 +108,17 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = P => TestUtilities.BuildTestPath(P)
                 .Shortest(); //adds the shortestPath function and consequently assigns path parameter
 
             var pathBuilder = new PathBuilder(query, pathExpr);
 
             var expected = "P=shortestPath(" +
-                "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
-                "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [" + Environment.NewLine + "  \"Meredith Grey\"" + Environment.NewLine + "] })" +
-                ")";
+                           "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
+                           "<-[:STARRED_IN|ACTED_IN*1]-" +
+                           "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [" +
+                           Environment.NewLine + "  \"Meredith Grey\"" + Environment.NewLine + "] })" +
+                           ")";
 
             var actual = pathBuilder.Build(ref query);
 
@@ -139,7 +131,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestAlreadyBoundPath(P)
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = P => TestUtilities.BuildTestAlreadyBoundPath(P)
                 .Extend(RelationshipDirection.Outgoing);
 
             var pathBuilder = new PathBuilder(query, pathExpr);
@@ -148,9 +140,9 @@ namespace Neo4jClient.DataAnnotations.Tests
             var path = pathBuilder.Path as Path;
 
             var expected = "(greysAnatomy)" +
-                "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo)" +
-                "-->()";
+                           "<-[:STARRED_IN|ACTED_IN*1]-" +
+                           "(ellenPompeo)" +
+                           "-->()";
 
             var actual = path.Build(ref query);
 

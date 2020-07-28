@@ -1,6 +1,6 @@
-﻿using Neo4jClient.DataAnnotations.Utils;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Neo4jClient.DataAnnotations.Utils;
 
 namespace Neo4jClient.DataAnnotations
 {
