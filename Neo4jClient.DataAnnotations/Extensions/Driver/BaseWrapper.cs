@@ -6,7 +6,7 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
 {
     public abstract class BaseWrapper<T> : IEquatable<T>
     {
-        public BaseWrapper(T item)
+        protected BaseWrapper(T item)
         {
             WrappedItem = item;
         }

@@ -36,42 +36,12 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
             return WrappedItem.SupportsMultiDbAsync();
         }
 
-        public Config Config { get => WrappedItem.Config; }
+        public Config Config => WrappedItem.Config;
 
         public void Dispose()
         {
             WrappedItem.Dispose();
         }
-        //TODO: REMOVE COMMENTED CODE
-        //public IAsyncSession AsyncSession()
-        //{
-        //    return GetSession(WrappedItem.Session());
-        //}
-
-        //public IAsyncSession AsyncSession(AccessMode defaultMode)
-        //{
-        //    return GetSession(WrappedItem.AsyncSession(defaultMode));
-        //}
-
-        //public IAsyncSession AsyncSession(string bookmark)
-        //{
-        //    return GetSession(WrappedItem.AsyncSession(bookmark));
-        //}
-
-        //public IAsyncSession Session(AccessMode defaultMode, string bookmark)
-        //{
-        //    return GetSession(WrappedItem.Session(defaultMode, bookmark));
-        //}
-
-        //public IAsyncSession Session(AccessMode defaultMode, IEnumerable<string> bookmarks)
-        //{
-        //    return GetSession(WrappedItem.Session(defaultMode, bookmarks));
-        //}
-
-        //public IAsyncSession Session(IEnumerable<string> bookmarks)
-        //{
-        //    return GetSession(WrappedItem.Session(bookmarks));
-        //}
 
         protected internal static IAsyncSession GetSession(IAsyncSession session)
         {
