@@ -163,6 +163,13 @@ If you encounter an exception anywhere, kindly raise an issue so we can deal wit
 
 Cheers.
 
+## PS: Buy me a coffee?
+
+Neo4jClient.DataAnnotations is the result of many hours of work. If you would like to show support for the development of this project, then, please feel free to buy me a coffee :).
+
+<a href="https://www.buymeacoffee.com/francnuec" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" style="height: 51px !important;width: 217px !important;" width="217" height="51" ></a>
+
+
 >  
 >  
 > Written with [StackEdit](https://stackedit.io/).

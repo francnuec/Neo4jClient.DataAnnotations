@@ -249,6 +249,59 @@ namespace Neo4jClient.DataAnnotations
                 {
                 }
             }
+
+            if (graphClient is IBoltGraphClient)
+            {
+                if (!graphClient.IsConnected)
+                {
+                    //connection is required at this point for bolt clients
+                    throw new InvalidOperationException(Messages.ClientIsNotConnectedError);
+                }
+
+                dynamic driverMemberInfo = null;
+
+                PropertyInfo driverProperty = graphClient
+                    .GetType()
+                    .GetProperty("Driver", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+
+                if (driverProperty != null && !driverProperty.CanWrite)
+                {
+                    FieldInfo driverBackingField = null;
+
+                    try
+                    {
+                        //try reflection to set the converters in the original array
+                        driverBackingField = Utils.Utilities.GetBackingField(driverProperty);
+                        driverMemberInfo = driverBackingField;
+                    }
+                    catch
+                    {
+                    }
+                }
+                else
+                {
+                    driverMemberInfo = driverProperty;
+                }
+
+                var driver = driverMemberInfo?.GetValue(graphClient) as IDriver;
+                if (driver == null)
+                {
+                    //this isn't supposed to happen
+                    throw new InvalidOperationException(Messages.ClientHasNoDriverError);
+                }
+
+                //now wrap the driver with our wrappers
+                driver = new DriverWrapper(driver);
+
+                try
+                {
+                    //replace the driver
+                    driverMemberInfo?.SetValue(graphClient, driver);
+                }
+                catch
+                {
+                }
+            }
         }
 
         public static EntityService CreateNewEntityService()
