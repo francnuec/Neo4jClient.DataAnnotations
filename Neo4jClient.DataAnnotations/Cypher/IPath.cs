@@ -1,10 +1,4 @@
-﻿using Neo4jClient.Cypher;
-using System;
-using Neo4jClient.DataAnnotations.Utils;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq.Expressions;
-using System.Text;
+﻿using System.ComponentModel;
 
 namespace Neo4jClient.DataAnnotations.Cypher
 {
@@ -47,22 +41,18 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
     public interface IPatternedPath : IPath
     {
-
     }
 
     public interface IPatternedPath<out TANode> : IPath
     {
-
     }
 
     public interface IPatternedPath<out TANode, out TBNode> : IPath
     {
-
     }
 
     public interface IPatternedPath<out TANode, out TRel, out TBNode> : IPath
     {
-
     }
 
 
@@ -74,21 +64,17 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
     public interface IPatternedPathExtension : IPathExtension
     {
-
     }
 
     public interface IPatternedPathExtension<out TBNode> : IPathExtension
     {
-
     }
 
     public interface IPatternedPathExtension<out TANode, out TBNode> : IPathExtension
     {
-
     }
 
     public interface IPatternedPathExtension<out TANode, out TRel, out TBNode> : IPathExtension
     {
-
     }
 }

@@ -1,41 +1,40 @@
-﻿using Neo4jClient.DataAnnotations.Cypher;
-using Neo4jClient.DataAnnotations.Serialization;
-using System;
-using Neo4jClient.DataAnnotations.Utils;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Text;
-using System.ComponentModel;
+using Neo4jClient.DataAnnotations.Cypher;
+using Neo4jClient.DataAnnotations.Serialization;
+using Neo4jClient.DataAnnotations.Utils;
 using Newtonsoft.Json.Linq;
 
 namespace Neo4jClient.DataAnnotations.Expressions
 {
     public partial class FunctionExpressionVisitor : ExpressionVisitor, IHaveAnnotationsContext
     {
+        private readonly List<Func<FunctionHandlerContext, Func<Expression>>> canHandleHandlers
+            = new List<Func<FunctionHandlerContext, Func<Expression>>>();
+
+        private FunctionHandlerContext handlerTestContext;
+
+        //public StringBuilder Builder { get; } = new StringBuilder();
+
+        private FunctionsVisitorBuilder mBuilder;
+
         public FunctionExpressionVisitor(QueryContext queryContext, FunctionVisitorContext context = null)
         {
-            QueryContext = queryContext ??  throw new ArgumentNullException(nameof(queryContext));
+            QueryContext = queryContext ?? throw new ArgumentNullException(nameof(queryContext));
             Context = context ?? new FunctionVisitorContext();
             Context.Visitor = this;
         }
 
         public FunctionVisitorContext Context { get; }
 
-        public AnnotationsContext AnnotationsContext => QueryContext.AnnotationsContext;
-
-        //public StringBuilder Builder { get; } = new StringBuilder();
-
-        private FunctionsVisitorBuilder mBuilder;
         public FunctionsVisitorBuilder Builder
         {
             get
             {
-                if (mBuilder == null)
-                {
-                    mBuilder = new FunctionsVisitorBuilder(this);
-                }
+                if (mBuilder == null) mBuilder = new FunctionsVisitorBuilder(this);
 
                 return mBuilder;
             }
@@ -47,21 +46,16 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         public Func<object, string> Serializer => QueryContext?.SerializeCallback;
 
-        protected List<Expression> IgnoredNodes { get; private set; } = new List<Expression>();
-        protected List<Expression> UnhandledNodes { get; private set; } = new List<Expression>();
+        protected List<Expression> IgnoredNodes { get; } = new List<Expression>();
+        protected List<Expression> UnhandledNodes { get; } = new List<Expression>();
+
+        public AnnotationsContext AnnotationsContext => QueryContext.AnnotationsContext;
 
         public EntityService EntityService => AnnotationsContext.EntityService;
 
-        private FunctionHandlerContext handlerTestContext = null;
-        private List<Func<FunctionHandlerContext, Func<Expression>>> canHandleHandlers
-                = new List<Func<FunctionHandlerContext, Func<Expression>>>();
-
         protected virtual void NotHandled(Expression node)
         {
-            if (node != null && !UnhandledNodes.Contains(node))
-            {
-                UnhandledNodes.Add(node);
-            }
+            if (node != null && !UnhandledNodes.Contains(node)) UnhandledNodes.Add(node);
         }
 
         protected virtual void Handled(Expression node)
@@ -72,10 +66,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         public virtual void Ignore(Expression node)
         {
-            if (node != null && !IgnoredNodes.Contains(node))
-            {
-                IgnoredNodes.Add(node);
-            }
+            if (node != null && !IgnoredNodes.Contains(node)) IgnoredNodes.Add(node);
 
             Handled(node);
         }
@@ -97,7 +88,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
         }
 
         /// <summary>
-        /// Don't call this method directly unless you wan't to force this process
+        ///     Don't call this method directly unless you wan't to force this process
         /// </summary>
         public virtual void ProcessUnhandledSimpleVars(Expression currentNode, bool considerInits = false)
         {
@@ -107,7 +98,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
             Expression initExpression = null;
 
             //filter the nodes for only the onces of interest to us
-            Func<Expression, bool> filter = (n) =>
+            Func<Expression, bool> filter = n =>
             {
                 switch (n.NodeType)
                 {
@@ -116,21 +107,26 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     case ExpressionType.Convert:
                     case ExpressionType.ConvertChecked:
                     case ExpressionType.Unbox:
-                    case ExpressionType.Call when (n is MethodCallExpression callExpr
-                    && (
-                    (callExpr.Method.Name.StartsWith("_As") && (callExpr.Method.DeclaringType == Defaults.CypherFuncsType
-                    || callExpr.Method.DeclaringType == Defaults.CypherExtensionFuncsType)) //._As and ._AsList()
-                    || (callExpr.Method.Name == "Get" && callExpr.Method.DeclaringType == Defaults.VarsType) //CypherVariables.Get()
-                    || callExpr.Method.IsEquivalentTo(Defaults.CypherObjectIndexerInfo) //CypherVariables.Get("")[""]
-                    //|| (callExpr.Method.Name == "_" && callExpr.Method.DeclaringType == Defaults.ObjectExtensionsType) //._()
-                    )
-                    ):
+                    case ExpressionType.Call when n is MethodCallExpression callExpr
+                                                  && (
+                                                      callExpr.Method.Name.StartsWith("_As") &&
+                                                      (callExpr.Method.DeclaringType == Defaults.CypherFuncsType
+                                                       || callExpr.Method.DeclaringType ==
+                                                       Defaults.CypherExtensionFuncsType) //._As and ._AsList()
+                                                      || callExpr.Method.Name == "Get" &&
+                                                      callExpr.Method.DeclaringType ==
+                                                      Defaults.VarsType //CypherVariables.Get()
+                                                      || callExpr.Method.IsEquivalentTo(
+                                                          Defaults
+                                                              .CypherObjectIndexerInfo) //CypherVariables.Get("")[""]
+                                                                                        //|| (callExpr.Method.Name == "_" && callExpr.Method.DeclaringType == Defaults.ObjectExtensionsType) //._()
+                                                  ):
                         {
                             return true;
                         }
                     case ExpressionType.MemberInit:
                     case ExpressionType.New:
-                    case ExpressionType.ListInit when (n.Type.IsDictionaryType()):
+                    case ExpressionType.ListInit when n.Type.IsDictionaryType():
                         {
                             if (considerInits && initExpression == null)
                             {
@@ -148,23 +144,20 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
             //repeatFilter:
 
-            List<Expression> _unhandledNodes = UnhandledNodes
+            var _unhandledNodes = UnhandledNodes
                 .AsEnumerable()
                 .Reverse()
                 .TakeWhile(filter)
                 .ToList();
 
-            if (_unhandledNodes.Count == 0)
-            {
-                return;
-            }
+            if (_unhandledNodes.Count == 0) return;
 
-            bool hasMemberAccess = _unhandledNodes.Any(n => n.NodeType == ExpressionType.MemberAccess);
+            var hasMemberAccess = _unhandledNodes.Any(n => n.NodeType == ExpressionType.MemberAccess);
 
             JObject initJObject = null;
             JToken initJValue = null;
 
-            int initExprIdx = -1;
+            var initExprIdx = -1;
 
             string builtValue = null;
 
@@ -176,25 +169,19 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     _unhandledNodes.Remove(initExpression);
 
                 if (!hasMemberAccess)
-                {
                     try
                     {
                         var executedValue = initExpression.ExecuteExpression<object>();
-                        if (executedValue is JToken token)
-                        {
-                            initJValue = token;
-                        }
+                        if (executedValue is JToken token) initJValue = token;
                     }
                     catch
                     {
-
                     }
-                }
             }
 
             if (initJValue == null)
             {
-                bool removeVariable = false;
+                var removeVariable = false;
 
                 if (!Utils.Utilities.HasVars(_unhandledNodes))
                 {
@@ -212,15 +199,14 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     removeVariable = true;
                 }
 
-                builtValue = ExpressionUtilities.BuildSimpleVarsCall(_unhandledNodes, QueryContext, useResolvedJsonName: Context.UseResolvedJsonName);
+                builtValue =
+                    ExpressionUtilities.BuildSimpleVarsCall(_unhandledNodes, QueryContext, Context.UseResolvedJsonName);
 
                 if (string.IsNullOrWhiteSpace(builtValue))
-                {
                     //error
                     throw new InvalidOperationException(
                         string.Format(Messages.InvalidVariableExpressionError,
-                        _unhandledNodes.Last().ToString(), builtValue ?? ""));
-                }
+                            _unhandledNodes.Last(), builtValue ?? ""));
 
                 if (removeVariable)
                 {
@@ -244,10 +230,8 @@ namespace Neo4jClient.DataAnnotations.Expressions
                             (Expression.Lambda(initExpression), QueryContext, out var hasFuncsInProps);
 
                         if (existingJToken == null)
-                        {
                             //cache this for later use in same query
                             QueryContext.FuncsCachedJTokens[initExpression] = initJObject;
-                        }
                     }
                     else
                     {
@@ -256,43 +240,29 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 }
 
                 if (initJObject != null && initJObject.Count > 0)
-                {
                     try
                     {
                         initJValue = initJObject.SelectToken($"$.{builtValue.Trim().TrimStart('.')}");
                     }
                     catch (Exception e)
                     {
-
                     }
-                }
             }
 
             if (considerInits && initJValue == null)
-            {
                 //we didn't get what we came here for
                 return;
-            }
 
             if (considerInits && initExprIdx >= 0)
-            {
                 //replace it
                 _unhandledNodes.Insert(initExprIdx, initExpression);
-            }
 
             if (initJValue != null)
-            {
                 WriteArgument(Expression.Constant(initJValue, initJValue.GetType()), _unhandledNodes.LastOrDefault());
-            }
             else
-            {
                 Builder.Append(builtValue, _unhandledNodes.LastOrDefault());
-            }
 
-            foreach (var node in _unhandledNodes)
-            {
-                Handled(node);
-            }
+            foreach (var node in _unhandledNodes) Handled(node);
         }
 
         public virtual bool CanHandle(Expression node, out Func<Expression> handler)
@@ -300,7 +270,8 @@ namespace Neo4jClient.DataAnnotations.Expressions
             return CanHandle(node, out handler, out var handlerContext);
         }
 
-        protected virtual bool CanHandle(Expression node, out Func<Expression> handler, out FunctionHandlerContext context)
+        protected virtual bool CanHandle(Expression node, out Func<Expression> handler,
+            out FunctionHandlerContext context)
         {
             handler = null;
             context = null;
@@ -312,50 +283,43 @@ namespace Neo4jClient.DataAnnotations.Expressions
             //then expression class types
 
             if (node is MemberExpression memberNode
-                  && Context.MemberInfoHandlers.Where(mhp => mhp.Key.Name == memberNode.Member.Name)
-                  .Select(mhp => mhp.Value).ToArray() is var memberHandlers
-                  && memberHandlers?.Length > 0)
-            {
+                && Context.MemberInfoHandlers.Where(mhp => mhp.Key.Name == memberNode.Member.Name)
+                    .Select(mhp => mhp.Value).ToArray() is var memberHandlers
+                && memberHandlers?.Length > 0)
                 canHandleHandlers.AddRange(memberHandlers);
-            }
             else if (node is MethodCallExpression methodNode
-                && Context.MemberInfoHandlers.Where(mhp => mhp.Key.Name == methodNode.Method.Name)
-                .Select(mhp => mhp.Value).ToArray() is var methodHandlers
-                && methodHandlers?.Length > 0)
-            {
+                     && Context.MemberInfoHandlers.Where(mhp => mhp.Key.Name == methodNode.Method.Name)
+                         .Select(mhp => mhp.Value).ToArray() is var methodHandlers
+                     && methodHandlers?.Length > 0)
                 canHandleHandlers.AddRange(methodHandlers);
-            }
 
             if (Context.NodeTypeHandlers.TryGetValue(node.NodeType, out var nodeTypeHandlers)
-               && nodeTypeHandlers?.Count > 0)
-            {
+                && nodeTypeHandlers?.Count > 0)
                 canHandleHandlers.AddRange(nodeTypeHandlers);
-            }
 
             var type = node.GetType();
 
             if (Context.TypeHandlers
-                .GroupBy(tp => tp.Key == type ? 1 : (tp.Key.IsAssignableFrom(type) ? 2 : 0)) //prioritize exact type matches over base matches
-                .Where(tpg => tpg.Key > 0)
-                .SelectMany(tpg => tpg.SelectMany(tp => tp.Value)) is var typeHandlers
+                    .GroupBy(tp =>
+                        tp.Key == type ? 1 :
+                        tp.Key.IsAssignableFrom(type) ? 2 : 0) //prioritize exact type matches over base matches
+                    .Where(tpg => tpg.Key > 0)
+                    .SelectMany(tpg => tpg.SelectMany(tp => tp.Value)) is var typeHandlers
                 && typeHandlers?.Count() > 0)
-            {
                 canHandleHandlers.AddRange(typeHandlers);
-            }
 
             if (canHandleHandlers.Count > 0)
             {
                 if (handlerTestContext == null)
-                {
-                    handlerTestContext = new FunctionHandlerContext()
+                    handlerTestContext = new FunctionHandlerContext
                     {
                         VisitorContext = Context
                     };
-                }
 
                 handlerTestContext.Expression = node;
 
-                handler = canHandleHandlers.Select(h => h.Invoke(handlerTestContext)).Where(f => f != null).FirstOrDefault();
+                handler = canHandleHandlers.Select(h => h.Invoke(handlerTestContext)).Where(f => f != null)
+                    .FirstOrDefault();
             }
 
             var hasHandler = handler != null;
@@ -380,7 +344,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
         }
 
         /// <summary>
-        /// This will invoke the specified handler.
+        ///     This will invoke the specified handler.
         /// </summary>
         /// <param name="handler"></param>
         /// <param name="node"></param>
@@ -395,7 +359,8 @@ namespace Neo4jClient.DataAnnotations.Expressions
             return newNode;
         }
 
-        public virtual bool WriteArgument(Expression argExpr, Expression callerNode, bool isRawValue = false, bool writeOnlySimpleValue = false)
+        public virtual bool WriteArgument(Expression argExpr, Expression callerNode, bool isRawValue = false,
+            bool writeOnlySimpleValue = false)
         {
             bool isContinuous = false, hasSimpleValue = false;
             object argumentObj = null;
@@ -405,7 +370,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
             try
             {
                 var _arg = argExpr.Uncast(out var cast);
-                isRawValue = isRawValue || _arg.Type == typeof(Newtonsoft.Json.Linq.JRaw);
+                isRawValue = isRawValue || _arg.Type == typeof(JRaw);
 
                 argumentObj = _arg.ExecuteExpression<object>();
 
@@ -414,14 +379,12 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     var _argument = Serializer(argumentObj);
 
                     if (isRawValue
-                        && _arg.Type != typeof(Newtonsoft.Json.Linq.JRaw)
+                        && _arg.Type != typeof(JRaw)
                         && !string.IsNullOrWhiteSpace(_argument)
                         && _argument.StartsWith("\"")
                         && _argument.EndsWith("\""))
-                    {
                         //remove the quotation
                         _argument = _argument.Substring(0, _argument.Length - 1).Remove(0, 1);
-                    }
 
                     return _argument;
                 };
@@ -438,7 +401,8 @@ namespace Neo4jClient.DataAnnotations.Expressions
             if (!hasSimpleValue)
             {
                 //maybe a vars call
-                var exprs = ExpressionUtilities.GetSimpleMemberAccessStretch(EntityService, argExpr, out var entity, out isContinuous);
+                var exprs = ExpressionUtilities.GetSimpleMemberAccessStretch(EntityService, argExpr, out var entity,
+                    out isContinuous);
             }
 
             if (!isContinuous)
@@ -448,10 +412,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
             if (hasSimpleValue)
             {
                 string argument = null;
-                if (argumentObj == null)
-                {
-                    argument = serializedArgumentGetter();
-                }
+                if (argumentObj == null) argument = serializedArgumentGetter();
 
                 if (!isRawValue //never use params for raw values.
                     && Context.BuildStrategy != PropertiesBuildStrategy.NoParams
@@ -480,15 +441,15 @@ namespace Neo4jClient.DataAnnotations.Expressions
             return true;
         }
 
-        public virtual void WriteOperation(string neo4jOperator, Expression left, 
+        public virtual void WriteOperation(string neo4jOperator, Expression left,
             Expression operatorNode, Expression right, Expression callerNode)
         {
             WriteOperation(neo4jOperator, left, true, operatorNode, true, right, callerNode);
         }
 
-        public virtual void WriteOperation(string neo4jOperator, 
-            Expression left, bool leftSpace, 
-            Expression operatorNode, 
+        public virtual void WriteOperation(string neo4jOperator,
+            Expression left, bool leftSpace,
+            Expression operatorNode,
             bool rightSpace, Expression right,
             Expression callerNode)
         {
@@ -524,7 +485,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                     return node;
                 }
 
-                if (QueryContext.FuncsCachedBuilds.TryGetValue(node, out var visitResult) 
+                if (QueryContext.FuncsCachedBuilds.TryGetValue(node, out var visitResult)
                     && !string.IsNullOrEmpty(visitResult.Build))
                 {
                     //this has been executed before so don't do it again
@@ -533,7 +494,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 }
 
                 var nodeBuilder = new StringBuilder();
-                var nodeMonitor = new FunctionsVisitorBuilder.Monitor()
+                var nodeMonitor = new FunctionsVisitorBuilder.Monitor
                 {
                     Node = node,
                     DidAppend = (builder, caller, value) =>
@@ -543,10 +504,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                         else
                             nodeBuilder.Append(value);
                     },
-                    DidClearAll = (builder) =>
-                    {
-                        nodeBuilder.Clear();
-                    }
+                    DidClearAll = builder => { nodeBuilder.Clear(); }
                 };
 
                 Builder.Monitors.Add(nodeMonitor);
@@ -558,12 +516,9 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 Func<Expression> continuation = () => base.Visit(node);
 
                 if (CanHandle(node, out var handler, out var handlerContext))
-                {
                     //invoke handler
                     newNode = InvokeHandler(handlerContext, continuation);
-                }
                 else
-                {
                     switch (node.NodeType)
                     {
                         case ExpressionType.MemberAccess:
@@ -574,10 +529,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                         case ExpressionType.Call:
                             {
                                 //try to see if it can be executed to write a simple value first & write this value is all okay
-                                if (WriteArgument(node, node, writeOnlySimpleValue: true))
-                                {
-                                    break;
-                                }
+                                if (WriteArgument(node, node, writeOnlySimpleValue: true)) break;
 
                                 goto default;
                             }
@@ -587,7 +539,6 @@ namespace Neo4jClient.DataAnnotations.Expressions
                                 break;
                             }
                     }
-                }
 
                 Handled(node);
 
@@ -597,12 +548,10 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 //cache the results for this query
                 var nodeBuild = nodeBuilder.ToString();
                 if (!string.IsNullOrEmpty(nodeBuild))
-                {
                     lock (QueryContext.FuncsCachedBuilds)
                     {
                         QueryContext.FuncsCachedBuilds[node] = (newNode, nodeBuild);
                     }
-                }
 
                 ProcessUnhandledSimpleVars(node);
 

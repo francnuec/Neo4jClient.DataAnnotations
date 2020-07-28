@@ -1,21 +1,19 @@
 ﻿using System;
-using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text;
 
 namespace Neo4jClient.DataAnnotations.Expressions
 {
     public class ParameterAccessStretchVisitor : ExpressionVisitor, IHaveEntityService
     {
-        List<Expression> seenExpressions = new List<Expression>();
+        private readonly List<Expression> seenExpressions = new List<Expression>();
 
         public ParameterAccessStretchVisitor(EntityService entityService)
         {
             EntityService = entityService ?? throw new ArgumentNullException(nameof(entityService));
         }
 
-        public Dictionary<Expression, ParameterExpression> ParameterAccesses { get; } 
+        public Dictionary<Expression, ParameterExpression> ParameterAccesses { get; }
             = new Dictionary<Expression, ParameterExpression>();
 
         public EntityService EntityService { get; }

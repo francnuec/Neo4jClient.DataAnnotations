@@ -1,20 +1,18 @@
-﻿using Neo4jClient.Cypher;
-using System;
-using Neo4jClient.DataAnnotations.Utils;
-using System.Text;
+﻿using System;
 using System.Linq.Expressions;
+using System.Text;
+using Neo4jClient.Cypher;
 
 namespace Neo4jClient.DataAnnotations.Cypher
 {
     public class PathBuilder : Annotated, IPathBuilder //, IPathFinish
     {
         public PathBuilder(ICypherFluentQuery query, AnnotationsContext context = null)
-            :base(query, context)
+            : base(query, context)
         {
-
         }
 
-        public PathBuilder(ICypherFluentQuery query, 
+        public PathBuilder(ICypherFluentQuery query,
             Expression<Func<IPathBuilder, IPathExtent>> expression,
             AnnotationsContext context = null)
             : this(query, context)
@@ -51,19 +49,12 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
             var pathVariable = PathVariable;
 
-            if (AssignPathVariable && pathVariable != null)
-            {
-                builder.Append($"{pathVariable}=");
-            }
+            if (AssignPathVariable && pathVariable != null) builder.Append($"{pathVariable}=");
 
             if (FindShortestPath)
-            {
                 builder.Append($"shortestPath({pathText})");
-            }
             else
-            {
                 builder.Append(pathText);
-            }
 
             return builder.ToString();
         }
@@ -76,7 +67,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
             }
             catch
             {
-
             }
 
             return base.ToString();

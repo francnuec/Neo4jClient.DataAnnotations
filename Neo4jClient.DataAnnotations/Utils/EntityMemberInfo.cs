@@ -10,6 +10,14 @@ namespace Neo4jClient.DataAnnotations.Expressions
 {
     public class EntityMemberInfo : IHaveEntityService
     {
+        private string complexJsonName;
+
+        private string complexName;
+
+        private string jsonName;
+
+        private Type reflectedType;
+
         public EntityMemberInfo(EntityService entityService,
             string memberName, Type memberType,
             EntityMemberInfo complexParent = null, Type reflectedType = null)
@@ -41,7 +49,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
         public EntityMemberInfo(EntityService entityService, MemberInfo member,
             EntityMemberInfo complexParent = null, Type reflectedType = null)
             : this(entityService, member?.Name ?? throw new ArgumentNullException(nameof(member)),
-                  member.GetMemberType(), complexParent, reflectedType)
+                member.GetMemberType(), complexParent, reflectedType)
         {
             MemberInfo = member;
 
@@ -64,65 +72,49 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         public string Name { get; }
 
-        private string jsonName;
         public string JsonName
         {
             get
             {
-                if (string.IsNullOrWhiteSpace(jsonName))
-                {
-                    return Name;
-                }
+                if (string.IsNullOrWhiteSpace(jsonName)) return Name;
 
                 return jsonName;
             }
-            internal set
-            {
-                jsonName = value;
-            }
+            internal set => jsonName = value;
         }
 
-        private string complexName;
         public string ComplexName
         {
             get
             {
                 if (string.IsNullOrWhiteSpace(complexName))
-                {
-                    return ComplexParent == null ? Name : $"{ComplexParent.ComplexName}{Defaults.ComplexTypeNameSeparator}{Name}";
-                }
+                    return ComplexParent == null
+                        ? Name
+                        : $"{ComplexParent.ComplexName}{Defaults.ComplexTypeNameSeparator}{Name}";
 
                 return complexName;
             }
-            internal set
-            {
-                complexName = value;
-            }
+            internal set => complexName = value;
         }
 
-        private string complexJsonName;
         public string ComplexJsonName
         {
             get
             {
                 if (string.IsNullOrWhiteSpace(complexJsonName))
-                {
-                    return ComplexParent == null ? JsonName : $"{ComplexParent.ComplexJsonName}{Defaults.ComplexTypeNameSeparator}{JsonName}";
-                }
+                    return ComplexParent == null
+                        ? JsonName
+                        : $"{ComplexParent.ComplexJsonName}{Defaults.ComplexTypeNameSeparator}{JsonName}";
 
                 return complexJsonName;
             }
-            internal set
-            {
-                complexJsonName = value;
-            }
+            internal set => complexJsonName = value;
         }
 
         public MemberInfo MemberInfo { get; }
 
         public EntityMemberInfo ComplexParent { get; }
 
-        private Type reflectedType;
         public Type ReflectedType
         {
             get
@@ -133,30 +125,21 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
                     if (ComplexParent?.MemberFinalType is Type memType
                         && reflectedType?.IsGenericAssignableFrom(memType) == true)
-                    {
                         //choose the more specific type
                         reflectedType = memType;
-                    }
 
                     if (ComplexParent?.MemberInfo?.GetMemberType() is Type memType2
                         && reflectedType?.IsGenericAssignableFrom(memType2) == true)
-                    {
                         reflectedType = memType2;
-                    }
 
                     if (DeclaringType != null
                         && reflectedType?.IsGenericAssignableFrom(DeclaringType) == true)
-                    {
                         reflectedType = DeclaringType;
-                    }
                 }
 
                 return reflectedType;
             }
-            private set
-            {
-                reflectedType = value;
-            }
+            private set => reflectedType = value;
         }
 
         public Type DeclaringType { get; }
@@ -182,8 +165,10 @@ namespace Neo4jClient.DataAnnotations.Expressions
             if (obj is EntityMemberInfo otherComplexMemberInfo)
             {
                 var equals = MemberInfo?.Equals(otherComplexMemberInfo.MemberInfo) ??
-                    (ComplexName.Equals(otherComplexMemberInfo.ComplexName) 
-                    && (ComplexName == Name ? MemberFinalType?.Equals(otherComplexMemberInfo.MemberFinalType) ?? false : true));
+                             ComplexName.Equals(otherComplexMemberInfo.ComplexName)
+                             && (ComplexName == Name
+                                 ? MemberFinalType?.Equals(otherComplexMemberInfo.MemberFinalType) ?? false
+                                 : true);
 
                 return equals && (ComplexParent?.Equals(otherComplexMemberInfo.ComplexParent) ?? true);
             }
@@ -193,10 +178,10 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         public override int GetHashCode()
         {
-            return (MemberInfo?.GetHashCode() 
-                ?? ComplexName?.GetHashCode() 
-                ?? ComplexJsonName?.GetHashCode() 
-                ?? base.GetHashCode()) | (ComplexParent?.GetHashCode() ?? 0);
+            return (MemberInfo?.GetHashCode()
+                    ?? ComplexName?.GetHashCode()
+                    ?? ComplexJsonName?.GetHashCode()
+                    ?? base.GetHashCode()) | (ComplexParent?.GetHashCode() ?? 0);
         }
 
         public void ResolveNames(EntityResolver resolver, Func<object, string> serializer)
@@ -235,9 +220,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
                         Utils.Utilities.InitializeComplexTypedProperties(entity, EntityService);
 
                         if (!EntityService.EntityTypes.Contains(entityType))
-                        {
                             EntityService.AddEntityType(entityType); //just in case it wasn't already added.
-                        }
 
                         //serialize the entity so the jsonnames would be set
                         var serializedEntity = serializer(entity);
@@ -254,8 +237,11 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 //var complexName = ComplexName;
 
                 var memberJsonNameMapItem = jsonPropMap
-                    .Where(item => memberInfo != null ? item.Value.IsEquivalentTo(memberInfo) : 
-                    (item.Key.Actual == nonJsonName && item.Value.GetMemberType().IsGenericAssignableFrom(MemberFinalType)))
+                    .Where(item =>
+                        memberInfo != null
+                            ? item.Value.IsEquivalentTo(memberInfo)
+                            : item.Key.Actual == nonJsonName &&
+                              item.Value.GetMemberType().IsGenericAssignableFrom(MemberFinalType))
                     .FirstOrDefault();
 
                 if (memberJsonNameMapItem.Value != null)
@@ -275,7 +261,6 @@ namespace Neo4jClient.DataAnnotations.Expressions
             }
             catch
             {
-
             }
 
             return base.ToString();
@@ -283,17 +268,13 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         public List<string> GetAllPossibleComplexNames()
         {
-            var result = new List<string>() { ComplexName, Name };
+            var result = new List<string> { ComplexName, Name };
 
             var parentNames = ComplexParent?.GetAllPossibleComplexNames();
 
             if (parentNames?.Count > 0)
-            {
                 foreach (var parentName in parentNames)
-                {
                     result.Add($"{parentName}{Defaults.ComplexTypeNameSeparator}{Name}");
-                }
-            }
 
             result = result.Distinct().ToList();
             return result;
@@ -301,17 +282,13 @@ namespace Neo4jClient.DataAnnotations.Expressions
 
         public List<string> GetAllPossibleComplexJsonNames()
         {
-            var result = new List<string>() { ComplexJsonName, JsonName };
+            var result = new List<string> { ComplexJsonName, JsonName };
 
             var parentNames = ComplexParent?.GetAllPossibleComplexJsonNames();
 
             if (parentNames?.Count > 0)
-            {
                 foreach (var parentName in parentNames)
-                {
                     result.Add($"{parentName}{Defaults.ComplexTypeNameSeparator}{Name}");
-                }
-            }
 
             //make distinct and arrange from most complex to least complex
             result = result.Distinct().OrderByDescending(n => n.Length).ToList();

@@ -1,7 +1,4 @@
-﻿using Neo4j.Driver;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
 using System.Threading.Tasks;
 using Neo4j.Driver;
 
@@ -9,7 +6,9 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
 {
     public class DriverWrapper : BaseWrapper<IDriver>, IDriver
     {
-        public DriverWrapper(IDriver driver) : base(driver) { }
+        public DriverWrapper(IDriver driver) : base(driver)
+        {
+        }
 
         public IAsyncSession AsyncSession()
         {
@@ -45,10 +44,7 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
 
         protected internal static IAsyncSession GetSession(IAsyncSession session)
         {
-            if (session != null && !(session is SessionWrapper))
-            {
-                return new SessionWrapper(session);
-            }
+            if (session != null && !(session is SessionWrapper)) return new SessionWrapper(session);
 
             return session;
         }

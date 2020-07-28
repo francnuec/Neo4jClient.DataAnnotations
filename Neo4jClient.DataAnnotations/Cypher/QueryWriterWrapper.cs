@@ -1,9 +1,8 @@
-﻿using Neo4jClient.Cypher;
+﻿using System;
+using System.Collections.Generic;
+using Neo4jClient.Cypher;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Neo4jClient.DataAnnotations.Cypher
 {
@@ -18,43 +17,38 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         public QueryWriter QueryWriter { get; protected set; }
 
+        public bool IsBoltClient { get; }
+
         public AnnotationsContext AnnotationsContext { get; }
 
         public EntityService EntityService => AnnotationsContext?.EntityService;
 
-        public bool IsBoltClient { get; }
-
         public virtual object GetTransformedParameterValue(object value)
         {
             if (IsBoltClient && value is JObject valueJObject)
-            {
                 //because bolt client uses the Neo4j driver directly, 
                 //we need to convert this to dictionary so it can be understood by the driver.
                 value = valueJObject.ToObject<Dictionary<string, object>>();
-            }
 
             return value;
         }
 
-        public new string CreateParameter(object paramValue)
+        public string CreateParameter(object paramValue)
         {
             return QueryWriter.CreateParameter(GetTransformedParameterValue(paramValue));
         }
 
-        public new void CreateParameter(string key, object value)
+        public void CreateParameter(string key, object value)
         {
             QueryWriter.CreateParameter(key, GetTransformedParameterValue(value));
         }
 
-        public new void CreateParameters(IDictionary<string, object> parameters)
+        public void CreateParameters(IDictionary<string, object> parameters)
         {
-            foreach (var param in parameters)
-            {
-                QueryWriter.CreateParameter(param.Key, param.Value);
-            }
+            foreach (var param in parameters) QueryWriter.CreateParameter(param.Key, param.Value);
         }
 
-        public new bool ContainsParameterWithKey(string key)
+        public bool ContainsParameterWithKey(string key)
         {
             return QueryWriter.ContainsParameterWithKey(key);
         }

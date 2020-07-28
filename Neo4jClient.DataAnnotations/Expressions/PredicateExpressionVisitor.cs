@@ -1,8 +1,5 @@
-﻿using System;
-using Neo4jClient.DataAnnotations.Utils;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text;
 
 namespace Neo4jClient.DataAnnotations.Expressions
 {
@@ -16,7 +13,7 @@ namespace Neo4jClient.DataAnnotations.Expressions
         public Dictionary<Expression, Expression> OriginalAssignments { get; }
             = new Dictionary<Expression, Expression>();
 
-        public Dictionary<Expression, Expression> RightNodeReplacements { get; set; } 
+        public Dictionary<Expression, Expression> RightNodeReplacements { get; set; }
             = new Dictionary<Expression, Expression>();
 
         public bool MakeRightNodeReplacements { get; set; } = true;
@@ -30,14 +27,11 @@ namespace Neo4jClient.DataAnnotations.Expressions
                 if (MakeRightNodeReplacements && RightNodeReplacements?.Count > 0)
                 {
                     //replace all the parameter calls on the right with a vars get call instead
-                    if (replacerVisitor == null)
-                    {
-                        replacerVisitor = new ReplacerExpressionVisitor(RightNodeReplacements);
-                    }
+                    if (replacerVisitor == null) replacerVisitor = new ReplacerExpressionVisitor(RightNodeReplacements);
 
                     rightNode = replacerVisitor.Visit(rightNode);
                 }
-                
+
                 Assignments[node.Left] = rightNode;
                 OriginalAssignments[node.Left] = node.Right;
 

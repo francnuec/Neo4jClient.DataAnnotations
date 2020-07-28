@@ -1,16 +1,14 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
-using Neo4jClient.DataAnnotations.Utils;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq.Expressions;
-using System.Text;
+using Neo4jClient.DataAnnotations.Utils;
+using Newtonsoft.Json.Linq;
 
-namespace Neo4jClient.DataAnnotations//.Cypher
+namespace Neo4jClient.DataAnnotations //.Cypher
 {
     public static class CypherFunctions
     {
         /// <summary>
-        /// The neo4j asterisk (*) wildcard.
+        ///     The neo4j asterisk (*) wildcard.
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -18,9 +16,12 @@ namespace Neo4jClient.DataAnnotations//.Cypher
 
 
         /// <summary>
-        /// No Further Processing. Naming and other processing escape. This instructs the expression visitors to use as specified.
-        /// NOTE: This method does not affect serialization. So inner complex typed properties would still serialize to exploded properties as expected.
-        /// This method is mainly used by the expression visitors, and mostly at the top surface level (rarely deep into the object).
+        ///     No Further Processing. Naming and other processing escape. This instructs the expression visitors to use as
+        ///     specified.
+        ///     NOTE: This method does not affect serialization. So inner complex typed properties would still serialize to
+        ///     exploded properties as expected.
+        ///     This method is mainly used by the expression visitors, and mostly at the top surface level (rarely deep into the
+        ///     object).
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="obj"></param>
@@ -31,16 +32,18 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// Casts an object to a certain type so as to use its properties directly.
-        /// Use only in expressions, especially with <see cref="CypherVariables"/> method calls (in which case it Pseudo-casts).
-        /// NOTE: THIS METHOD IS NOT SAFE TO EXECUTE. If the cast fails, it merely generates a default value for the return type.
+        ///     Casts an object to a certain type so as to use its properties directly.
+        ///     Use only in expressions, especially with <see cref="CypherVariables" /> method calls (in which case it
+        ///     Pseudo-casts).
+        ///     NOTE: THIS METHOD IS NOT SAFE TO EXECUTE. If the cast fails, it merely generates a default value for the return
+        ///     type.
         /// </summary>
         /// <typeparam name="TReturn"></typeparam>
         /// <returns></returns>
         public static TReturn _As<TReturn>(object obj)
         {
             //do something, just in case this method was executed
-            TReturn ret = default(TReturn);
+            TReturn ret = default;
 
             try
             {
@@ -55,10 +58,11 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// Casts an object to a list of a certain type so as to use IEnumerable extension methods.
-        /// Use only in expressions, especially with <see cref="CypherVariables"/> method calls (in which case it Pseudo-casts).
-        /// Shortcut for <code>._As&lt;List&lt;T&gt;&gt;()</code>
-        /// NOTE: THIS METHOD IS NOT SAFE TO EXECUTE. If the cast fails, it throws an error.
+        ///     Casts an object to a list of a certain type so as to use IEnumerable extension methods.
+        ///     Use only in expressions, especially with <see cref="CypherVariables" /> method calls (in which case it
+        ///     Pseudo-casts).
+        ///     Shortcut for <code>._As&lt;List&lt;T&gt;&gt;()</code>
+        ///     NOTE: THIS METHOD IS NOT SAFE TO EXECUTE. If the cast fails, it throws an error.
         /// </summary>
         /// <typeparam name="TReturn"></typeparam>
         /// <returns></returns>
@@ -80,17 +84,19 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// Casts an object to a list of a certain type so as to use IEnumerable extension methods.
-        /// Use only in expressions, especially with <see cref="CypherVariables"/> method calls (in which case it Pseudo-casts).
-        /// Shortcut for <code>._As&lt;List&lt;T&gt;&gt;()</code>
-        /// NOTE: THIS METHOD IS NOT SAFE TO EXECUTE. If the cast fails, it merely returns a list having <paramref name="obj"/> as only item.
+        ///     Casts an object to a list of a certain type so as to use IEnumerable extension methods.
+        ///     Use only in expressions, especially with <see cref="CypherVariables" /> method calls (in which case it
+        ///     Pseudo-casts).
+        ///     Shortcut for <code>._As&lt;List&lt;T&gt;&gt;()</code>
+        ///     NOTE: THIS METHOD IS NOT SAFE TO EXECUTE. If the cast fails, it merely returns a list having
+        ///     <paramref name="obj" /> as only item.
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
         public static List<TSource> _AsList<TSource>(TSource obj)
         {
             //do something, just in case this method was executed
-            List<TSource> ret = _AsList<TSource>(obj as object);
+            var ret = _AsList<TSource>(obj as object);
 
             //try
             //{
@@ -106,7 +112,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
 
 
         /// <summary>
-        /// The neo4j <code>IS NULL</code> function
+        ///     The neo4j <code>IS NULL</code> function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -116,7 +122,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j <code>IS NOT NULL</code> function
+        ///     The neo4j <code>IS NOT NULL</code> function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -126,7 +132,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j collect aggregator.
+        ///     The neo4j collect aggregator.
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -136,7 +142,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j length function
+        ///     The neo4j length function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -146,7 +152,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j exists function
+        ///     The neo4j exists function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -156,7 +162,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j size function
+        ///     The neo4j size function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -166,7 +172,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j id function
+        ///     The neo4j id function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -176,7 +182,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j type function
+        ///     The neo4j type function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -186,7 +192,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j properties function
+        ///     The neo4j properties function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -196,7 +202,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j timestamp function
+        ///     The neo4j timestamp function
         /// </summary>
         /// <returns></returns>
         public static long Timestamp()
@@ -205,7 +211,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j avg function
+        ///     The neo4j avg function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -215,7 +221,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j max function
+        ///     The neo4j max function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -225,7 +231,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j min function
+        ///     The neo4j min function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -235,7 +241,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j sum function
+        ///     The neo4j sum function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -245,7 +251,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j startNode function
+        ///     The neo4j startNode function
         /// </summary>
         /// <typeparam name="TReturn"></typeparam>
         /// <returns></returns>
@@ -255,7 +261,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j endNode function
+        ///     The neo4j endNode function
         /// </summary>
         /// <typeparam name="TReturn"></typeparam>
         /// <returns></returns>
@@ -265,7 +271,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j count function
+        ///     The neo4j count function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -275,7 +281,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j keys function.
+        ///     The neo4j keys function.
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -285,7 +291,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j labels function.
+        ///     The neo4j labels function.
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -295,7 +301,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j nodes function.
+        ///     The neo4j nodes function.
         /// </summary>
         /// <typeparam name="TReturn"></typeparam>
         /// <returns></returns>
@@ -305,7 +311,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j relationships function.
+        ///     The neo4j relationships function.
         /// </summary>
         /// <typeparam name="TReturn"></typeparam>
         /// <returns></returns>
@@ -315,7 +321,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j distinct function.
+        ///     The neo4j distinct function.
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -325,7 +331,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j range function
+        ///     The neo4j range function
         /// </summary>
         /// <returns></returns>
         public static List<int> Range<TStart, TEnd>(TStart start, TEnd end)
@@ -334,7 +340,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j range function
+        ///     The neo4j range function
         /// </summary>
         /// <returns></returns>
         public static List<int> Range<TStart, TEnd, TStep>(TStart start, TEnd end, TStep step)
@@ -343,7 +349,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j tail function.
+        ///     The neo4j tail function.
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -353,7 +359,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j stDev function
+        ///     The neo4j stDev function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -363,7 +369,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j stDevP function
+        ///     The neo4j stDevP function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -373,7 +379,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j percentileCont function
+        ///     The neo4j percentileCont function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <typeparam name="TP"></typeparam>
@@ -386,7 +392,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j percentileDisc function
+        ///     The neo4j percentileDisc function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <typeparam name="TP"></typeparam>
@@ -399,7 +405,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j none function.
+        ///     The neo4j none function.
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <param name="source"></param>
@@ -411,7 +417,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j single function.
+        ///     The neo4j single function.
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <param name="source"></param>
@@ -423,7 +429,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j rand function
+        ///     The neo4j rand function
         /// </summary>
         /// <returns></returns>
         public static double Rand()
@@ -432,7 +438,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j e function
+        ///     The neo4j e function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -442,7 +448,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j cot function
+        ///     The neo4j cot function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -452,7 +458,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j degrees function
+        ///     The neo4j degrees function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -462,7 +468,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j haversin function
+        ///     The neo4j haversin function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -472,7 +478,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j pi function
+        ///     The neo4j pi function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>
@@ -482,7 +488,7 @@ namespace Neo4jClient.DataAnnotations//.Cypher
         }
 
         /// <summary>
-        /// The neo4j radians function
+        ///     The neo4j radians function
         /// </summary>
         /// <typeparam name="TSource"></typeparam>
         /// <returns></returns>

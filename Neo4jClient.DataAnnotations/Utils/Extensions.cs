@@ -1,15 +1,10 @@
 ﻿using System;
-using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
-using System.Linq;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Runtime.CompilerServices;
-using System.Reflection;
+using System.Linq;
 using System.Linq.Expressions;
-using Neo4jClient.DataAnnotations.Expressions;
-using Neo4jClient.DataAnnotations.Cypher;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using Newtonsoft.Json.Linq;
 
 namespace Neo4jClient.DataAnnotations.Utils
@@ -27,15 +22,13 @@ namespace Neo4jClient.DataAnnotations.Utils
             var interfaceTypes = givenType.GetInterfaces();
 
             foreach (var it in interfaceTypes)
-            {
                 if (it.GetTypeInfo().IsGenericType && it.GetGenericTypeDefinition() == genericType)
                     return true;
-            }
 
             if (givenType.GetTypeInfo().IsGenericType && givenType.GetGenericTypeDefinition() == genericType)
                 return true;
 
-            Type baseType = givenType.GetTypeInfo().BaseType;
+            var baseType = givenType.GetTypeInfo().BaseType;
             if (baseType == null) return false;
 
             return IsGenericAssignableFrom(genericType, baseType);
@@ -44,26 +37,32 @@ namespace Neo4jClient.DataAnnotations.Utils
         public static bool IsMatch(this Type propType, Type propertyType, bool includeIEnumerableArg = true)
         {
             return propType == propertyType
-                      || (includeIEnumerableArg && Utils.Utilities.GetEnumerableGenericType(propType) == propertyType);
+                   || includeIEnumerableArg && Utilities.GetEnumerableGenericType(propType) == propertyType;
         }
 
-        internal static IEnumerable<PropertyInfo> OrderNavs(this IEnumerable<PropertyInfo> props, EntityTypeInfo typeInfo)
+        internal static IEnumerable<PropertyInfo> OrderNavs(this IEnumerable<PropertyInfo> props,
+            EntityTypeInfo typeInfo)
         {
             //order them obeying explicit column order
 
             var columnFKs = typeInfo.ColumnAttributeFKs;
 
             return props
-                .OrderBy(p => p.IsDefined(Defaults.ColumnType) ? (p.GetCustomAttribute(Defaults.ColumnType) as ColumnAttribute).Order
-                : (columnFKs.Where(fk => fk.NavigationProperty == p && fk.ScalarProperty?.IsDefined(Defaults.ColumnType) == true)
-                .Select(fk => (int?)(fk.ScalarProperty.GetCustomAttribute(Defaults.ColumnType) as ColumnAttribute).Order)
-                .FirstOrDefault() ?? 0)) //first order by explicit column attribute
-                .ThenBy(p => typeInfo.AllProperties.IndexOf(p)) //then by how they appear on the class.
+                    .OrderBy(p => p.IsDefined(Defaults.ColumnType)
+                        ? (p.GetCustomAttribute(Defaults.ColumnType) as ColumnAttribute).Order
+                        : columnFKs.Where(fk =>
+                                fk.NavigationProperty == p &&
+                                fk.ScalarProperty?.IsDefined(Defaults.ColumnType) == true)
+                            .Select(fk =>
+                                (int?)(fk.ScalarProperty.GetCustomAttribute(Defaults.ColumnType) as ColumnAttribute)
+                                .Order)
+                            .FirstOrDefault() ?? 0) //first order by explicit column attribute
+                    .ThenBy(p => typeInfo.AllProperties.IndexOf(p)) //then by how they appear on the class.
                 ;
         }
 
         internal static IEnumerable<PropertyInfo> UnionNavPropsWithFKs
-            (this IEnumerable<PropertyInfo> navProps,
+        (this IEnumerable<PropertyInfo> navProps,
             EntityTypeInfo typeInfo,
             Type attributeToFilter,
             Func<ForeignKeyProperty, bool> fkFilter,
@@ -84,9 +83,10 @@ namespace Neo4jClient.DataAnnotations.Utils
 
         public static bool IsAnonymousType(this Type type)
         {
-            bool hasCompilerGeneratedAttribute = type.GetTypeInfo().GetCustomAttributes(typeof(CompilerGeneratedAttribute), false).Count() > 0;
-            bool nameContainsAnonymousType = type.FullName.Contains("AnonymousType");
-            bool isAnonymousType = hasCompilerGeneratedAttribute && nameContainsAnonymousType;
+            var hasCompilerGeneratedAttribute =
+                type.GetTypeInfo().GetCustomAttributes(typeof(CompilerGeneratedAttribute), false).Count() > 0;
+            var nameContainsAnonymousType = type.FullName.Contains("AnonymousType");
+            var isAnonymousType = hasCompilerGeneratedAttribute && nameContainsAnonymousType;
 
             return isAnonymousType;
         }
@@ -107,7 +107,6 @@ namespace Neo4jClient.DataAnnotations.Utils
         public static void ExecuteExpression(this Expression expr)
         {
             if (expr.NodeType == ExpressionType.Lambda)
-            {
                 try
                 {
                     (expr as Expression<Action>).Compile().Invoke();
@@ -119,7 +118,6 @@ namespace Neo4jClient.DataAnnotations.Utils
                     //unwrap it first
                     expr = (expr as LambdaExpression).Body;
                 }
-            }
 
             var exprLambda = Expression.Lambda<Action>(expr);
             exprLambda.Compile().Invoke();
@@ -128,7 +126,6 @@ namespace Neo4jClient.DataAnnotations.Utils
         public static T ExecuteExpression<T>(this Expression expr)
         {
             if (expr.NodeType == ExpressionType.Lambda)
-            {
                 try
                 {
                     return (expr as Expression<Func<T>>).Compile().Invoke();
@@ -139,40 +136,41 @@ namespace Neo4jClient.DataAnnotations.Utils
                     //unwrap it first
                     expr = (expr as LambdaExpression).Body;
                 }
-            }
 
-            if (expr?.Type != typeof(T))
-            {
-                expr = Expression.Convert(expr, typeof(T));
-            }
-            
+            if (expr?.Type != typeof(T)) expr = Expression.Convert(expr, typeof(T));
+
             var exprLambda = Expression.Lambda<Func<T>>(expr);
             return exprLambda.Compile().Invoke();
         }
 
         public static bool IsEquivalentTo(this MemberInfo @this, MemberInfo member)
         {
-            Type memberType = (member as PropertyInfo)?.PropertyType 
-                ?? (member as FieldInfo)?.FieldType ?? (member as MethodInfo)?.ReturnType;
-       
-            return @this == member || (memberType != null ? IsEquivalentTo(@this, member?.Name, member?.DeclaringType, memberType) //use the longer version 
+            var memberType = (member as PropertyInfo)?.PropertyType
+                             ?? (member as FieldInfo)?.FieldType ?? (member as MethodInfo)?.ReturnType;
+
+            return @this == member || (memberType != null
+                ? IsEquivalentTo(@this, member?.Name, member?.DeclaringType,
+                    memberType) //use the longer version 
                 : IsEquivalentTo(@this, member?.Name, member?.DeclaringType));
         }
 
         public static bool IsEquivalentTo(this MemberInfo @this, string memberName, Type memberDeclaringType)
         {
-            return @this?.Name == memberName && (@this?.DeclaringType?.IsAssignableFrom(memberDeclaringType) == true || memberDeclaringType.IsAssignableFrom(@this?.DeclaringType));
+            return @this?.Name == memberName && (@this?.DeclaringType?.IsAssignableFrom(memberDeclaringType) == true ||
+                                                 memberDeclaringType.IsAssignableFrom(@this?.DeclaringType));
         }
 
-        public static bool IsEquivalentTo(this MemberInfo @this, string memberName, Type memberDeclaringType, Type memberType)
+        public static bool IsEquivalentTo(this MemberInfo @this, string memberName, Type memberDeclaringType,
+            Type memberType)
         {
-            Type thisType = (@this as PropertyInfo)?.PropertyType
-                ?? (@this as FieldInfo)?.FieldType ?? (@this as MethodInfo)?.ReturnType;
+            var thisType = (@this as PropertyInfo)?.PropertyType
+                           ?? (@this as FieldInfo)?.FieldType ?? (@this as MethodInfo)?.ReturnType;
 
             return IsEquivalentTo(@this, memberName, memberDeclaringType) && thisType == memberType;
         }
 
-        public static IEnumerable<T> ExactOrEquivalent<T>(this IEnumerable<T> source, Func<T, T, bool> equivalence, T prototype)
+        public static IEnumerable<T> ExactOrEquivalent<T>(this IEnumerable<T> source, Func<T, T, bool> equivalence,
+            T prototype)
         {
             return ExactOrEquivalent(source, (t, t2) => t.Equals(t2), equivalence, prototype);
         }
@@ -184,10 +182,8 @@ namespace Neo4jClient.DataAnnotations.Utils
             var match = source.Where(t => exactness(t, prototype)).ToList();
 
             if (match == null || match.Count == 0)
-            {
                 //then find its equivalence instead
                 match = source.Where(t => equivalence(t, prototype)).ToList();
-            }
 
             return match ?? new List<T>();
         }
@@ -195,7 +191,8 @@ namespace Neo4jClient.DataAnnotations.Utils
         internal static IEnumerable<T> ExactOrEquivalentMember<T>
             (this IEnumerable<T> source, Func<T, MemberInfo> selector, T member)
         {
-            return ExactOrEquivalent(source, (t1, t2) => selector(t1) == selector(t2), (t1, t2) => selector(t1).IsEquivalentTo(selector(t2)), member);
+            return ExactOrEquivalent(source, (t1, t2) => selector(t1) == selector(t2),
+                (t1, t2) => selector(t1).IsEquivalentTo(selector(t2)), member);
         }
 
         public static Expression Uncast(this Expression expression, out Type castRemoved, Type castToRemove = null)
@@ -209,14 +206,14 @@ namespace Neo4jClient.DataAnnotations.Utils
                 case ExpressionType.ConvertChecked:
                 case ExpressionType.TypeAs:
                 case ExpressionType.Unbox:
-                case ExpressionType.Call when ((callExpr = expression as MethodCallExpression) != null
-                    && (callExpr.Method.Name.StartsWith("_As")
-                    && (callExpr.Method.DeclaringType == Defaults.CypherFuncsType 
-                    || callExpr.Method.DeclaringType == Defaults.CypherExtensionFuncsType))):
+                case ExpressionType.Call when (callExpr = expression as MethodCallExpression) != null &&
+                                              callExpr.Method.Name.StartsWith("_As") &&
+                                              (callExpr.Method.DeclaringType == Defaults.CypherFuncsType
+                                               || callExpr.Method.DeclaringType == Defaults.CypherExtensionFuncsType):
                     {
                         if (castToRemove == null || castToRemove == expression.Type)
                         {
-                            var unary = (expression as UnaryExpression);
+                            var unary = expression as UnaryExpression;
                             castRemoved = expression.Type;
                             return unary?.Operand ?? callExpr?.Arguments[0];
                         }
@@ -229,7 +226,7 @@ namespace Neo4jClient.DataAnnotations.Utils
         }
 
         /// <summary>
-        /// Removes cast around an expression only if the cast was a boxing operation.
+        ///     Removes cast around an expression only if the cast was a boxing operation.
         /// </summary>
         /// <param name="expression"></param>
         /// <param name="castRemoved"></param>
@@ -256,7 +253,6 @@ namespace Neo4jClient.DataAnnotations.Utils
             castAdded = null;
 
             if (castToAdd == null)
-            {
                 //try executing this to get the actual type of the object returned and use that type
                 try
                 {
@@ -265,9 +261,7 @@ namespace Neo4jClient.DataAnnotations.Utils
                 }
                 catch
                 {
-
                 }
-            }
 
             if (castToAdd != null && expression.Type != castToAdd)
             {
@@ -299,7 +293,6 @@ namespace Neo4jClient.DataAnnotations.Utils
             }
             catch
             {
-
             }
 
             return expression;
@@ -329,24 +322,24 @@ namespace Neo4jClient.DataAnnotations.Utils
                 //DisplayClass
 
                 return typeInfo.IsDefined(typeof(CompilerGeneratedAttribute))
-                    && typeInfo.IsNested
-                    && typeInfo.IsNestedPrivate
-                    && typeInfo.IsSealed
-                    && typeInfo.Name.StartsWith("<>")
-                    && typeInfo.Name.Contains("DisplayClass");
+                       && typeInfo.IsNested
+                       && typeInfo.IsNestedPrivate
+                       && typeInfo.IsSealed
+                       && typeInfo.Name.StartsWith("<>")
+                       && typeInfo.Name.Contains("DisplayClass");
             }
 
             return false;
         }
 
-        public static bool IsEntity(this Expression expression, DataAnnotations.EntityService entityService)
+        public static bool IsEntity(this Expression expression, EntityService entityService)
         {
             return entityService.ContainsEntityType(expression.Type);
         }
 
-        public static bool IsScalar(this Type type, DataAnnotations.EntityService entityService)
+        public static bool IsScalar(this Type type, EntityService entityService)
         {
-            return Utils.Utilities.IsScalarType(type, entityService);
+            return Utilities.IsScalarType(type, entityService);
         }
 
         ///// <summary>
@@ -369,9 +362,9 @@ namespace Neo4jClient.DataAnnotations.Utils
 
         public static Type GetMemberType(this MemberInfo member)
         {
-            return (member as PropertyInfo)?.PropertyType 
-                ?? (member as FieldInfo)?.FieldType 
-                ?? (member as MethodInfo)?.ReturnType;
+            return (member as PropertyInfo)?.PropertyType
+                   ?? (member as FieldInfo)?.FieldType
+                   ?? (member as MethodInfo)?.ReturnType;
         }
 
         public static bool IsConstant(this Expression node)
@@ -380,7 +373,7 @@ namespace Neo4jClient.DataAnnotations.Utils
         }
 
         /// <summary>
-        /// Converts a string value to its appropriate <see cref="JToken"/> or <see cref="JRaw"/>.
+        ///     Converts a string value to its appropriate <see cref="JToken" /> or <see cref="JRaw" />.
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
@@ -402,7 +395,7 @@ namespace Neo4jClient.DataAnnotations.Utils
 
         public static bool CanBeNull(this Type type)
         {
-            return !type.IsValueType || (Nullable.GetUnderlyingType(type) != null);
+            return !type.IsValueType || Nullable.GetUnderlyingType(type) != null;
         }
     }
 }

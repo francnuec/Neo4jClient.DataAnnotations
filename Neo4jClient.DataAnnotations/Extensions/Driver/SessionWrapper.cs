@@ -1,35 +1,14 @@
-﻿using Neo4j.Driver;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Neo4j.Driver;
-using Neo4jClient.Transactions;
 
 namespace Neo4jClient.DataAnnotations.Extensions.Driver
 {
     public class SessionWrapper : BaseWrapper<IAsyncSession>, IAsyncSession
     {
-        public SessionWrapper(IAsyncSession session) : base(session) { }
-
-        protected internal static IResultCursor GetResultCursor(IResultCursor resultCursor)
+        public SessionWrapper(IAsyncSession session) : base(session)
         {
-            if (resultCursor != null && !(resultCursor is ResultCursorWrapper))
-            {
-                return new ResultCursorWrapper(resultCursor);
-            }
-
-            return resultCursor;
-        }
-
-        protected internal static IAsyncTransaction GetAsyncTransaction(IAsyncTransaction transaction)
-        {
-            if (transaction != null && !(transaction is AsyncTransactionWrapper))
-            {
-                return new AsyncTransactionWrapper(transaction);
-            }
-
-            return transaction;
         }
 
         public async Task<IResultCursor> RunAsync(string query)
@@ -72,7 +51,8 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
             return WrappedItem.ReadTransactionAsync(tx => work(GetAsyncTransaction(tx)));
         }
 
-        public Task<T> ReadTransactionAsync<T>(Func<IAsyncTransaction, Task<T>> work, Action<TransactionConfigBuilder> action)
+        public Task<T> ReadTransactionAsync<T>(Func<IAsyncTransaction, Task<T>> work,
+            Action<TransactionConfigBuilder> action)
         {
             return WrappedItem.ReadTransactionAsync(tx => work(GetAsyncTransaction(tx)), action);
         }
@@ -92,7 +72,8 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
             return WrappedItem.WriteTransactionAsync(tx => work(GetAsyncTransaction(tx)));
         }
 
-        public Task<T> WriteTransactionAsync<T>(Func<IAsyncTransaction, Task<T>> work, Action<TransactionConfigBuilder> action)
+        public Task<T> WriteTransactionAsync<T>(Func<IAsyncTransaction, Task<T>> work,
+            Action<TransactionConfigBuilder> action)
         {
             return WrappedItem.WriteTransactionAsync(tx => work(GetAsyncTransaction(tx)), action);
         }
@@ -112,7 +93,8 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
             return GetResultCursor(await WrappedItem.RunAsync(query, action));
         }
 
-        public async Task<IResultCursor> RunAsync(string query, IDictionary<string, object> parameters, Action<TransactionConfigBuilder> action)
+        public async Task<IResultCursor> RunAsync(string query, IDictionary<string, object> parameters,
+            Action<TransactionConfigBuilder> action)
         {
             return GetResultCursor(await WrappedItem.RunAsync(query, parameters, action));
         }
@@ -123,5 +105,21 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
         }
 
         public Bookmark LastBookmark => WrappedItem.LastBookmark;
+
+        protected internal static IResultCursor GetResultCursor(IResultCursor resultCursor)
+        {
+            if (resultCursor != null && !(resultCursor is ResultCursorWrapper))
+                return new ResultCursorWrapper(resultCursor);
+
+            return resultCursor;
+        }
+
+        protected internal static IAsyncTransaction GetAsyncTransaction(IAsyncTransaction transaction)
+        {
+            if (transaction != null && !(transaction is AsyncTransactionWrapper))
+                return new AsyncTransactionWrapper(transaction);
+
+            return transaction;
+        }
     }
 }

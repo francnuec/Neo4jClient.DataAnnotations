@@ -1,8 +1,4 @@
-﻿using System;
-using Neo4jClient.DataAnnotations.Utils;
-using System.Collections.Generic;
-using System.Linq.Expressions;
-using System.Text;
+﻿using System.Linq.Expressions;
 
 namespace Neo4jClient.DataAnnotations.Expressions
 {
@@ -19,10 +15,6 @@ namespace Neo4jClient.DataAnnotations.Expressions
             Item = null;
             Container = null;
             IsContained = false;
-        }
-
-        public ContainsExpressionVisitor()
-        {
         }
 
         public override Expression Visit(Expression node)

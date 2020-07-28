@@ -1,16 +1,11 @@
-﻿using Neo4jClient.Cypher;
-using System;
-using Neo4jClient.DataAnnotations.Utils;
-using System.Collections.Generic;
-using System.Text;
-using System.Collections;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
+﻿using System;
+using Neo4jClient.Cypher;
 
 namespace Neo4jClient.DataAnnotations.Cypher
 {
     public abstract class Annotated : IAnnotated, IHaveAnnotationsContext, IHaveEntityService //, ICypherFluentQuery
     {
+        private AnnotationsContext context;
         private ICypherFluentQuery internalCypherQuery;
 
         public Annotated(ICypherFluentQuery query)
@@ -23,31 +18,17 @@ namespace Neo4jClient.DataAnnotations.Cypher
             AnnotationsContext = context;
         }
 
-        public virtual ref ICypherFluentQuery CypherQuery
-        {
-            get
-            {
-                return ref internalCypherQuery;
-            }
-        }
-
-        private AnnotationsContext context;
+        public virtual ref ICypherFluentQuery CypherQuery => ref internalCypherQuery;
 
         public AnnotationsContext AnnotationsContext
         {
             get
             {
-                if (context == null)
-                {
-                    context = CypherQuery.GetAnnotationsContext();
-                }
+                if (context == null) context = CypherQuery.GetAnnotationsContext();
 
                 return context;
             }
-            protected internal set
-            {
-                context = value;
-            }
+            protected internal set => context = value;
         }
 
         public EntityService EntityService => AnnotationsContext?.EntityService;
