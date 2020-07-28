@@ -1,4 +1,4 @@
-﻿using Neo4j.Driver.V1;
+﻿using Neo4j.Driver;
 using Neo4jClient.DataAnnotations.Utils;
 using System;
 using System.Linq;

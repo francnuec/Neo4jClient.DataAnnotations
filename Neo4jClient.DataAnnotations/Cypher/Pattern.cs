@@ -43,8 +43,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
         {
             get
             {
-                return buildStrategy ?? 
-                    Path?.Builder?.PatternBuildStrategy ?? 
+                return buildStrategy ??
+                    Path?.Builder?.PatternBuildStrategy ??
                     PropertiesBuildStrategy.NoParams;
             }
             set
@@ -60,8 +60,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
         {
             get
             {
-                return aVar ?? 
-                    (aVar = (abSelector ?? arSelector)?.Parameters[0].Name) ?? 
+                return aVar ??
+                    (aVar = (abSelector ?? arSelector)?.Parameters[0].Name) ??
                     GetVariable("A", ref aVar, ref aVarIsAuto);
             }
 
@@ -78,8 +78,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
         {
             get
             {
-                return rVar ?? 
-                    (rVar = rbSelector?.Parameters[0].Name) ?? 
+                return rVar ??
+                    (rVar = rbSelector?.Parameters[0].Name) ??
                     GetVariable("R", ref rVar, ref rVarIsAuto);
             }
 
@@ -351,7 +351,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
                         {
                             //set navprops
                             BNavProperty = inverseProp ?? bNavProp;
-                            
+
                             //create expression
                             rbSelector = CreateNavigationPropertySelector(RType, navigationProp, RVariable);
                         }
@@ -1020,20 +1020,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
         internal static bool IsAlreadyBound(Pattern pattern, string variable)
         {
             //this is a crude test.
-            bool alreadyBound = pattern.QueryWriterGetter != null 
+            bool alreadyBound = pattern.QueryWriterGetter != null
                 && pattern.QueryWriterGetter(pattern.CypherQuery)?.ContainsParameterWithKey(variable) == true;
 
             if (!alreadyBound)
             {
                 alreadyBound = pattern.CypherQuery.Query?.QueryParameters?.ContainsKey(variable) == true;
             }
-            
+
             return alreadyBound;
         }
 
         internal static string BuildRelationship(Pattern pattern,
             string variable, bool variableIsAuto, string Variable, //NOTE: this call order is important, and method signature should not be reshuffled.
-            bool? isAlreadyBound, IEnumerable<string> types, 
+            bool? isAlreadyBound, IEnumerable<string> types,
             Tuple<int?, int?> hops,
             Func<object> finalObjectGetter,
             Func<JObject> finalPropertiesGetter,
@@ -1472,7 +1472,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             inverseProperty = null;
 
             //get the nav properties
-            var aNavProps = knownNavProperty != null ? 
+            var aNavProps = knownNavProperty != null ?
                 new List<PropertyInfo>() { knownNavProperty } //make sure its the only one in the collection
                 : FilterNavProperties(aTypeInfo, bTypeInfo.Type, true);
 
@@ -1709,7 +1709,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
                     bool hasRepeated = false;
 
-                    repeat:
+                repeat:
                     RelationshipDirection? direction = dir;
 
                     var retrieved = GetOtherNodeFromRAndKnownNode
@@ -1847,8 +1847,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         internal static void ResolveInternalUtilities(Pattern pattern)
         {
-            if (pattern.Client == null 
-                || pattern.Serializer == null 
+            if (pattern.Client == null
+                || pattern.Serializer == null
                 || (pattern.Resolver == null && pattern.Converter == null)
                 || pattern.AnnotationsContext == null)
             {
@@ -1858,7 +1858,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             }
         }
 
-        internal static JObject GetFinalProperties(Pattern pattern, 
+        internal static JObject GetFinalProperties(Pattern pattern,
             LambdaExpression properties, LambdaExpression constraints, Type type, out bool hasFunctions)
         {
             ResolveInternalUtilities(pattern);

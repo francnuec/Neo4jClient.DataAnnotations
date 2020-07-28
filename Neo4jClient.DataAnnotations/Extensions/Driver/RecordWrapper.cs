@@ -1,10 +1,10 @@
-﻿using Neo4j.Driver.V1;
-using Neo4jClient.Cypher;
+﻿using Neo4jClient.Cypher;
 using System;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using Neo4j.Driver;
 
 namespace Neo4jClient.DataAnnotations.Extensions.Driver
 {

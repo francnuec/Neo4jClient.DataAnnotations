@@ -144,7 +144,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             {
                 var boltClient = Substitute.For<ITestBoltGraphClient>();
 
-                boltClient.Driver.Returns(Substitute.For<Neo4j.Driver.V1.IDriver>());
+                boltClient.Driver.Returns(Substitute.For<Neo4j.Driver.IDriver>());
 
                 boltClient.JsonConverters.Returns(GraphClient.DefaultJsonConverters?.ToList() ?? new List<JsonConverter>());
                 boltClient.JsonContractResolver.Returns(GraphClient.DefaultJsonContractResolver);
@@ -170,8 +170,8 @@ namespace Neo4jClient.DataAnnotations.Tests
         }
     }
 
-    public interface ITestBoltGraphClient: IBoltGraphClient, IRawGraphClient
+    public interface ITestBoltGraphClient : IBoltGraphClient, IRawGraphClient
     {
-        public Neo4j.Driver.V1.IDriver Driver { get; set; }
+        public Neo4j.Driver.IDriver Driver { get; set; }
     }
 }

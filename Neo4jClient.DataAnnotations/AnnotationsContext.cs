@@ -7,7 +7,7 @@ using System.Reflection;
 using Neo4jClient.DataAnnotations.Serialization;
 using Neo4jClient.Cypher;
 using Neo4jClient.DataAnnotations.Extensions.Driver;
-using Neo4j.Driver.V1;
+using Neo4j.Driver;
 
 namespace Neo4jClient.DataAnnotations
 {
@@ -34,27 +34,27 @@ namespace Neo4jClient.DataAnnotations
             }
         }
 
-        public AnnotationsContext(IGraphClient graphClient) 
+        public AnnotationsContext(IGraphClient graphClient)
             : this(graphClient, null, null, null)
         {
         }
 
-        public AnnotationsContext(IGraphClient graphClient, EntityService entityService) 
+        public AnnotationsContext(IGraphClient graphClient, EntityService entityService)
             : this(graphClient, null, null, entityService)
         {
         }
 
-        public AnnotationsContext(IGraphClient graphClient, EntityResolver resolver) 
+        public AnnotationsContext(IGraphClient graphClient, EntityResolver resolver)
             : this(graphClient, resolver, null, null)
         {
         }
 
-        public AnnotationsContext(IGraphClient graphClient, EntityResolver resolver, EntityService entityService) 
+        public AnnotationsContext(IGraphClient graphClient, EntityResolver resolver, EntityService entityService)
             : this(graphClient, resolver, null, entityService)
         {
         }
 
-        public AnnotationsContext(IGraphClient graphClient, EntityConverter converter) 
+        public AnnotationsContext(IGraphClient graphClient, EntityConverter converter)
             : this(graphClient, null, converter, null)
         {
         }

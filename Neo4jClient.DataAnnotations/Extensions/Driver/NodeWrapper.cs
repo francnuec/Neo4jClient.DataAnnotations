@@ -1,9 +1,9 @@
-﻿using Neo4j.Driver.V1;
-using Neo4jClient.DataAnnotations.Utils;
+﻿using Neo4jClient.DataAnnotations.Utils;
 using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
+using Neo4j.Driver;
 
 namespace Neo4jClient.DataAnnotations.Extensions.Driver
 {

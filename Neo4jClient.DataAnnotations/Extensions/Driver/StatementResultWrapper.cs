@@ -1,4 +1,4 @@
-﻿using Neo4j.Driver.V1;
+﻿using Neo4j.Driver;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,71 +6,62 @@ using System.Text;
 
 namespace Neo4jClient.DataAnnotations.Extensions.Driver
 {
-    public class StatementResultWrapper : BaseWrapper<IStatementResult>, IStatementResult
-    {
-        public StatementResultWrapper(IStatementResult statementResult) : base(statementResult) { }
+    //public class StatementResultWrapper : BaseWrapper<Result>, IStatementResult
+    //{
+    //    public StatementResultWrapper(IStatementResult statementResult) : base(statementResult) { }
 
-        public IReadOnlyList<string> Keys => WrappedItem.Keys;
+    //    public IReadOnlyList<string> Keys => WrappedItem.Keys;
 
-        public IResultSummary Summary => WrappedItem.Summary;
+    //    public IResultSummary Summary => WrappedItem.Summary;
 
-        public IResultSummary Consume()
-        {
-            return WrappedItem.Consume();
-        }
+    //    public IResultSummary Consume()
+    //    {
+    //        return WrappedItem.Consume();
+    //    }
 
-        public IEnumerator<IRecord> GetEnumerator()
-        {
-            return new EnumeratorWrapper(WrappedItem.GetEnumerator());
-        }
+    //    public IEnumerator<IRecord> GetEnumerator()
+    //    {
+    //        return new EnumeratorWrapper(WrappedItem.GetEnumerator());
+    //    }
 
-        public IRecord Peek()
-        {
-            return GetRecord(WrappedItem.Peek());
-        }
+    //    public IRecord Peek()
+    //    {
+    //        return GetRecord(WrappedItem.Peek());
+    //    }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+    //    IEnumerator IEnumerable.GetEnumerator()
+    //    {
+    //        return GetEnumerator();
+    //    }
 
-        protected internal static IRecord GetRecord(IRecord record)
-        {
-            if (record != null && !(record is RecordWrapper))
-            {
-                return new RecordWrapper(record);
-            }
 
-            return record;
-        }
+    //    public class EnumeratorWrapper : IEnumerator<IRecord>
+    //    {
+    //        public EnumeratorWrapper(IEnumerator<IRecord> enumerator)
+    //        {
+    //            Enumerator = enumerator;
+    //        }
 
-        public class EnumeratorWrapper : IEnumerator<IRecord>
-        {
-            public EnumeratorWrapper(IEnumerator<IRecord> enumerator)
-            {
-                Enumerator = enumerator;
-            }
+    //        public IEnumerator<IRecord> Enumerator { get; }
 
-            public IEnumerator<IRecord> Enumerator { get; }
+    //        public IRecord Current => GetRecord(Enumerator.Current);
 
-            public IRecord Current => GetRecord(Enumerator.Current);
+    //        object IEnumerator.Current => Current;
 
-            object IEnumerator.Current => Current;
+    //        public void Dispose()
+    //        {
+    //            Enumerator.Dispose();
+    //        }
 
-            public void Dispose()
-            {
-                Enumerator.Dispose();
-            }
+    //        public bool MoveNext()
+    //        {
+    //            return Enumerator.MoveNext();
+    //        }
 
-            public bool MoveNext()
-            {
-                return Enumerator.MoveNext();
-            }
-
-            public void Reset()
-            {
-                Enumerator.Reset();
-            }
-        }
-    }
+    //        public void Reset()
+    //        {
+    //            Enumerator.Reset();
+    //        }
+    //    }
+    //}
 }
