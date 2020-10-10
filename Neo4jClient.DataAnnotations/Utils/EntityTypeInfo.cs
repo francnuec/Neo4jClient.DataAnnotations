@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.Reflection;
@@ -12,21 +13,21 @@ namespace Neo4jClient.DataAnnotations.Utils
 {
     public sealed class EntityTypeInfo : IHaveEntityService
     {
-        private Dictionary<string, Dictionary<PropertyInfo, IEnumerable<Attribute>>> attrTypeToPropsToAttrs
-            = new Dictionary<string, Dictionary<PropertyInfo, IEnumerable<Attribute>>>();
+        private ConcurrentDictionary<string, ConcurrentDictionary<PropertyInfo, IEnumerable<Attribute>>> attrTypeToPropsToAttrs
+            = new ConcurrentDictionary<string, ConcurrentDictionary<PropertyInfo, IEnumerable<Attribute>>>();
         private List<PropertyInfo> complexTypedProps;
         private List<string> labelsWithTypeNameCatch;
         private List<PropertyInfo> allProperties;
         private Dictionary<MemberName, MemberInfo> jsonNamePropertyMap;
         private List<ForeignKeyProperty> foreignKeyProperties;
         private List<PropertyInfo> navigationProps;
-        private Dictionary<Type, List<ForeignKeyProperty>> attributedForeignKeys
-            = new Dictionary<Type, List<ForeignKeyProperty>>();
+        private ConcurrentDictionary<Type, List<ForeignKeyProperty>> attributedForeignKeys
+            = new ConcurrentDictionary<Type, List<ForeignKeyProperty>>();
         //private JsonObjectContract JsonContract { get; set; }
         private List<JsonProperty> _jsonProps = null;
         private List<PropertyInfo> notMappedProps;
 
-        private static MethodInfo CreatePropertyMethodInfo { get; } 
+        private static MethodInfo CreatePropertyMethodInfo { get; }
             = typeof(DefaultContractResolver).GetMethod("CreateProperty",
                 BindingFlags.NonPublic | BindingFlags.Instance);
 
@@ -340,12 +341,12 @@ namespace Neo4jClient.DataAnnotations.Utils
                 || property.ScalarProperty?.Name == property.Attribute?.Name;
         }
 
-        internal Dictionary<PropertyInfo, IEnumerable<Attribute>> GetPropertiesWithAttribute(Type attributeType, bool inherit = false)
+        internal ConcurrentDictionary<PropertyInfo, IEnumerable<Attribute>> GetPropertiesWithAttribute(Type attributeType, bool inherit = false)
         {
-            Dictionary<PropertyInfo, IEnumerable<Attribute>> props;
+            ConcurrentDictionary<PropertyInfo, IEnumerable<Attribute>> props;
             if (!attrTypeToPropsToAttrs.TryGetValue(attributeType.FullName, out props))
             {
-                props = new Dictionary<PropertyInfo, IEnumerable<Attribute>>();
+                props = new ConcurrentDictionary<PropertyInfo, IEnumerable<Attribute>>();
 
                 var properties = AllProperties;
                 foreach (var property in properties)
