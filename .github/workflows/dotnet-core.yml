@@ -20,6 +20,6 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --configuration Release --no-restore --framework netstandard2.0
+      run: dotnet build ~/Neo4jClient.DataAnnotations/Neo4jClient.DataAnnotations.csproj --configuration Release --no-restore --framework netstandard2.0
     - name: Test
-      run: dotnet test --no-restore --verbosity normal
+      run: dotnet test ~/Neo4jClient.DataAnnotations.Tests/Neo4jClient.DataAnnotations.Tests.csproj --no-restore --verbosity normal
