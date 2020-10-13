@@ -219,7 +219,7 @@ namespace Neo4jClient.DataAnnotations
 
                     try
                     {
-                        //try reflection to set the converters in the original array
+                        //try reflection to set the driver via backing field
                         driverBackingField = Utils.Utilities.GetBackingField(driverProperty);
                         driverMemberInfo = driverBackingField;
                     }
