@@ -1,20 +1,23 @@
-﻿using Neo4j.Driver.V1;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
 using System.Threading.Tasks;
+using Neo4j.Driver;
 
 namespace Neo4jClient.DataAnnotations.Extensions.Driver
 {
     public class DriverWrapper : BaseWrapper<IDriver>, IDriver
     {
-        public DriverWrapper(IDriver driver) : base(driver) { }
-
-        public Uri Uri => WrappedItem.Uri;
-
-        public void Close()
+        public DriverWrapper(IDriver driver) : base(driver)
         {
-            WrappedItem.Close();
+        }
+
+        public IAsyncSession AsyncSession()
+        {
+            return GetSession(WrappedItem.AsyncSession());
+        }
+
+        public IAsyncSession AsyncSession(Action<SessionConfigBuilder> action)
+        {
+            return GetSession(WrappedItem.AsyncSession(action));
         }
 
         public Task CloseAsync()
@@ -22,47 +25,26 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
             return WrappedItem.CloseAsync();
         }
 
+        public Task VerifyConnectivityAsync()
+        {
+            return WrappedItem.VerifyConnectivityAsync();
+        }
+
+        public Task<bool> SupportsMultiDbAsync()
+        {
+            return WrappedItem.SupportsMultiDbAsync();
+        }
+
+        public Config Config => WrappedItem.Config;
+
         public void Dispose()
         {
             WrappedItem.Dispose();
         }
 
-        public ISession Session()
+        protected internal static IAsyncSession GetSession(IAsyncSession session)
         {
-            return GetSession(WrappedItem.Session());
-        }
-
-        public ISession Session(AccessMode defaultMode)
-        {
-            return GetSession(WrappedItem.Session(defaultMode));
-        }
-
-        public ISession Session(string bookmark)
-        {
-            return GetSession(WrappedItem.Session(bookmark));
-        }
-
-        public ISession Session(AccessMode defaultMode, string bookmark)
-        {
-            return GetSession(WrappedItem.Session(defaultMode, bookmark));
-        }
-
-        public ISession Session(AccessMode defaultMode, IEnumerable<string> bookmarks)
-        {
-            return GetSession(WrappedItem.Session(defaultMode, bookmarks));
-        }
-
-        public ISession Session(IEnumerable<string> bookmarks)
-        {
-            return GetSession(WrappedItem.Session(bookmarks));
-        }
-
-        protected internal static ISession GetSession(ISession session)
-        {
-            if (session != null && !(session is SessionWrapper))
-            {
-                return new SessionWrapper(session);
-            }
+            if (session != null && !(session is SessionWrapper)) return new SessionWrapper(session);
 
             return session;
         }

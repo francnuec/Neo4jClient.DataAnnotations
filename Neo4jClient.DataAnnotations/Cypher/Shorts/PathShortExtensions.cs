@@ -11,7 +11,7 @@
 //    {
 //        //P = (A)-[R]-(B), where A = First Node in pattern, R = relationship, B = Last Node in pattern, P = entire path, dir = direction of relationship
 //        //Names are so chosen to allow ease in naming paramters explicitly.
-        
+
 //        #region P
 //        /// <summary>
 //        /// P = (A)-[R]-(B).
@@ -126,7 +126,6 @@
 //        {
 //            return CypherPathExtensions.SharedPattern(source, A, R, B, dir);
 //        }
-
 
 
 //        /// <summary>
@@ -248,7 +247,6 @@
 //        {
 //            return CypherPathExtensions.SharedPattern<TANode>(source, A, R, B, dir);
 //        }
-
 
 
 //        /// <summary>
@@ -384,7 +382,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// P = (A)-[R]-(B).
 //        /// To omit any variable, pass empty string or null to it.
@@ -518,7 +515,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// P = (A)-[R]-(B).
 //        /// To omit any variable, pass empty string or null to it.
@@ -650,7 +646,6 @@
 //        {
 //            return CypherPathExtensions.SharedPattern<TANode, TBNode>(source, relationship, R, B, dir);
 //        }
-
 
 
 //        /// <summary>
@@ -792,7 +787,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// P = (A)-[R]-(B).
 //        /// To omit any variable, pass empty string or null to it.
@@ -890,7 +884,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// P = (A)-[R]-(B).
 //        /// To omit any variable, pass empty string or null to it.
@@ -986,7 +979,6 @@
 //        {
 //            return (IPatternedPath<TANode, TRel, TBNode>)CypherPathExtensions.SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, dir);
 //        }
-
 
 
 //        /// <summary>
@@ -1100,7 +1092,6 @@
 //        {
 //            return (IPatternedPath<TANode, TRel, TBNode>)CypherPathExtensions.SharedPattern<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, dir);
 //        }
-
 
 
 //        /// <summary>
@@ -1286,7 +1277,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (A:Label1:Label2)-[R:TYPE1|TYPE2]-(B:Label1:Label2).
 //        /// Adds labels in addition to those already marked by attributes. For the relationship, you're adding types, not labels.
@@ -1356,7 +1346,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (A:Label1:Label2)-[R:TYPE1|TYPE2]-(B:Label1:Label2).
 //        /// Adds labels in addition to those already marked by attributes. For the relationship, you're adding types, not labels.
@@ -1424,7 +1413,6 @@
 //        {
 //            return (IPatternedPath<TANode, TBNode>)CypherPathExtensions.SharedLabel(source, A, R, B, replaceA, replaceR, replaceB);
 //        }
-
 
 
 //        /// <summary>
@@ -1601,7 +1589,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (A)-[*1..6]-(B)
 //        /// Adds variable length relationships where, from the sample, the number of hops would be from 1 (min), to 6 (max).
@@ -1652,7 +1639,6 @@
 //        {
 //            return (IPatternedPath<TANode, TBNode>)CypherPathExtensions.SharedHop<TANode, CypherObject, TBNode>(source, from, to);
 //        }
-
 
 
 //        /// <summary>
@@ -1775,7 +1761,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (A:Actor {name: "Ellen Pompeo", age: 47})-[R:ACTED_IN {isActive: true}]-(B:Movie {title: "Grey's Anatomy"}).
 //        /// Adds constraints to the entities.
@@ -1843,7 +1828,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (A:Actor {name: "Ellen Pompeo", age: 47})-[R:ACTED_IN {isActive: true}]-(B:Movie {title: "Grey's Anatomy"}).
 //        /// Adds constraints to the entities.
@@ -1909,7 +1893,6 @@
 //        {
 //            return (IPatternedPath<TANode, TBNode>)CypherPathExtensions.SharedConstrain(source, A, R, B);
 //        }
-
 
 
 //        /// <summary>
@@ -2047,7 +2030,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (A:Actor {name: "Ellen Pompeo", age: 47})-[R:ACTED_IN {isActive: true}]-(B:Movie {title: "Grey's Anatomy"}).
 //        /// Adds properties to the entities. This method should be primarily used with the CREATE clause.
@@ -2115,7 +2097,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (A:Actor {name: "Ellen Pompeo", age: 47})-[R:ACTED_IN {isActive: true}]-(B:Movie {title: "Grey's Anatomy"}).
 //        /// Adds properties to the entities. This method should be primarily used with the CREATE clause.
@@ -2181,7 +2162,6 @@
 //        {
 //            return (IPatternedPath<TANode, TBNode>)CypherPathExtensions.SharedProp<TANode, CypherObject, TBNode>(source, A, R, B);
 //        }
-
 
 
 //        /// <summary>
@@ -2263,7 +2243,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
 //        /// </summary>
@@ -2283,7 +2262,6 @@
 //        {
 //            return (IPatternedPath<TANode, TBNode>)CypherPathExtensions.SharedType(source, A, null, B);
 //        }
-
 
 
 //        /// <summary>
@@ -2360,7 +2338,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (A)-[R]-(B)-[R2]-(C).
 //        /// Extends an existing path.
@@ -2402,7 +2379,6 @@
 //        {
 //            return CypherPathExtensions.SharedExtend<TBNode>(source, R, B, dir);
 //        }
-
 
 
 //        /// <summary>
@@ -2618,7 +2594,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (A)-[R]-(B)-[R2]-(C).
 //        /// Extends an existing path.
@@ -2674,7 +2649,6 @@
 //        {
 //            return (IPatternedPathExtension<TANode, TRel, TBNode>)CypherPathExtensions.SharedExtend<TANode, TRel, TBNode>(source, R, B, dir);
 //        }
-
 
 
 //        /// <summary>
@@ -2734,7 +2708,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (A)-[R]-(B)-[R2]-(C).
 //        /// Extends an existing path.
@@ -2790,7 +2763,6 @@
 //        {
 //            return (IPatternedPathExtension<TANode, TRel, TBNode>)CypherPathExtensions.SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, null, R, B, dir);
 //        }
-
 
 
 //        /// <summary>
@@ -2856,7 +2828,6 @@
 //            return (IPatternedPathExtension<TANode, TRel, TBNode>)
 //                CypherPathExtensions.SharedExtend<TANode, TRel, TBNode>(source, beginRelationship, endRelationship, null, B, dir);
 //        }
-
 
 
 //        /// <summary>
@@ -2975,7 +2946,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (B)-[R2:TYPE1|TYPE2]-(C:Label1:Label2).
 //        /// Adds labels to the pattern extension, in addition to those already marked by attributes. For the relationship, you're adding types, not labels.
@@ -3024,7 +2994,6 @@
 //        {
 //            return (IPatternedPathExtension<TBNode>)CypherPathExtensions.SharedLabel(source, R, B, replaceR, replaceB);
 //        }
-
 
 
 //        /// <summary>
@@ -3077,7 +3046,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (B)-[R2:TYPE1|TYPE2]-(C:Label1:Label2).
 //        /// Adds labels to the pattern extension, in addition to those already marked by attributes. For the relationship, you're adding types, not labels.
@@ -3126,7 +3094,6 @@
 //        {
 //            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)CypherPathExtensions.SharedLabel(source, R, B, replaceR, replaceB);
 //        }
-
 
 
 //        /// <summary>
@@ -3232,7 +3199,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (B)-[:*1..6]-(C)
 //        /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
@@ -3283,7 +3249,6 @@
 //        {
 //            return (IPatternedPathExtension<TBNode>)CypherPathExtensions.SharedHop<CypherObject, CypherObject, TBNode>(source, from, to);
 //        }
-
 
 
 //        /// <summary>
@@ -3338,7 +3303,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (B)-[:*1..6]-(C)
 //        /// Adds variable length relationships to the pattern extension where, from the sample, the number of hops would be from 1 (min), to 6 (max).
@@ -3389,7 +3353,6 @@
 //        {
 //            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)CypherPathExtensions.SharedHop<CypherObject, TRel, TBNode>(source, from, to);
 //        }
-
 
 
 //        /// <summary>
@@ -3486,7 +3449,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (B)-[R2:WROTE {isActive: true}]-(C:Writer {name: "Shonda Rhimes"}).
 //        /// Adds constraints to the entities of the pattern extension.
@@ -3526,7 +3488,6 @@
 //        {
 //            return (IPatternedPathExtension<TBNode>)CypherPathExtensions.SharedConstrain<CypherObject, CypherObject, TBNode>(source, R, B);
 //        }
-
 
 
 //        /// <summary>
@@ -3570,7 +3531,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (B)-[R2:WROTE {isActive: true}]-(C:Writer {name: "Shonda Rhimes"}).
 //        /// Adds constraints to the entities of the pattern extension.
@@ -3591,7 +3551,6 @@
 //        {
 //            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)CypherPathExtensions.SharedConstrain<CypherObject, TRel, TBNode>(source, R, B);
 //        }
-
 
 
 //        /// <summary>
@@ -3679,7 +3638,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (B)-[R2:WROTE {isActive: true}]-(C:Writer {name: "Shonda Rhimes"}).
 //        /// Adds properties to the entities of the pattern extension. This method should be primarily used with the CREATE clause.
@@ -3721,7 +3679,6 @@
 //        {
 //            return (IPatternedPathExtension<TBNode>)CypherPathExtensions.SharedProp<CypherObject, CypherObject, TBNode>(source, R, B);
 //        }
-
 
 
 //        /// <summary>
@@ -3767,7 +3724,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (B)-[R2:WROTE {isActive: true}]-(C:Writer {name: "Shonda Rhimes"}).
 //        /// Adds properties to the entities of the pattern extension. This method should be primarily used with the CREATE clause.
@@ -3789,7 +3745,6 @@
 //        {
 //            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)CypherPathExtensions.SharedProp<CypherObject, TRel, TBNode>(source, R, B);
 //        }
-
 
 
 //        /// <summary>
@@ -3847,7 +3802,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// Changes the node's c# type at runtime. However, ensure that this new type can be assigned to the type specified at compile time.
 //        /// </summary>
@@ -3857,7 +3811,6 @@
 //        {
 //            return (IPatternedPathExtension<TANode, TBNode>)CypherPathExtensions.SharedType(source, null, B);
 //        }
-
 
 
 //        /// <summary>
@@ -3879,7 +3832,6 @@
 //        {
 //            return (IPatternedPathExtension<CypherObject, TRel, TBNode>)CypherPathExtensions.SharedType(source, R, B);
 //        }
-
 
 
 //        /// <summary>
@@ -3948,7 +3900,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (A)-[R]-(B)-[R2]-(C)-[R3]-(D).
 //        /// Extends an existing path even further.
@@ -3993,7 +3944,6 @@
 //            //source is expected to be of type Path which also implements IPath.
 //            return E<TBNode>(source as IPath, R, B, dir);
 //        }
-
 
 
 //        /// <summary>
@@ -4087,7 +4037,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (A)-[R]-(B)-[R2]-(C)-[R3]-(D).
 //        /// Extends an existing path even further.
@@ -4179,7 +4128,6 @@
 //        }
 
 
-
 //        /// <summary>
 //        /// (A)-[R]-(B)-[R2]-(C)-[R3]-(D).
 //        /// Extends an existing path even further.
@@ -4224,7 +4172,6 @@
 //            //source is expected to be of type Path which also implements IPath.
 //            return E<TRel, TBNode>(source as IPath, R, B, dir);
 //        }
-
 
 
 //        /// <summary>
@@ -4290,7 +4237,6 @@
 //            //source is expected to be of type Path which also implements IPath.
 //            return E(source as IPath, beginRelationship, endRelationship, B, dir);
 //        }
-
 
 
 //        /// <summary>
@@ -4454,3 +4400,4 @@
 //        #endregion
 //    }
 //}
+

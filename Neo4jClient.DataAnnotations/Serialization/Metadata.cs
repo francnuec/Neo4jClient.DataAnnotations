@@ -1,8 +1,6 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System.Collections.Generic;
 using Neo4jClient.DataAnnotations.Utils;
-using System.Collections.Generic;
-using System.Text;
+using Newtonsoft.Json;
 
 namespace Neo4jClient.DataAnnotations.Serialization
 {

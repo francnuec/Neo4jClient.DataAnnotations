@@ -1,40 +1,86 @@
-﻿using Neo4j.Driver.V1;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
+using Neo4j.Driver;
 
 namespace Neo4jClient.DataAnnotations.Extensions.Driver
 {
-    public class SessionWrapper : BaseWrapper<ISession>, ISession
+    public class SessionWrapper : BaseWrapper<IAsyncSession>, IAsyncSession
     {
-        public SessionWrapper(ISession session) : base(session) { }
-
-        public string LastBookmark => WrappedItem.LastBookmark;
-
-        public ITransaction BeginTransaction()
+        public SessionWrapper(IAsyncSession session) : base(session)
         {
-            return WrappedItem.BeginTransaction();
         }
 
-        public ITransaction BeginTransaction(TransactionConfig txConfig)
+        public async Task<IResultCursor> RunAsync(string query)
         {
-            return WrappedItem.BeginTransaction(txConfig);
+            return GetResultCursor(await WrappedItem.RunAsync(query));
         }
 
-        public ITransaction BeginTransaction(string bookmark)
+        public async Task<IResultCursor> RunAsync(string query, object parameters)
         {
-            return WrappedItem.BeginTransaction(bookmark);
+            return GetResultCursor(await WrappedItem.RunAsync(query, parameters));
         }
 
-        public Task<ITransaction> BeginTransactionAsync()
+        public async Task<IResultCursor> RunAsync(string query, IDictionary<string, object> parameters)
+        {
+            return GetResultCursor(await WrappedItem.RunAsync(query, parameters));
+        }
+
+        public async Task<IResultCursor> RunAsync(Query query)
+        {
+            return GetResultCursor(await WrappedItem.RunAsync(query));
+        }
+
+        public Task<IAsyncTransaction> BeginTransactionAsync()
         {
             return WrappedItem.BeginTransactionAsync();
         }
 
-        public Task<ITransaction> BeginTransactionAsync(TransactionConfig txConfig)
+        public Task<IAsyncTransaction> BeginTransactionAsync(Action<TransactionConfigBuilder> action)
         {
-            return WrappedItem.BeginTransactionAsync(txConfig);
+            return WrappedItem.BeginTransactionAsync(action);
+        }
+
+        public Task<T> ReadTransactionAsync<T>(Func<IAsyncTransaction, Task<T>> work)
+        {
+            return WrappedItem.ReadTransactionAsync(tx => work(GetAsyncTransaction(tx)));
+        }
+
+        public Task ReadTransactionAsync(Func<IAsyncTransaction, Task> work)
+        {
+            return WrappedItem.ReadTransactionAsync(tx => work(GetAsyncTransaction(tx)));
+        }
+
+        public Task<T> ReadTransactionAsync<T>(Func<IAsyncTransaction, Task<T>> work,
+            Action<TransactionConfigBuilder> action)
+        {
+            return WrappedItem.ReadTransactionAsync(tx => work(GetAsyncTransaction(tx)), action);
+        }
+
+        public Task ReadTransactionAsync(Func<IAsyncTransaction, Task> work, Action<TransactionConfigBuilder> action)
+        {
+            return WrappedItem.ReadTransactionAsync(tx => work(GetAsyncTransaction(tx)), action);
+        }
+
+        public Task<T> WriteTransactionAsync<T>(Func<IAsyncTransaction, Task<T>> work)
+        {
+            return WrappedItem.WriteTransactionAsync(tx => work(GetAsyncTransaction(tx)));
+        }
+
+        public Task WriteTransactionAsync(Func<IAsyncTransaction, Task> work)
+        {
+            return WrappedItem.WriteTransactionAsync(tx => work(GetAsyncTransaction(tx)));
+        }
+
+        public Task<T> WriteTransactionAsync<T>(Func<IAsyncTransaction, Task<T>> work,
+            Action<TransactionConfigBuilder> action)
+        {
+            return WrappedItem.WriteTransactionAsync(tx => work(GetAsyncTransaction(tx)), action);
+        }
+
+        public Task WriteTransactionAsync(Func<IAsyncTransaction, Task> work, Action<TransactionConfigBuilder> action)
+        {
+            return WrappedItem.WriteTransactionAsync(tx => work(GetAsyncTransaction(tx)), action);
         }
 
         public Task CloseAsync()
@@ -42,188 +88,36 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
             return WrappedItem.CloseAsync();
         }
 
-        public void Dispose()
+        public async Task<IResultCursor> RunAsync(string query, Action<TransactionConfigBuilder> action)
         {
-            WrappedItem.Dispose();
+            return GetResultCursor(await WrappedItem.RunAsync(query, action));
         }
 
-        public T ReadTransaction<T>(Func<ITransaction, T> work)
+        public async Task<IResultCursor> RunAsync(string query, IDictionary<string, object> parameters,
+            Action<TransactionConfigBuilder> action)
         {
-            return WrappedItem.ReadTransaction<T>(tx => work(GetTransaction(tx)));
+            return GetResultCursor(await WrappedItem.RunAsync(query, parameters, action));
         }
 
-        public void ReadTransaction(Action<ITransaction> work)
+        public async Task<IResultCursor> RunAsync(Query query, Action<TransactionConfigBuilder> action)
         {
-            WrappedItem.ReadTransaction(tx => work(GetTransaction(tx)));
+            return GetResultCursor(await WrappedItem.RunAsync(query, action));
         }
 
-        public T ReadTransaction<T>(Func<ITransaction, T> work, TransactionConfig txConfig)
+        public Bookmark LastBookmark => WrappedItem.LastBookmark;
+
+        protected internal static IResultCursor GetResultCursor(IResultCursor resultCursor)
         {
-            return WrappedItem.ReadTransaction<T>(tx => work(GetTransaction(tx)), txConfig);
+            if (resultCursor != null && !(resultCursor is ResultCursorWrapper))
+                return new ResultCursorWrapper(resultCursor);
+
+            return resultCursor;
         }
 
-        public void ReadTransaction(Action<ITransaction> work, TransactionConfig txConfig)
+        protected internal static IAsyncTransaction GetAsyncTransaction(IAsyncTransaction transaction)
         {
-            WrappedItem.ReadTransaction(tx => work(GetTransaction(tx)), txConfig);
-        }
-
-        public Task<T> ReadTransactionAsync<T>(Func<ITransaction, Task<T>> work)
-        {
-            return WrappedItem.ReadTransactionAsync<T>(tx => work(GetTransaction(tx)));
-        }
-
-        public Task ReadTransactionAsync(Func<ITransaction, Task> work)
-        {
-            return WrappedItem.ReadTransactionAsync(tx => work(GetTransaction(tx)));
-        }
-
-        public Task<T> ReadTransactionAsync<T>(Func<ITransaction, Task<T>> work, TransactionConfig txConfig)
-        {
-            return WrappedItem.ReadTransactionAsync<T>(tx => work(GetTransaction(tx)), txConfig);
-        }
-
-        public Task ReadTransactionAsync(Func<ITransaction, Task> work, TransactionConfig txConfig)
-        {
-            return WrappedItem.ReadTransactionAsync(tx => work(GetTransaction(tx)), txConfig);
-        }
-
-        public IStatementResult Run(string statement, TransactionConfig txConfig)
-        {
-            return GetStatementResult(WrappedItem.Run(statement, txConfig));
-        }
-
-        public IStatementResult Run(string statement, IDictionary<string, object> parameters, TransactionConfig txConfig)
-        {
-            return GetStatementResult(WrappedItem.Run(statement, parameters, txConfig));
-        }
-
-        public IStatementResult Run(Statement statement, TransactionConfig txConfig)
-        {
-            return GetStatementResult(WrappedItem.Run(statement, txConfig));
-        }
-
-        public IStatementResult Run(string statement)
-        {
-            return GetStatementResult(WrappedItem.Run(statement));
-        }
-
-        public IStatementResult Run(string statement, object parameters)
-        {
-            return GetStatementResult(WrappedItem.Run(statement, parameters));
-        }
-
-        public IStatementResult Run(string statement, IDictionary<string, object> parameters)
-        {
-            return GetStatementResult(WrappedItem.Run(statement, parameters));
-        }
-
-        public IStatementResult Run(Statement statement)
-        {
-            return GetStatementResult(WrappedItem.Run(statement));
-        }
-
-        public async Task<IStatementResultCursor> RunAsync(string statement, TransactionConfig txConfig)
-        {
-            return GetStatementResultCursor(await WrappedItem.RunAsync(statement, txConfig));
-        }
-
-        public async Task<IStatementResultCursor> RunAsync(string statement, IDictionary<string, object> parameters, TransactionConfig txConfig)
-        {
-            return GetStatementResultCursor(await WrappedItem.RunAsync(statement, parameters, txConfig));
-        }
-
-        public async Task<IStatementResultCursor> RunAsync(Statement statement, TransactionConfig txConfig)
-        {
-            return GetStatementResultCursor(await WrappedItem.RunAsync(statement, txConfig));
-        }
-
-        public async Task<IStatementResultCursor> RunAsync(string statement)
-        {
-            return GetStatementResultCursor(await WrappedItem.RunAsync(statement));
-        }
-
-        public async Task<IStatementResultCursor> RunAsync(string statement, object parameters)
-        {
-            return GetStatementResultCursor(await WrappedItem.RunAsync(statement, parameters));
-        }
-
-        public async Task<IStatementResultCursor> RunAsync(string statement, IDictionary<string, object> parameters)
-        {
-            return GetStatementResultCursor(await WrappedItem.RunAsync(statement, parameters));
-        }
-
-        public async Task<IStatementResultCursor> RunAsync(Statement statement)
-        {
-            return GetStatementResultCursor(await WrappedItem.RunAsync(statement));
-        }
-
-        public T WriteTransaction<T>(Func<ITransaction, T> work)
-        {
-            return WrappedItem.WriteTransaction<T>(tx => work(GetTransaction(tx)));
-        }
-
-        public void WriteTransaction(Action<ITransaction> work)
-        {
-            WrappedItem.WriteTransaction(tx => work(GetTransaction(tx)));
-        }
-
-        public T WriteTransaction<T>(Func<ITransaction, T> work, TransactionConfig txConfig)
-        {
-            return WrappedItem.WriteTransaction<T>(tx => work(GetTransaction(tx)), txConfig);
-        }
-
-        public void WriteTransaction(Action<ITransaction> work, TransactionConfig txConfig)
-        {
-            WrappedItem.WriteTransaction(tx => work(GetTransaction(tx)), txConfig);
-        }
-
-        public Task<T> WriteTransactionAsync<T>(Func<ITransaction, Task<T>> work)
-        {
-            return WrappedItem.WriteTransactionAsync<T>(tx => work(GetTransaction(tx)));
-        }
-
-        public Task WriteTransactionAsync(Func<ITransaction, Task> work)
-        {
-            return WrappedItem.WriteTransactionAsync(tx => work(GetTransaction(tx)))
-;
-        }
-
-        public Task<T> WriteTransactionAsync<T>(Func<ITransaction, Task<T>> work, TransactionConfig txConfig)
-        {
-            return WrappedItem.WriteTransactionAsync<T>(tx => work(GetTransaction(tx)), txConfig);
-        }
-
-        public Task WriteTransactionAsync(Func<ITransaction, Task> work, TransactionConfig txConfig)
-        {
-            return WrappedItem.WriteTransactionAsync(tx => work(GetTransaction(tx)), txConfig);
-        }
-
-        protected internal static IStatementResult GetStatementResult(IStatementResult statementResult)
-        {
-            if (statementResult != null && !(statementResult is StatementResultWrapper))
-            {
-                return new StatementResultWrapper(statementResult);
-            }
-
-            return statementResult;
-        }
-
-        protected internal static IStatementResultCursor GetStatementResultCursor(IStatementResultCursor statementResultCursor)
-        {
-            if (statementResultCursor != null && !(statementResultCursor is StatementResultCursorWrapper))
-            {
-                return new StatementResultCursorWrapper(statementResultCursor);
-            }
-
-            return statementResultCursor;
-        }
-
-        protected internal static ITransaction GetTransaction(ITransaction transaction)
-        {
-            if (transaction != null && !(transaction is TransactionWrapper))
-            {
-                return new TransactionWrapper(transaction);
-            }
+            if (transaction != null && !(transaction is AsyncTransactionWrapper))
+                return new AsyncTransactionWrapper(transaction);
 
             return transaction;
         }

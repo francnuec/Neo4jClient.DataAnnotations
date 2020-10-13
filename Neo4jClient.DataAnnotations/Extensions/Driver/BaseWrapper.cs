@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Neo4jClient.DataAnnotations.Extensions.Driver
 {
     public abstract class BaseWrapper<T> : IEquatable<T>
     {
-        public BaseWrapper(T item)
+        protected BaseWrapper(T item)
         {
             WrappedItem = item;
         }
@@ -15,10 +13,7 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
 
         public virtual bool Equals(T other)
         {
-            if (other is BaseWrapper<T> otherWrapper)
-            {
-                return WrappedItem.Equals(otherWrapper.WrappedItem);
-            }
+            if (other is BaseWrapper<T> otherWrapper) return WrappedItem.Equals(otherWrapper.WrappedItem);
 
             return WrappedItem.Equals(other);
         }

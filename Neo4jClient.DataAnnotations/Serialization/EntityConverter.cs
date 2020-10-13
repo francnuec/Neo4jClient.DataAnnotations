@@ -1,28 +1,16 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using System;
-using Neo4jClient.DataAnnotations.Utils;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using Neo4jClient.DataAnnotations.Utils;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Reflection;
-using System.IO;
+using Newtonsoft.Json.Serialization;
 
 namespace Neo4jClient.DataAnnotations.Serialization
 {
     public class EntityConverter : JsonConverter, IHaveAnnotationsContext
     {
-        public EntityConverter()
-        {
-        }
-
-        public override bool CanConvert(Type objectType)
-        {
-            return AnnotationsContext.EntityResolver == null &&
-                EntityService.ContainsEntityType(objectType);
-        }
-
-        public override bool CanRead => AnnotationsContext.EntityResolver == null; //resolver takes precedence by default
+        public override bool CanRead =>
+            AnnotationsContext.EntityResolver == null; //resolver takes precedence by default
 
         public override bool CanWrite => AnnotationsContext.EntityResolver == null;
 
@@ -30,7 +18,14 @@ namespace Neo4jClient.DataAnnotations.Serialization
 
         public EntityService EntityService => AnnotationsContext.EntityService;
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override bool CanConvert(Type objectType)
+        {
+            return AnnotationsContext.EntityResolver == null &&
+                   EntityService.ContainsEntityType(objectType);
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue,
+            JsonSerializer serializer)
         {
             SerializationUtilities.EnsureSerializerInstance(ref serializer);
 
@@ -48,9 +43,11 @@ namespace Neo4jClient.DataAnnotations.Serialization
             //now convert to JObject
             var valueJObject = serializer.Deserialize<JObject>(reader);
 
-            SerializationUtilities.EnsureRightJObject(AnnotationsContext, ref valueJObject, out var valueMetadataJObject);
+            SerializationUtilities.EnsureRightJObject(AnnotationsContext, ref valueJObject,
+                out var valueMetadataJObject);
 
-            valueType = SerializationUtilities.GetRightObjectType(valueType, valueMetadataJObject, EntityService); //this ensures we have the right type to deserialize into
+            valueType = SerializationUtilities.GetRightObjectType(valueType, valueMetadataJObject,
+                EntityService); //this ensures we have the right type to deserialize into
 
             if (valueType != objectType)
             {
@@ -101,7 +98,8 @@ namespace Neo4jClient.DataAnnotations.Serialization
                 var nullValueHandling = serializer.NullValueHandling;
                 var defaultValueHandling = serializer.DefaultValueHandling;
                 serializer.NullValueHandling = NullValueHandling.Include; //we need null values for complex types
-                serializer.DefaultValueHandling = DefaultValueHandling.Include; //we need all properties for complex types
+                serializer.DefaultValueHandling =
+                    DefaultValueHandling.Include; //we need all properties for complex types
 
                 //finally serialize object
                 serializer.Serialize(writer, value);

@@ -1,8 +1,8 @@
-﻿using Neo4jClient.DataAnnotations.Cypher;
+﻿using System;
+using System.Linq.Expressions;
+using Neo4jClient.DataAnnotations.Cypher;
 using Neo4jClient.DataAnnotations.Cypher.Functions;
 using Neo4jClient.DataAnnotations.Tests.Models;
-using System;
-using System.Linq.Expressions;
 using Xunit;
 
 namespace Neo4jClient.DataAnnotations.Tests
@@ -28,7 +28,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            query = query.WithExpression((ActorNode actor) => actor.Address.City, out var actual, isMemberAccess: false);
+            query = query.WithExpression((ActorNode actor) => actor.Address.City, out var actual, false);
 
             var expected = "NewAddressName_City";
 
@@ -41,9 +41,10 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            query = query.WithExpression((ActorNode actor) => new { actor.Name, actor.Born, actor.Address.City }, out var actual);
+            query = query.WithExpression((ActorNode actor) => new { actor.Name, actor.Born, actor.Address.City },
+                out var actual);
 
-            var expected = new string[] { "actor.Name", "actor.Born", "actor.NewAddressName_City" };
+            var expected = new[] { "actor.Name", "actor.Born", "actor.NewAddressName_City" };
 
             Assert.Equal(expected, actual);
         }
@@ -54,16 +55,17 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = P => TestUtilities.BuildTestPath(P)
                 .Extend(RelationshipDirection.Outgoing);
 
             query = query.UsingBuildStrategy(PropertiesBuildStrategy.NoParams)
-                .WithPattern(out var actual, pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic));
+                .WithPattern(out var actual, pathExpr, p => p.Pattern("a", "b", RelationshipDirection.Automatic));
 
             var expected = "(greysAnatomy:Series { Title: \"Grey's Anatomy\", Year: 2017 })" +
-                "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [" + Environment.NewLine + "  \"Meredith Grey\"" + Environment.NewLine + "] })" +
-                "-->(), (a)--(b)";
+                           "<-[:STARRED_IN|ACTED_IN*1]-" +
+                           "(ellenPompeo:Female:Actor:Person { Name: \"Ellen Pompeo\", Born: shondaRhimes.Born, Roles: [" +
+                           Environment.NewLine + "  \"Meredith Grey\"" + Environment.NewLine + "] })" +
+                           "-->(), (a)--(b)";
 
             Assert.Equal(expected, actual);
         }
@@ -74,16 +76,16 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPathMixed(P)
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = P => TestUtilities.BuildTestPathMixed(P)
                 .Extend(RelationshipDirection.Outgoing);
 
             query = query.UsingBuildStrategy(PropertiesBuildStrategy.WithParams)
-                .WithPattern(out var actual, pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic));
+                .WithPattern(out var actual, pathExpr, p => p.Pattern("a", "b", RelationshipDirection.Automatic));
 
             var expected = "(greysAnatomy:Series $greysAnatomy)" +
-                "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
-                "-->(), (a)--(b)";
+                           "<-[:STARRED_IN|ACTED_IN*1]-" +
+                           "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
+                           "-->(), (a)--(b)";
 
             Assert.Equal(expected, actual);
         }
@@ -94,15 +96,16 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = P => TestUtilities.BuildTestPath(P)
                 .Extend(RelationshipDirection.Outgoing);
 
-            query = query.WithPattern(out var actual, pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic));
+            query = query.WithPattern(out var actual, pathExpr,
+                p => p.Pattern("a", "b", RelationshipDirection.Automatic));
 
             var expected = "(greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
-                "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
-                "-->(), (a)--(b)";
+                           "<-[:STARRED_IN|ACTED_IN*1]-" +
+                           "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
+                           "-->(), (a)--(b)";
 
             Assert.Equal(expected, actual);
         }
@@ -113,15 +116,16 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = P => TestUtilities.BuildTestPath(P)
                 .Extend(RelationshipDirection.Outgoing);
 
-            var actual = query.Match(pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic)).Query.QueryText;
+            var actual = query.Match(pathExpr, p => p.Pattern("a", "b", RelationshipDirection.Automatic)).Query
+                .QueryText;
 
             var expected = "MATCH (greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
-                "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
-                "-->(), (a)--(b)";
+                           "<-[:STARRED_IN|ACTED_IN*1]-" +
+                           "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
+                           "-->(), (a)--(b)";
 
             Assert.Equal(expected, actual);
         }
@@ -132,12 +136,14 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = P => TestUtilities.BuildTestPath(P)
                 .Extend(RelationshipDirection.Outgoing);
 
-            var actual = query.OptionalMatch(pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic)).Query.QueryText;
+            var actual = query.OptionalMatch(pathExpr, p => p.Pattern("a", "b", RelationshipDirection.Automatic)).Query
+                .QueryText;
 
-            var expected = "OPTIONAL MATCH (greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
+            var expected =
+                "OPTIONAL MATCH (greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
                 "<-[:STARRED_IN|ACTED_IN*1]-" +
                 "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
                 "-->(), (a)--(b)";
@@ -151,15 +157,16 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPath(P)
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = P => TestUtilities.BuildTestPath(P)
                 .Extend(RelationshipDirection.Outgoing);
 
-            var actual = query.Merge(pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic)).Query.QueryText;
+            var actual = query.Merge(pathExpr, p => p.Pattern("a", "b", RelationshipDirection.Automatic)).Query
+                .QueryText;
 
             var expected = "MERGE (greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
-                "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
-                "-->(), (a)--(b)";
+                           "<-[:STARRED_IN|ACTED_IN*1]-" +
+                           "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
+                           "-->(), (a)--(b)";
 
             Assert.Equal(expected, actual);
         }
@@ -170,16 +177,17 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPathMixed(P)
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = P => TestUtilities.BuildTestPathMixed(P)
                 .Extend(RelationshipDirection.Outgoing);
 
-            var actual = query.Create(pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic)).Query.QueryText;
+            var actual = query.Create(pathExpr, p => p.Pattern("a", "b", RelationshipDirection.Automatic)).Query
+                .QueryText;
 
             //This scenario is probably unlikely in a real neo4j situation, but for tests sakes.
-            var expected = "CREATE (greysAnatomy:Series $greysAnatomy)" +
-                "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
-                "-->(), (a)--(b)";
+            var expected = "CREATE (greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
+                           "<-[:STARRED_IN|ACTED_IN*1]-" +
+                           "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
+                           "-->(), (a)--(b)";
 
             Assert.Equal(expected, actual);
         }
@@ -190,16 +198,17 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = (P) => TestUtilities.BuildTestPathMixed(P)
+            Expression<Func<IPathBuilder, IPathExtent>> pathExpr = P => TestUtilities.BuildTestPathMixed(P)
                 .Extend(RelationshipDirection.Outgoing);
 
-            var actual = query.CreateUnique(pathExpr, (p) => p.Pattern("a", "b", RelationshipDirection.Automatic)).Query.QueryText;
+            var actual = query.CreateUnique(pathExpr, p => p.Pattern("a", "b", RelationshipDirection.Automatic)).Query
+                .QueryText;
 
             //This scenario is probably unlikely in a real neo4j situation, but for tests sakes.
             var expected = "CREATE UNIQUE (greysAnatomy:Series $greysAnatomy)" +
-                "<-[:STARRED_IN|ACTED_IN*1]-" +
-                "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
-                "-->(), (a)--(b)";
+                           "<-[:STARRED_IN|ACTED_IN*1]-" +
+                           "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
+                           "-->(), (a)--(b)";
 
             Assert.Equal(expected, actual);
         }
@@ -213,9 +222,10 @@ namespace Neo4jClient.DataAnnotations.Tests
             var actual = query.Set((ActorNode actor) =>
                 actor.Name == "Ellen Pompeo"
                 && actor.Born == CypherVariables.Get<ActorNode>("shondaRhimes").Born
-                && actor.Roles == new string[] { "Meredith Grey" }, out var setParam).Query.QueryText;
+                && actor.Roles == new[] { "Meredith Grey" }, out var setParam).Query.QueryText;
 
-            var expected = $"SET actor.Name = ${setParam}.Name, actor.Born = shondaRhimes.Born, actor.Roles = ${setParam}.Roles";
+            var expected =
+                $"SET actor.Name = ${setParam}.Name, actor.Born = shondaRhimes.Born, actor.Roles = ${setParam}.Roles";
 
             Assert.Equal(expected, actual);
         }
@@ -228,12 +238,13 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = query.UsingBuildStrategy(PropertiesBuildStrategy.WithParams)
                 .Set((ActorNode actor) =>
-                actor.Name == "Ellen Pompeo"
-                && actor.Born == 1969
-                && actor.Roles == new string[] { "Meredith Grey" }, out var setParam).Query.QueryText;
+                    actor.Name == "Ellen Pompeo"
+                    && actor.Born == 1969
+                    && actor.Roles == new[] { "Meredith Grey" }, out var setParam).Query.QueryText;
 
             //When using Set predicate, WithParams strategy is the same as WithParamsForValues
-            var expected = $"SET actor.Name = ${setParam}.Name, actor.Born = ${setParam}.Born, actor.Roles = ${setParam}.Roles";
+            var expected =
+                $"SET actor.Name = ${setParam}.Name, actor.Born = ${setParam}.Born, actor.Roles = ${setParam}.Roles";
 
             Assert.Equal(expected, actual);
         }
@@ -246,12 +257,13 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = query.UsingBuildStrategy(PropertiesBuildStrategy.WithParams)
                 .Set((ActorNode actor) =>
-                actor.Name == "Ellen Pompeo"
-                && actor.Born == (actor.Born + 1) //((int?)null ?? 1969) + 1
-                && actor.Roles == new string[] { "Meredith Grey" }, out var setParam).Query.QueryText;
+                    actor.Name == "Ellen Pompeo"
+                    && actor.Born == actor.Born + 1 //((int?)null ?? 1969) + 1
+                    && actor.Roles == new[] { "Meredith Grey" }, out var setParam).Query.QueryText;
 
             //When using Set predicate, WithParams strategy is the same as WithParamsForValues
-            var expected = $"SET actor.Name = ${setParam}.Name, actor.Born = actor.Born + $p1, actor.Roles = ${setParam}.Roles";
+            var expected =
+                $"SET actor.Name = ${setParam}.Name, actor.Born = actor.Born + $p1, actor.Roles = ${setParam}.Roles";
 
             Assert.Equal(expected, actual);
         }
@@ -264,12 +276,13 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = query.UsingBuildStrategy(PropertiesBuildStrategy.WithParams)
                 .Set((ActorNode actor) =>
-                actor.Name == "Ellen Pompeo"
-                && actor.Born == (CypherVariables.Get<ActorNode>("actor").Born + 1) //((int?)null ?? 1969) + 1
-                && actor.Roles == new string[] { "Meredith Grey" }, out var setParam).Query.QueryText;
+                    actor.Name == "Ellen Pompeo"
+                    && actor.Born == CypherVariables.Get<ActorNode>("actor").Born + 1 //((int?)null ?? 1969) + 1
+                    && actor.Roles == new[] { "Meredith Grey" }, out var setParam).Query.QueryText;
 
             //When using Set predicate, WithParams strategy is the same as WithParamsForValues
-            var expected = $"SET actor.Name = ${setParam}.Name, actor.Born = actor.Born + $p1, actor.Roles = ${setParam}.Roles";
+            var expected =
+                $"SET actor.Name = ${setParam}.Name, actor.Born = actor.Born + $p1, actor.Roles = ${setParam}.Roles";
 
             Assert.Equal(expected, actual);
         }
@@ -280,7 +293,7 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            var actual = query.Set("movie", () => new MovieNode()
+            var actual = query.Set("movie", () => new MovieNode
             {
                 Title = "Grey's Anatomy",
                 Year = 2017
@@ -298,7 +311,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var query = testContext.Query;
 
             var actual = query.UsingBuildStrategy(PropertiesBuildStrategy.WithParamsForValues)
-                .Set("movie", () => new MovieNode()
+                .Set("movie", () => new MovieNode
                 {
                     Title = "Grey's Anatomy",
                     Year = 2017
@@ -316,7 +329,7 @@ namespace Neo4jClient.DataAnnotations.Tests
             var query = testContext.Query;
 
             var actual = query.SetAdd((MovieNode movie) => movie.Title == "Grey's Anatomy"
-            && movie.Year == 2017, setParameter: out var setParam).Query.QueryText;
+                                                           && movie.Year == 2017, out var setParam).Query.QueryText;
 
             var expected = $"SET movie += ${setParam}";
 
@@ -331,9 +344,9 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = query.UsingBuildStrategy(PropertiesBuildStrategy.NoParams)
                 .SetAdd((MovieNode m) => m.Title == "Grey's Anatomy"
-            && m.Year == 2017, "movie").Query.QueryText;
+                                         && m.Year == 2017, "movie").Query.QueryText;
 
-            var expected = $"SET movie += {{ Title: \"Grey's Anatomy\", Year: 2017 }}";
+            var expected = "SET movie += { Title: \"Grey's Anatomy\", Year: 2017 }";
 
             Assert.Equal(expected, actual);
         }
@@ -363,15 +376,21 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            var actual = query.CreateIndex((ActorNode actor) => new { (actor.Address as AddressWithComplexType).Location, actor.Name }).Query.QueryText;
+            var actual = query
+                .CreateIndex((ActorNode actor) => new { (actor.Address as AddressWithComplexType).Location, actor.Name })
+                .Query.QueryText;
 
-            var expected = "CREATE INDEX ON :Actor(NewAddressName_Location_Latitude, NewAddressName_Location_Longitude, Name)";
+            var expected =
+                "CREATE INDEX ON :Actor(NewAddressName_Location_Latitude, NewAddressName_Location_Longitude, Name)";
 
             Assert.Equal(expected, actual);
 
             //test DROP too
-            actual = query.DropIndex((ActorNode actor) => new { (actor.Address as AddressWithComplexType).Location, actor.Name }).Query.QueryText;
-            expected = "DROP INDEX ON :Actor(NewAddressName_Location_Latitude, NewAddressName_Location_Longitude, Name)";
+            actual = query
+                .DropIndex((ActorNode actor) => new { (actor.Address as AddressWithComplexType).Location, actor.Name })
+                .Query.QueryText;
+            expected =
+                "DROP INDEX ON :Actor(NewAddressName_Location_Latitude, NewAddressName_Location_Longitude, Name)";
 
             Assert.Equal(expected, actual);
         }
@@ -420,14 +439,14 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            var actual = query.CreateExistsConstraint((MovieActorRelationship rel) => rel.Roles, isRelationship: true).Query.QueryText;
+            var actual = query.CreateExistsConstraint((MovieActorRelationship rel) => rel.Roles, true).Query.QueryText;
 
             var expected = "CREATE CONSTRAINT ON ()-[rel:ACTED_IN]-() ASSERT exists(rel.Roles)";
 
             Assert.Equal(expected, actual);
 
             //test DROP too
-            actual = query.DropExistsConstraint((MovieActorRelationship rel) => rel.Roles, isRelationship: true).Query.QueryText;
+            actual = query.DropExistsConstraint((MovieActorRelationship rel) => rel.Roles, true).Query.QueryText;
             expected = "DROP CONSTRAINT ON ()-[rel:ACTED_IN]-() ASSERT exists(rel.Roles)";
 
             Assert.Equal(expected, actual);
@@ -439,15 +458,19 @@ namespace Neo4jClient.DataAnnotations.Tests
         {
             var query = testContext.Query;
 
-            var actual = query.CreateKeyConstraint((ActorNode actor) => new { (actor.Address as AddressWithComplexType).Location, actor.Name }).Query.QueryText;
+            var actual = query.CreateKeyConstraint((ActorNode actor) =>
+                new { (actor.Address as AddressWithComplexType).Location, actor.Name }).Query.QueryText;
 
-            var expected = "CREATE CONSTRAINT ON (actor:Actor) ASSERT (actor.NewAddressName_Location_Latitude, actor.NewAddressName_Location_Longitude, actor.Name) IS NODE KEY";
+            var expected =
+                "CREATE CONSTRAINT ON (actor:Actor) ASSERT (actor.NewAddressName_Location_Latitude, actor.NewAddressName_Location_Longitude, actor.Name) IS NODE KEY";
 
             Assert.Equal(expected, actual);
 
             //test DROP too
-            actual = query.DropKeyConstraint((ActorNode actor) => new { (actor.Address as AddressWithComplexType).Location, actor.Name }).Query.QueryText;
-            expected = "DROP CONSTRAINT ON (actor:Actor) ASSERT (actor.NewAddressName_Location_Latitude, actor.NewAddressName_Location_Longitude, actor.Name) IS NODE KEY";
+            actual = query.DropKeyConstraint((ActorNode actor) =>
+                new { (actor.Address as AddressWithComplexType).Location, actor.Name }).Query.QueryText;
+            expected =
+                "DROP CONSTRAINT ON (actor:Actor) ASSERT (actor.NewAddressName_Location_Latitude, actor.NewAddressName_Location_Longitude, actor.Name) IS NODE KEY";
 
             Assert.Equal(expected, actual);
         }
@@ -689,7 +712,8 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = cypherQuery.QueryText;
 
-            var expected = "WITH movie.Title AS title, movie.Year AS Year, actor.NewAddressName_Location_Longitude AS lg"
+            var expected =
+                "WITH movie.Title AS title, movie.Year AS Year, actor.NewAddressName_Location_Longitude AS lg"
                 + ", actor.NewAddressName_ComplexProperty_Property AS Property, count(something) AS something_count";
 
             Assert.Equal(expected, actual);
@@ -735,7 +759,8 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = cypherQuery.QueryText;
 
-            var expected = "RETURN movie.Title AS title, movie.Year AS Year, actor.NewAddressName_Location_Longitude AS lg"
+            var expected =
+                "RETURN movie.Title AS title, movie.Year AS Year, actor.NewAddressName_Location_Longitude AS lg"
                 + ", actor.NewAddressName_ComplexProperty_Property AS Property, count(something) AS something_count";
 
             Assert.Equal(expected, actual);
@@ -782,7 +807,8 @@ namespace Neo4jClient.DataAnnotations.Tests
 
             var actual = cypherQuery.QueryText;
 
-            var expected = "RETURN DISTINCT movie.Title AS title, movie.Year AS Year, actor.NewAddressName_Location_Longitude AS lg"
+            var expected =
+                "RETURN DISTINCT movie.Title AS title, movie.Year AS Year, actor.NewAddressName_Location_Longitude AS lg"
                 + ", actor.NewAddressName_ComplexProperty_Property AS Property, count(something) AS something_count"
                 + ", $p0 AS constant";
 

@@ -1,10 +1,9 @@
 ﻿using System;
-using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Reflection;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace Neo4jClient.DataAnnotations.Utils
@@ -14,8 +13,8 @@ namespace Neo4jClient.DataAnnotations.Utils
         private static readonly Random variableRandom = new Random();
 
         /// <summary>
-        /// Gets all the <see cref="TableAttribute"/> names on the class inheritance as labels.
-        /// Should none be gotten, the type name is used instead by default.
+        ///     Gets all the <see cref="TableAttribute" /> names on the class inheritance as labels.
+        ///     Should none be gotten, the type name is used instead by default.
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
@@ -26,23 +25,20 @@ namespace Neo4jClient.DataAnnotations.Utils
 
             while (typeInfo != null)
             {
-                labels.Add(GetLabel(typeInfo.AsType(), useTypeNameIfEmpty: false));
+                labels.Add(GetLabel(typeInfo.AsType(), false));
                 typeInfo = typeInfo.BaseType?.GetTypeInfo();
             }
 
             labels = labels.Distinct().Where(l => !string.IsNullOrWhiteSpace(l)).ToList();
 
-            if (labels.Count > 0 || !useTypeNameIfEmpty)
-            {
-                return labels;
-            }
+            if (labels.Count > 0 || !useTypeNameIfEmpty) return labels;
 
-            return new List<string>() { type.Name };
+            return new List<string> { type.Name };
         }
 
         /// <summary>
-        /// Gets the <see cref="TableAttribute"/> name on the specified class as a label.
-        /// Should none be gotten, the type name is used instead by default.
+        ///     Gets the <see cref="TableAttribute" /> name on the specified class as a label.
+        ///     Should none be gotten, the type name is used instead by default.
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
@@ -62,46 +58,42 @@ namespace Neo4jClient.DataAnnotations.Utils
             return useTypeNameIfEmpty ? type.Name : "";
         }
 
-        public static PropertyInfo GetPropertyInfoFrom<TSource, TProperty>(Expression<Func<TSource, TProperty>> propertyLambda)
+        public static PropertyInfo GetPropertyInfoFrom<TSource, TProperty>(
+            Expression<Func<TSource, TProperty>> propertyLambda)
         {
             return GetPropertyInfoFrom(propertyLambda.Body, typeof(TSource), typeof(TProperty));
         }
 
         public static PropertyInfo GetPropertyInfoFrom(Expression expr, Type sourceType, Type propertyType,
-             bool includeIEnumerableArg = true, bool acceptObjectTypeCast = false)
+            bool includeIEnumerableArg = true, bool acceptObjectTypeCast = false)
         {
-            MemberExpression memberExpr = (!acceptObjectTypeCast ? expr :
-                expr?.Uncast(out var cast, castToRemove: Defaults.ObjectType)) as MemberExpression;
+            var memberExpr =
+                (!acceptObjectTypeCast ? expr : expr?.Uncast(out var cast, Defaults.ObjectType)) as MemberExpression;
 
             if (memberExpr == null)
                 throw new ArgumentException(string.Format(
                     "Expression '{0}' refers to a method, not a property.",
-                    expr.ToString()));
+                    expr));
 
-            PropertyInfo propInfo = memberExpr.Member as PropertyInfo;
+            var propInfo = memberExpr.Member as PropertyInfo;
             if (propInfo == null)
                 throw new ArgumentException(string.Format(
                     "Expression '{0}' refers to a field, not a property.",
-                    expr.ToString()));
+                    expr));
 
             if (sourceType != null)
-            {
                 if (sourceType != propInfo.DeclaringType &&
-                !propInfo.DeclaringType.IsAssignableFrom(sourceType))
+                    !propInfo.DeclaringType.IsAssignableFrom(sourceType))
                     throw new ArgumentException(string.Format(
                         "Expresion '{0}' refers to a property that is not from type '{1}'.",
-                        expr.ToString(),
+                        expr,
                         sourceType));
-            }
 
             if (propertyType != null)
             {
-                var isPropType = propInfo.PropertyType.IsMatch(propertyType, includeIEnumerableArg: includeIEnumerableArg);
+                var isPropType = propInfo.PropertyType.IsMatch(propertyType, includeIEnumerableArg);
 
-                if (!isPropType)
-                {
-                    throw new ArgumentException($"Expected property of type '{propertyType}'.");
-                }
+                if (!isPropType) throw new ArgumentException($"Expected property of type '{propertyType}'.");
             }
 
             return propInfo;
@@ -121,13 +113,11 @@ namespace Neo4jClient.DataAnnotations.Utils
                 interfaces = new List<Type>();
             }
 
-            if (type.GetTypeInfo().IsInterface)
-            {
-                interfaces.Insert(0, type);
-            }
+            if (type.GetTypeInfo().IsInterface) interfaces.Insert(0, type);
 
             var interfaceType = interfaces?.Where(i => i.GetTypeInfo().IsGenericType
-            && i.GetGenericTypeDefinition() == iEnumerableType).FirstOrDefault();
+                                                       && i.GetGenericTypeDefinition() == iEnumerableType)
+                .FirstOrDefault();
 
             return interfaceType?.GetGenericArguments().SingleOrDefault();
         }
@@ -135,26 +125,27 @@ namespace Neo4jClient.DataAnnotations.Utils
         public static Type GetNullableUnderlyingType(Type type)
         {
             return Nullable.GetUnderlyingType(type) ??
-                (type.GetTypeInfo().IsGenericType
-                && type.GetGenericTypeDefinition() == typeof(Nullable<>) ?
-                type.GetGenericArguments().FirstOrDefault() : null);
+                   (type.GetTypeInfo().IsGenericType
+                    && type.GetGenericTypeDefinition() == typeof(Nullable<>)
+                       ? type.GetGenericArguments().FirstOrDefault()
+                       : null);
         }
 
-        public static bool IsScalarType(Type type, DataAnnotations.EntityService entityService)
+        public static bool IsScalarType(Type type, EntityService entityService)
         {
-            bool isScalar = false;
-            if ((entityService as EntityService)?.processedScalarTypes.TryGetValue(type, out isScalar) == true)
+            var isScalar = false;
+            if (entityService?.processedScalarTypes.TryGetValue(type, out isScalar) == true)
                 return isScalar;
 
-            Func<Type, bool> isNav = (_type) =>
+            Func<Type, bool> isNav = _type =>
             {
                 var _typeInfo = _type?.GetTypeInfo();
                 var ret = (_typeInfo.IsClass
-                || _typeInfo.IsInterface
-                || _typeInfo.IsDefined(Defaults.NeoNonScalarType)
-                || entityService.KnownNonScalarTypes.Contains(_type))
-                && !entityService.KnownScalarTypes.Contains(_type)
-                && !_typeInfo.IsDefined(Defaults.NeoScalarType);
+                           || _typeInfo.IsInterface
+                           || _typeInfo.IsDefined(Defaults.NeoNonScalarType)
+                           || entityService.KnownNonScalarTypes.Contains(_type))
+                          && !entityService.KnownScalarTypes.Contains(_type)
+                          && !_typeInfo.IsDefined(Defaults.NeoScalarType);
 
                 return ret;
             };
@@ -162,17 +153,16 @@ namespace Neo4jClient.DataAnnotations.Utils
             if (type != null && isNav(type))
             {
                 //check for an array/iEnumerable/nullable before concluding
-                Type genericArgument = GetEnumerableGenericType(type) ?? GetNullableUnderlyingType(type);
+                var genericArgument = GetEnumerableGenericType(type) ?? GetNullableUnderlyingType(type);
 
                 if (genericArgument == null || isNav(genericArgument))
                 {
                     try
                     {
-                        (entityService as EntityService).processedScalarTypes[type] = false;
+                        entityService.processedScalarTypes[type] = false;
                     }
                     catch
                     {
-
                     }
 
                     return false;
@@ -183,11 +173,10 @@ namespace Neo4jClient.DataAnnotations.Utils
             {
                 try
                 {
-                    (entityService as EntityService).processedScalarTypes[type] = true;
+                    entityService.processedScalarTypes[type] = true;
                 }
                 catch
                 {
-
                 }
 
                 return true;
@@ -199,7 +188,7 @@ namespace Neo4jClient.DataAnnotations.Utils
         public static MethodInfo GetMethodInfo(Expression<Action> expression)
         {
             var member = expression.Body as MethodCallExpression;
-            
+
             if (member != null)
             {
                 var methodInfo = member.Method;
@@ -238,7 +227,7 @@ namespace Neo4jClient.DataAnnotations.Utils
             return member ?? throw new ArgumentException("Expression is not a field", "expression");
         }
 
-        internal static void InitializeComplexTypedProperties(object entity, DataAnnotations.EntityService entityService)
+        internal static void InitializeComplexTypedProperties(object entity, EntityService entityService)
         {
             var entityInfo = entityService.GetEntityTypeInfo(entity.GetType());
 
@@ -270,17 +259,18 @@ namespace Neo4jClient.DataAnnotations.Utils
         }
 
         /// <summary>
-        /// No further processing escape
+        ///     No further processing escape
         /// </summary>
         /// <param name="expressions"></param>
         /// <returns></returns>
         public static bool HasNfpEscape(Expression expression)
         {
-            expression = expression?.Uncast(out var cast, Defaults.ObjectType); //in case this is coming from a dictionary
+            expression =
+                expression?.Uncast(out var cast, Defaults.ObjectType); //in case this is coming from a dictionary
             MethodCallExpression methodExpr = null;
             return expression != null && (methodExpr = expression as MethodCallExpression) != null
-                && (methodExpr.Method.IsEquivalentTo("_", Defaults.CypherFuncsType)
-                || methodExpr.Method.IsEquivalentTo("_", Defaults.CypherExtensionFuncsType));
+                                      && (methodExpr.Method.IsEquivalentTo("_", Defaults.CypherFuncsType)
+                                          || methodExpr.Method.IsEquivalentTo("_", Defaults.CypherExtensionFuncsType));
         }
 
         public static bool HasVars(List<Expression> expressions)
@@ -292,19 +282,19 @@ namespace Neo4jClient.DataAnnotations.Utils
         {
             methodExpr = null;
             return expressions != null && expressions.Count > 0
-                && (methodExpr = expressions[0] as MethodCallExpression) != null
-                && methodExpr.Method.IsEquivalentTo("Get", Defaults.VarsType);
+                                       && (methodExpr = expressions[0] as MethodCallExpression) != null
+                                       && methodExpr.Method.IsEquivalentTo("Get", Defaults.VarsType);
         }
 
         /// <summary>
-        /// Placeholder method for <see cref="CypherVariables"/> class calls in expressions.
+        ///     Placeholder method for <see cref="CypherVariables" /> class calls in expressions.
         /// </summary>
         /// <typeparam name="TReturn">The last return type of the contiguous access stretch.</typeparam>
         /// <param name="index">The index of the actual expression in the store.</param>
         /// <returns>A default value of the return type.</returns>
         internal static TReturn GetValue<TReturn>(int index)
         {
-            return GetValue<TReturn>(index, createNewInstance: false);
+            return GetValue<TReturn>(index, false);
         }
 
         internal static TReturn GetValue<TReturn>(int index, bool createNewInstance = false)
@@ -312,17 +302,14 @@ namespace Neo4jClient.DataAnnotations.Utils
             var ret = (TReturn)typeof(TReturn).GetDefaultValue();
 
             if (createNewInstance && ret == null)
-            {
                 //this shouldn't be null
                 try
                 {
-                    ret = (TReturn)CreateInstance(typeof(TReturn), nonPublic: true);
+                    ret = (TReturn)CreateInstance(typeof(TReturn));
                 }
                 catch
                 {
-
                 }
-            }
 
             return ret;
         }
@@ -342,10 +329,9 @@ namespace Neo4jClient.DataAnnotations.Utils
         public static void CheckIfComplexTypeInstanceIsNull(object instance, string propertyName, Type declaringType)
         {
             if (instance == null)
-            {
                 //Complex types cannot be null. A value must be provided always.
-                throw new InvalidOperationException(string.Format(Messages.NullComplexTypePropertyError, propertyName, declaringType.Name));
-            }
+                throw new InvalidOperationException(string.Format(Messages.NullComplexTypePropertyError, propertyName,
+                    declaringType.Name));
         }
 
         internal static string GetRandomVariableFor(string entity)
@@ -360,8 +346,8 @@ namespace Neo4jClient.DataAnnotations.Utils
             lock (variableRandom)
             {
                 return "___" + $"{entity}"
-                    + variableRandom.Next(1, 500)
-                    + variableRandom.Next(500, 999);
+                             + variableRandom.Next(1, 500)
+                             + variableRandom.Next(500, 999);
             }
         }
 
@@ -389,11 +375,11 @@ namespace Neo4jClient.DataAnnotations.Utils
                         parameters = c.GetParameters()
                     })
                     .Where(nc => nc.parameters.Length == parameters.Length
-                        || (nc.parameters.Any(p => p.IsOptional || p.HasDefaultValue) && nc.parameters.Length > parameters.Length))
+                                 || nc.parameters.Any(p => p.IsOptional || p.HasDefaultValue) &&
+                                 nc.parameters.Length > parameters.Length)
                     .OrderBy(nc => nc.parameters.Length == parameters.Length ? -1 : nc.parameters.Length);
 
                 if (constructors?.Count() > 0)
-                {
                     foreach (var constructor in constructors)
                     {
                         var _params = parameters;
@@ -413,8 +399,9 @@ namespace Neo4jClient.DataAnnotations.Utils
                             {
                                 try
                                 {
-                                    if (paramsEnumerator.Current != null ?
-                                        paramInfo.ParameterType.IsGenericAssignableFrom(paramsEnumerator.Current.GetType())
+                                    if (paramsEnumerator.Current != null
+                                        ? paramInfo.ParameterType.IsGenericAssignableFrom(paramsEnumerator.Current
+                                            .GetType())
                                         : paramInfo.ParameterType.CanBeNull())
                                     {
                                         //found a match, or a parameter that can be assigned null
@@ -426,18 +413,13 @@ namespace Neo4jClient.DataAnnotations.Utils
                                 }
                                 catch
                                 {
-
                                 }
 
                                 if (paramInfo.HasDefaultValue)
-                                {
                                     paramList.Add(paramInfo.DefaultValue ?? paramInfo.RawDefaultValue);
-                                }
                                 else
-                                {
                                     //add default
                                     paramList.Add(paramInfo.ParameterType.GetDefaultValue());
-                                }
                             }
 
                             _params = paramList.ToArray();
@@ -450,10 +432,8 @@ namespace Neo4jClient.DataAnnotations.Utils
                         }
                         catch
                         {
-
                         }
                     }
-                }
 
                 if (o == null)
                     throw e;
@@ -465,23 +445,22 @@ namespace Neo4jClient.DataAnnotations.Utils
         public static string GetNewNeo4jParameterSyntax(string parameter)
         {
             if (parameter.StartsWith("{") && parameter.EndsWith("}"))
-            {
                 //this is the old parameter style
                 //use the new one that uses $ sign
                 parameter = $"${parameter.Substring(0, parameter.Length - 1).Remove(0, 1)}";
-            }
 
             return parameter;
         }
 
         public static FieldInfo GetBackingField(PropertyInfo pi)
         {
-            if (!pi.CanRead || !pi.GetGetMethod(nonPublic: true).IsDefined(typeof(CompilerGeneratedAttribute), inherit: true))
+            if (!pi.CanRead || !pi.GetGetMethod(true).IsDefined(typeof(CompilerGeneratedAttribute), true))
                 return null;
-            var backingField = pi.DeclaringType.GetField($"<{pi.Name}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
+            var backingField = pi.DeclaringType.GetField($"<{pi.Name}>k__BackingField",
+                BindingFlags.Instance | BindingFlags.NonPublic);
             if (backingField == null)
                 return null;
-            if (!backingField.IsDefined(typeof(CompilerGeneratedAttribute), inherit: true))
+            if (!backingField.IsDefined(typeof(CompilerGeneratedAttribute), true))
                 return null;
             return backingField;
         }

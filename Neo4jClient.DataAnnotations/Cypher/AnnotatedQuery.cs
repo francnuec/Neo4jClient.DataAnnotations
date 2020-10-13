@@ -1,11 +1,10 @@
 ﻿using System;
-using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
-using Neo4jClient.Cypher;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
+using Neo4jClient.Cypher;
 using Neo4jClient.DataAnnotations.Expressions;
 using Neo4jClient.DataAnnotations.Serialization;
 
@@ -13,19 +12,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 {
     public class AnnotatedQuery : Annotated, IAnnotatedQuery, IOrderedAnnotatedQuery
     {
-        protected static Type VbCompareReplacerType { get; private set; }
-
-        protected static MethodInfo PrivateGenericWithInfo { get; } = typeof(CypherFluentQuery)
-            .GetMethod("With", BindingFlags.Instance | BindingFlags.NonPublic)
-            .GetGenericMethodDefinition();
-
-        protected static MethodInfo PrivateGenericReturnInfo { get; } = typeof(CypherFluentQuery)
-            .GetMethod("Return", BindingFlags.Instance | BindingFlags.NonPublic)
-            .GetGenericMethodDefinition();
-
-        protected static MethodInfo PrivateGenericReturnDistinctInfo { get; } = typeof(CypherFluentQuery)
-            .GetMethod("ReturnDistinct", BindingFlags.Instance | BindingFlags.NonPublic)
-            .GetGenericMethodDefinition();
+        private FunctionExpressionVisitor _funcVisitor;
 
 
         public AnnotatedQuery(ICypherFluentQuery query) : this(query, null)
@@ -36,7 +23,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         {
             if (VbCompareReplacerType == null)
             {
-                Assembly neo4jClientAssembly = typeof(ICypherFluentQuery).GetTypeInfo().Assembly;
+                var neo4jClientAssembly = typeof(ICypherFluentQuery).GetTypeInfo().Assembly;
                 VbCompareReplacerType = neo4jClientAssembly.GetType("Neo4jClient.Cypher.VbCompareReplacer");
             }
 
@@ -44,7 +31,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
             {
                 QueryContext = CypherUtilities.GetQueryContext(query);
 
-                CamelCaseProperties = (bool)query.GetType().GetField("CamelCaseProperties", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).GetValue(query);
+                CamelCaseProperties = (bool)query.GetType().GetField("CamelCaseProperties",
+                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).GetValue(query);
                 FunctionVisitor = new FunctionExpressionVisitor(QueryContext);
             }
             else
@@ -64,6 +52,20 @@ namespace Neo4jClient.DataAnnotations.Cypher
                 AnnotationsContext = context;
         }
 
+        protected static Type VbCompareReplacerType { get; private set; }
+
+        protected static MethodInfo PrivateGenericWithInfo { get; } = typeof(CypherFluentQuery)
+            .GetMethod("With", BindingFlags.Instance | BindingFlags.NonPublic)
+            .GetGenericMethodDefinition();
+
+        protected static MethodInfo PrivateGenericReturnInfo { get; } = typeof(CypherFluentQuery)
+            .GetMethod("Return", BindingFlags.Instance | BindingFlags.NonPublic)
+            .GetGenericMethodDefinition();
+
+        protected static MethodInfo PrivateGenericReturnDistinctInfo { get; } = typeof(CypherFluentQuery)
+            .GetMethod("ReturnDistinct", BindingFlags.Instance | BindingFlags.NonPublic)
+            .GetGenericMethodDefinition();
+
         public QueryContext QueryContext { get; }
 
         public IGraphClient Client => QueryContext?.Client;
@@ -72,7 +74,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         protected Func<ICypherFluentQuery, QueryWriterWrapper> QueryWriterGetter => QueryContext.QueryWriterGetter;
 
-        protected QueryWriterWrapper QueryWriter { get { return QueryWriterGetter.Invoke(CypherQuery); } }
+        protected QueryWriterWrapper QueryWriter => QueryWriterGetter.Invoke(CypherQuery);
 
         protected EntityConverter Converter => QueryContext?.Converter;
 
@@ -80,7 +82,6 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         protected Func<object, string> Serializer => QueryContext?.SerializeCallback;
 
-        private FunctionExpressionVisitor _funcVisitor;
         protected FunctionExpressionVisitor FunctionVisitor
         {
             get
@@ -93,7 +94,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
                 return _funcVisitor;
             }
-            private set { _funcVisitor = value; }
+            private set => _funcVisitor = value;
         }
 
 
@@ -114,7 +115,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         protected void ReplaceQueryWriterText(ICypherFluentQuery newQuery, string newText)
         {
-            var queryWriter = QueryWriterGetter.Invoke(newQuery).QueryWriter;// as QueryWriter;
+            var queryWriter = QueryWriterGetter.Invoke(newQuery).QueryWriter; // as QueryWriter;
             var qwBuilderInfo = queryWriter.GetType().GetField("queryTextBuilder",
                 BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
             var qwBuilder = qwBuilderInfo.GetValue(queryWriter) as StringBuilder;
@@ -134,7 +135,9 @@ namespace Neo4jClient.DataAnnotations.Cypher
             foreach (var paramAccess in paramAccessStretchVisitor.ParameterAccesses)
             {
                 //"As" expression itself should be index 1.
-                var paramAccessExprs = ExpressionUtilities.GetSimpleMemberAccessStretch(EntityService, paramAccess.Key, out var entityExpr);
+                var paramAccessExprs =
+                    ExpressionUtilities.GetSimpleMemberAccessStretch(EntityService, paramAccess.Key,
+                        out var entityExpr);
                 if (paramAccessExprs.Count >= 2)
                 {
                     var returnAsMethodCallExpr = paramAccessExprs[1] as MethodCallExpression;
@@ -147,12 +150,12 @@ namespace Neo4jClient.DataAnnotations.Cypher
                     var sourceType = returnAsMethodCallExpr.Method.GetGenericArguments().Single();
 
                     if (replacements.FirstOrDefault(r => r.Value.Type == sourceType
-                        && ((r.Value as MethodCallExpression)?.Arguments[0] as ConstantExpression)
-                        .Value as string == paramAccess.Value.Name).Value is var varsGetExpr
+                                                         && ((r.Value as MethodCallExpression)?.Arguments[0] as
+                                                             ConstantExpression)
+                                                         .Value as string == paramAccess.Value.Name)
+                            .Value is var varsGetExpr
                         && varsGetExpr == null) //try get existing vars.get call
-                    {
                         varsGetExpr = ExpressionUtilities.GetVarsGetExpressionFor(paramAccess.Value.Name, sourceType);
-                    }
 
                     //replace the "As" call expression with our new parameter
                     replacements.Add(returnAsMethodCallExpr, varsGetExpr);
@@ -160,16 +163,14 @@ namespace Neo4jClient.DataAnnotations.Cypher
             }
 
             if (replacements.Count > 0)
-            {
                 //make replacements
                 expression = new ReplacerExpressionVisitor(replacements).Visit(expression) as LambdaExpression;
-            }
 
             return expression;
         }
 
         protected string BuildICypherResultItemExpression
-            (LambdaExpression expression, bool isOutputQuery,
+        (LambdaExpression expression, bool isOutputQuery,
             out CypherResultMode resultMode, out CypherResultFormat resultFormat)
         {
             //expecting:
@@ -188,16 +189,18 @@ namespace Neo4jClient.DataAnnotations.Cypher
         }
 
         #region Where
+
         protected string BuildWhereText(LambdaExpression expression)
         {
-            var vbCompareReplacerVisitor = Utils.Utilities.CreateInstance(VbCompareReplacerType, nonPublic: true) as ExpressionVisitor;
+            var vbCompareReplacerVisitor =
+                Utils.Utilities.CreateInstance(VbCompareReplacerType, true) as ExpressionVisitor;
             var expr = vbCompareReplacerVisitor.Visit(expression) as LambdaExpression;
 
             //visit the expression
             var visitor = FunctionVisitor;
             visitor.Clear();
             var newBodyExpr = visitor.Visit(expr.Body);
-            return "(" + visitor.Builder.ToString() + ")";
+            return "(" + visitor.Builder + ")";
         }
 
         protected internal AnnotatedQuery SharedWhere(LambdaExpression expression)
@@ -217,9 +220,11 @@ namespace Neo4jClient.DataAnnotations.Cypher
             var newQuery = CypherQuery.OrWhere(BuildWhereText(expression));
             return Mutate(newQuery);
         }
+
         #endregion
 
         #region With
+
         private ICypherFluentQuery<TResult> SharedWithQuery<TResult>(LambdaExpression expression)
         {
             var text = "WITH " + BuildICypherResultItemExpression(expression, false, out var mode, out var format);
@@ -231,7 +236,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
             });
         }
 
-        protected internal AnnotatedQuery<TResult> SharedWith<TResult>(LambdaExpression expression, string addedWithText)
+        protected internal AnnotatedQuery<TResult> SharedWith<TResult>(LambdaExpression expression,
+            string addedWithText)
         {
             //call private with
             var newQuery = SharedWithQuery<TResult>(expression);
@@ -240,15 +246,18 @@ namespace Neo4jClient.DataAnnotations.Cypher
             {
                 //prepend the addedtext in case there's a "*"
                 var newQueryText = QueryWriterGetter.Invoke(newQuery).ToCypherQuery().QueryText;
-                newQueryText = newQueryText.Insert(newQueryText.ToLower().LastIndexOf("with ") + 5, addedWithText.Trim(',') + ", ");
+                newQueryText = newQueryText.Insert(newQueryText.ToLower().LastIndexOf("with ") + 5,
+                    addedWithText.Trim(',') + ", ");
                 ReplaceQueryWriterText(newQuery, newQueryText);
             }
 
             return Mutate(newQuery);
         }
+
         #endregion
 
         #region Return
+
         protected internal AnnotatedQuery<TResult> SharedReturn<TResult>(LambdaExpression expression)
         {
             var text = "RETURN " + BuildICypherResultItemExpression(expression, true, out var mode, out var format);
@@ -265,7 +274,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
         protected internal AnnotatedQuery<TResult> SharedReturnDistinct<TResult>(LambdaExpression expression)
         {
-            var text = "RETURN DISTINCT " + BuildICypherResultItemExpression(expression, true, out var mode, out var format);
+            var text = "RETURN DISTINCT " +
+                       BuildICypherResultItemExpression(expression, true, out var mode, out var format);
 
             var newQuery = CypherQuery.Mutate<TResult>(w =>
             {
@@ -276,9 +286,11 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
             return Mutate(newQuery);
         }
+
         #endregion
 
         #region OrderBy
+
         protected internal AnnotatedQuery SharedOrderBy<TResult>
             (LambdaExpression expression, Func<ICypherFluentQuery, string[], IOrderedCypherFluentQuery> clause)
         {
@@ -299,9 +311,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
 
             //check to see if peradventure, an " AS " made it into the text
             if (withPropertyName.ToLower().IndexOf(" as ") is var asIdx && asIdx >= 0)
-            {
-                withPropertyName = withPropertyName.Remove(asIdx); //removes any text after the first " AS " of the return statement.
-            }
+                withPropertyName =
+                    withPropertyName.Remove(asIdx); //removes any text after the first " AS " of the return statement.
 
             withPropertyName = withPropertyName.Trim();
 
@@ -309,7 +320,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
             ReplaceQueryWriterText(withQuery, originalQueryText);
 
             //we can now write the order clause with our property name
-            var newQuery = clause(withQuery, new string[] { withPropertyName });
+            var newQuery = clause(withQuery, new[] { withPropertyName });
 
             return Mutate(newQuery);
         }
@@ -333,6 +344,7 @@ namespace Neo4jClient.DataAnnotations.Cypher
         {
             return SharedOrderBy<TResult>(expression, (q, p) => ((IOrderedCypherFluentQuery)q).ThenByDescending(p));
         }
+
         #endregion
     }
 
@@ -342,7 +354,8 @@ namespace Neo4jClient.DataAnnotations.Cypher
         {
         }
 
-        protected internal AnnotatedQuery(ICypherFluentQuery<TResult> query, AnnotatedQuery previous) : base(query, previous)
+        protected internal AnnotatedQuery(ICypherFluentQuery<TResult> query, AnnotatedQuery previous) : base(query,
+            previous)
         {
         }
     }

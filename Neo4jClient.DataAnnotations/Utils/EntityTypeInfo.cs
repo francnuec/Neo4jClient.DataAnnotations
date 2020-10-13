@@ -1,35 +1,33 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using Neo4jClient.DataAnnotations.Utils;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
-using System.Linq;
 using System.ComponentModel.DataAnnotations.Schema;
-using Newtonsoft.Json.Serialization;
+using System.Linq;
+using System.Reflection;
 using Neo4jClient.DataAnnotations.Serialization;
+using Newtonsoft.Json.Serialization;
 
 namespace Neo4jClient.DataAnnotations.Utils
 {
     public sealed class EntityTypeInfo : IHaveEntityService
     {
-        private ConcurrentDictionary<string, ConcurrentDictionary<PropertyInfo, IEnumerable<Attribute>>> attrTypeToPropsToAttrs
-            = new ConcurrentDictionary<string, ConcurrentDictionary<PropertyInfo, IEnumerable<Attribute>>>();
-        private List<PropertyInfo> complexTypedProps;
-        private List<string> labelsWithTypeNameCatch;
-        private List<PropertyInfo> allProperties;
-        private Dictionary<MemberName, MemberInfo> jsonNamePropertyMap;
-        private List<ForeignKeyProperty> foreignKeyProperties;
-        private List<PropertyInfo> navigationProps;
-        private ConcurrentDictionary<Type, List<ForeignKeyProperty>> attributedForeignKeys
-            = new ConcurrentDictionary<Type, List<ForeignKeyProperty>>();
         //private JsonObjectContract JsonContract { get; set; }
-        private List<JsonProperty> _jsonProps = null;
-        private List<PropertyInfo> notMappedProps;
+        private List<JsonProperty> _jsonProps;
+        private List<PropertyInfo> allProperties;
 
-        private static MethodInfo CreatePropertyMethodInfo { get; }
-            = typeof(DefaultContractResolver).GetMethod("CreateProperty",
-                BindingFlags.NonPublic | BindingFlags.Instance);
+        private readonly ConcurrentDictionary<Type, List<ForeignKeyProperty>> attributedForeignKeys
+            = new ConcurrentDictionary<Type, List<ForeignKeyProperty>>();
+
+        private readonly ConcurrentDictionary<string, ConcurrentDictionary<PropertyInfo, IEnumerable<Attribute>>>
+            attrTypeToPropsToAttrs
+                = new ConcurrentDictionary<string, ConcurrentDictionary<PropertyInfo, IEnumerable<Attribute>>>();
+
+        private List<PropertyInfo> complexTypedProps;
+        private List<ForeignKeyProperty> foreignKeyProperties;
+        private Dictionary<MemberName, MemberInfo> jsonNamePropertyMap;
+        private List<string> labelsWithTypeNameCatch;
+        private List<PropertyInfo> navigationProps;
+        private List<PropertyInfo> notMappedProps;
 
         public EntityTypeInfo(Type type, EntityService service)
         {
@@ -37,7 +35,9 @@ namespace Neo4jClient.DataAnnotations.Utils
             EntityService = service ?? throw new ArgumentNullException(nameof(service));
         }
 
-        public EntityService EntityService { get; }
+        private static MethodInfo CreatePropertyMethodInfo { get; }
+            = typeof(DefaultContractResolver).GetMethod("CreateProperty",
+                BindingFlags.NonPublic | BindingFlags.Instance);
 
         public Type Type { get; }
 
@@ -49,10 +49,8 @@ namespace Neo4jClient.DataAnnotations.Utils
 
                 if (labels.Count == 1
                     && labels[0] == Type.Name //check if the single label is the type name
-                    )
-                {
+                )
                     return new List<string>();
-                }
 
                 return labels;
             }
@@ -63,15 +61,10 @@ namespace Neo4jClient.DataAnnotations.Utils
             get
             {
                 if (labelsWithTypeNameCatch == null)
-                {
                     lock (this)
                     {
-                        if (labelsWithTypeNameCatch == null)
-                        {
-                            labelsWithTypeNameCatch = Utils.Utilities.GetLabels(Type, useTypeNameIfEmpty: true);
-                        }
+                        if (labelsWithTypeNameCatch == null) labelsWithTypeNameCatch = Utilities.GetLabels(Type);
                     }
-                }
 
                 return labelsWithTypeNameCatch;
             }
@@ -84,11 +77,9 @@ namespace Neo4jClient.DataAnnotations.Utils
                 lock (this)
                 {
                     if (allProperties == null)
-                    {
                         allProperties = Type.GetProperties
-                            (Defaults.MemberSearchBindingFlags)?.ToList()
-                            ?? new List<PropertyInfo>();
-                    }
+                                            (Defaults.MemberSearchBindingFlags)?.ToList()
+                                        ?? new List<PropertyInfo>();
                 }
 
                 return allProperties;
@@ -102,12 +93,10 @@ namespace Neo4jClient.DataAnnotations.Utils
                 lock (this)
                 {
                     if (navigationProps == null)
-                    {
                         navigationProps = AllProperties
-                            .Where(p => !Utils.Utilities.IsScalarType(p.PropertyType, EntityService))
+                            .Where(p => !Utilities.IsScalarType(p.PropertyType, EntityService))
                             .Except(ComplexTypedProperties)
                             .ToList();
-                    }
                 }
 
                 return navigationProps;
@@ -121,11 +110,9 @@ namespace Neo4jClient.DataAnnotations.Utils
                 lock (this)
                 {
                     if (complexTypedProps == null)
-                    {
                         complexTypedProps = AllProperties
                             .Where(p => p.PropertyType.IsComplex())
                             .ToList();
-                    }
                 }
 
                 return complexTypedProps;
@@ -158,7 +145,7 @@ namespace Neo4jClient.DataAnnotations.Utils
                             if (foreignKeyAttribute == null)
                                 continue;
 
-                            var foreignKeyProperty = new ForeignKeyProperty()
+                            var foreignKeyProperty = new ForeignKeyProperty
                             {
                                 Attribute = foreignKeyAttribute
                             };
@@ -167,7 +154,8 @@ namespace Neo4jClient.DataAnnotations.Utils
                             propsConsidered.Add(foreignKeyedProp.Key.Name);
 
                             //determine if the foreignkeyattribute name points to another property on this object
-                            var otherPropertyInfo = AllProperties.Where(p => p.Name == foreignKeyAttribute.Name).SingleOrDefault();
+                            var otherPropertyInfo = AllProperties.Where(p => p.Name == foreignKeyAttribute.Name)
+                                .SingleOrDefault();
 
                             if (otherPropertyInfo != null)
                             {
@@ -182,26 +170,29 @@ namespace Neo4jClient.DataAnnotations.Utils
                         //any property name that ends with "Id" or "_id" is expected to be the scalar foreign key
                         //and the name of its navigation property should equal the rest of the property name string with "Id" removed.
 
-                        var propertiesNotConsidered = AllProperties.Where(p => !propsConsidered.Contains(p.Name)).ToList();
+                        var propertiesNotConsidered =
+                            AllProperties.Where(p => !propsConsidered.Contains(p.Name)).ToList();
 
                         foreach (var propInfo in propertiesNotConsidered)
                         {
                             string fkName = null;
 
                             if ((propInfo.Name.EndsWith("Id") || propInfo.Name.ToLower().EndsWith("_id"))
-                                && Utils.Utilities.IsScalarType(propInfo.PropertyType, EntityService) //it must be scalar to be considered
-                                && !string.IsNullOrWhiteSpace(fkName = propInfo.Name.Substring(0, propInfo.Name.Length - 2).TrimEnd('_')))
+                                && Utilities.IsScalarType(propInfo.PropertyType,
+                                    EntityService) //it must be scalar to be considered
+                                && !string.IsNullOrWhiteSpace(fkName =
+                                    propInfo.Name.Substring(0, propInfo.Name.Length - 2).TrimEnd('_')))
                             {
                                 //check if this name belongs to a nav property already chosen as foreign key above
                                 //but whose defined foreignkey does not point to its scalar property.
-                                ForeignKeyProperty foreignKeyProperty = foreignKeyProperties
+                                var foreignKeyProperty = foreignKeyProperties
                                     .Where(fk => fk.NavigationProperty?.Name == fkName).SingleOrDefault();
 
                                 if (foreignKeyProperty == null)
                                 {
                                     var foreignKeyAttribute = new ForeignKeyAttribute(fkName);
 
-                                    foreignKeyProperty = new ForeignKeyProperty()
+                                    foreignKeyProperty = new ForeignKeyProperty
                                     {
                                         Attribute = foreignKeyAttribute,
                                         IsAttributeAutoCreated = true
@@ -210,13 +201,12 @@ namespace Neo4jClient.DataAnnotations.Utils
                                     foreignKeyProperties.Add(foreignKeyProperty);
 
                                     //determine if the foreignkeyattribute name points to another property on this object
-                                    var otherPropertyInfo = propertiesNotConsidered.Where(p => p.Name == fkName).SingleOrDefault();
+                                    var otherPropertyInfo = propertiesNotConsidered.Where(p => p.Name == fkName)
+                                        .SingleOrDefault();
 
                                     if (otherPropertyInfo != null)
-                                    {
                                         //assign the nav property
                                         AssignForeignKey(foreignKeyProperty, otherPropertyInfo);
-                                    }
                                 }
 
                                 //assign the scalar property
@@ -253,16 +243,13 @@ namespace Neo4jClient.DataAnnotations.Utils
 
         internal List<JsonProperty> JsonProperties
         {
-            get
-            {
-                return _jsonProps;
-            }
+            get => _jsonProps;
             set
             {
                 lock (this)
                 {
                     if (value == null || _jsonProps == null || value.Count != _jsonProps.Count
-                    || value.Any(np => !_jsonProps.Contains(np)))
+                        || value.Any(np => !_jsonProps.Contains(np)))
                     {
                         //something has changed
                         _jsonProps = value;
@@ -280,10 +267,7 @@ namespace Neo4jClient.DataAnnotations.Utils
             {
                 lock (this)
                 {
-                    if (jsonNamePropertyMap == null)
-                    {
-                        jsonNamePropertyMap = new Dictionary<MemberName, MemberInfo>();
-                    }
+                    if (jsonNamePropertyMap == null) jsonNamePropertyMap = new Dictionary<MemberName, MemberInfo>();
                 }
 
                 return jsonNamePropertyMap;
@@ -297,15 +281,14 @@ namespace Neo4jClient.DataAnnotations.Utils
             }
         }
 
-        internal List<ForeignKeyProperty> ColumnAttributeFKs
-        {
-            get { return GetForeignKeysWithAttribute(Defaults.ColumnType); }
-        }
+        internal List<ForeignKeyProperty> ColumnAttributeFKs => GetForeignKeysWithAttribute(Defaults.ColumnType);
+
+        public EntityService EntityService { get; }
 
         //internal DefaultContractResolver JsonResolver { get; set; }
 
         /// <summary>
-        /// Gets properties that have specific attribute on either the scalar or nav property of a foreign key.
+        ///     Gets properties that have specific attribute on either the scalar or nav property of a foreign key.
         /// </summary>
         internal List<ForeignKeyProperty> GetForeignKeysWithAttribute(Type attributeType)
         {
@@ -314,7 +297,8 @@ namespace Neo4jClient.DataAnnotations.Utils
             if (!attributedForeignKeys.TryGetValue(attributeType, out props))
             {
                 props = ForeignKeyProperties.Where(fk => fk.ScalarProperty?.IsDefined(attributeType) == true
-                || fk.NavigationProperty?.IsDefined(attributeType) == true)?.ToList() ?? new List<ForeignKeyProperty>();
+                                                         || fk.NavigationProperty?.IsDefined(attributeType) == true)
+                    ?.ToList() ?? new List<ForeignKeyProperty>();
 
                 attributedForeignKeys[attributeType] = props;
             }
@@ -325,23 +309,20 @@ namespace Neo4jClient.DataAnnotations.Utils
         internal void AssignForeignKey(ForeignKeyProperty property, PropertyInfo propertyInfo)
         {
             //check if its scalar
-            if (Utils.Utilities.IsScalarType(propertyInfo.PropertyType, EntityService))
-            {
+            if (Utilities.IsScalarType(propertyInfo.PropertyType, EntityService))
                 //only assign if scalar property hasn't been earlier on assigned.
                 //if it has been assigned, skip. it may mean the propertyinfo has nothing to do with foreignkeys and was just a coincedence.
                 property.ScalarProperty = property.ScalarProperty ?? propertyInfo;
-            }
             else
-            {
                 //its navigation prop
                 property.NavigationProperty = propertyInfo;
-            }
 
             property.IsAttributePointingToProperty = property.NavigationProperty?.Name == property.Attribute?.Name
-                || property.ScalarProperty?.Name == property.Attribute?.Name;
+                                                     || property.ScalarProperty?.Name == property.Attribute?.Name;
         }
 
-        internal ConcurrentDictionary<PropertyInfo, IEnumerable<Attribute>> GetPropertiesWithAttribute(Type attributeType, bool inherit = false)
+        internal ConcurrentDictionary<PropertyInfo, IEnumerable<Attribute>> GetPropertiesWithAttribute(
+            Type attributeType, bool inherit = false)
         {
             ConcurrentDictionary<PropertyInfo, IEnumerable<Attribute>> props;
             if (!attrTypeToPropsToAttrs.TryGetValue(attributeType.FullName, out props))
@@ -353,10 +334,7 @@ namespace Neo4jClient.DataAnnotations.Utils
                 {
                     var attrs = property.GetCustomAttributes(attributeType, inherit)?.Cast<Attribute>();
 
-                    if (attrs != null && attrs.Count() > 0)
-                    {
-                        props[property] = attrs;
-                    }
+                    if (attrs != null && attrs.Count() > 0) props[property] = attrs;
                 }
 
                 attrTypeToPropsToAttrs[attributeType.FullName] = props;
@@ -393,18 +371,14 @@ namespace Neo4jClient.DataAnnotations.Utils
                 var contract = resolver?.ResolveContract(Type) as JsonObjectContract;
 
                 if (contract == null || contract.Properties == null) //|| contract.Properties.Count == 0)
-                {
                     throw new InvalidOperationException(string.Format(Messages.NoContractResolvedError, Type.FullName));
-                }
 
                 SerializationUtilities.ResolveEntityProperties
-                    (contract.Properties, Type, this, EntityService, resolver,
-                    (propInfo) => CreatePropertyMethodInfo.Invoke(resolver, new object[] { propInfo, contract.MemberSerialization }) as JsonProperty);
+                (contract.Properties, Type, this, EntityService, resolver,
+                    propInfo => CreatePropertyMethodInfo.Invoke(resolver,
+                        new object[] { propInfo, contract.MemberSerialization }) as JsonProperty);
 
-                if (JsonProperties?.Count == 0)
-                {
-                    JsonProperties = new List<JsonProperty>(contract.Properties);
-                }
+                if (JsonProperties?.Count == 0) JsonProperties = new List<JsonProperty>(contract.Properties);
             }
         }
 
@@ -423,18 +397,19 @@ namespace Neo4jClient.DataAnnotations.Utils
         internal void MapJsonProperties()
         {
             JsonNamePropertyMap = JsonProperties?
-                    .Select(p => new
-                    {
-                        JsonProperty = p,
-                        MemberInfo = p.DeclaringType.GetMember(p.UnderlyingName, Defaults.MemberSearchBindingFlags)
-                        .Where(m => m.IsEquivalentTo(p.UnderlyingName, p.DeclaringType, p.PropertyType)).FirstOrDefault()
-                    })
-                    .Where(np => np.MemberInfo != null)
-                    .ToDictionary(np => new MemberName(
-                        np.JsonProperty.UnderlyingName,
-                        np.JsonProperty.GetComplexOrSimpleUnderlyingName(),
-                        np.JsonProperty.GetSimpleOrComplexPropertyName(),
-                        np.JsonProperty.PropertyName), np => np.MemberInfo);
+                .Select(p => new
+                {
+                    JsonProperty = p,
+                    MemberInfo = p.DeclaringType.GetMember(p.UnderlyingName, Defaults.MemberSearchBindingFlags)
+                        .Where(m => m.IsEquivalentTo(p.UnderlyingName, p.DeclaringType, p.PropertyType))
+                        .FirstOrDefault()
+                })
+                .Where(np => np.MemberInfo != null)
+                .ToDictionary(np => new MemberName(
+                    np.JsonProperty.UnderlyingName,
+                    np.JsonProperty.GetComplexOrSimpleUnderlyingName(),
+                    np.JsonProperty.GetSimpleOrComplexPropertyName(),
+                    np.JsonProperty.PropertyName), np => np.MemberInfo);
         }
 
         internal void IgnoreJsonProperties()
@@ -445,17 +420,11 @@ namespace Neo4jClient.DataAnnotations.Utils
                 var allPropsToIgnore = PropertiesToIgnore.ToArray();
 
                 foreach (var property in JsonProperties)
-                {
                     if (allPropsToIgnore.Any(p => p.Name == property.UnderlyingName))
                     {
                         property.Ignored = true;
                         //IgnoredJsonProperties.Add(property.PropertyName);
                     }
-                    else
-                    {
-                        //IgnoredJsonProperties.Remove(property.PropertyName);
-                    }
-                }
 
                 //IgnoredJsonProperties = IgnoredJsonProperties.Distinct().ToList();
             }
@@ -465,12 +434,12 @@ namespace Neo4jClient.DataAnnotations.Utils
         {
             try
             {
-                return $"Entity: {Type.ToString()}";
+                return $"Entity: {Type}";
             }
             catch
             {
-
             }
+
             return base.ToString();
         }
     }

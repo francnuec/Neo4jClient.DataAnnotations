@@ -1,18 +1,9 @@
 ﻿using System;
-using Neo4jClient.DataAnnotations.Utils;
 
 namespace Neo4jClient.DataAnnotations.Utils
 {
     internal class MemberName : IEquatable<MemberName>
     {
-        public static MemberName Empty { get; set; } = new MemberName("", "", "", "");
-
-        public string Actual { get; }
-        public string ComplexActual { get; }
-
-        public string Json { get; }
-        public string ComplexJson { get; }
-
         public MemberName(string actual, string complexActual, string json, string complexJson)
         {
             Actual = actual;
@@ -20,6 +11,14 @@ namespace Neo4jClient.DataAnnotations.Utils
             Json = json;
             ComplexJson = complexJson;
         }
+
+        public static MemberName Empty { get; set; } = new MemberName("", "", "", "");
+
+        public string Actual { get; }
+        public string ComplexActual { get; }
+
+        public string Json { get; }
+        public string ComplexJson { get; }
 
         public bool Equals(MemberName other)
         {
@@ -37,8 +36,8 @@ namespace Neo4jClient.DataAnnotations.Utils
             }
             catch
             {
-
             }
+
             return base.ToString();
         }
     }

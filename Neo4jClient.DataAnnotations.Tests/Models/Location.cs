@@ -1,8 +1,4 @@
-﻿using System;
-using Neo4jClient.DataAnnotations.Utils;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Neo4jClient.DataAnnotations.Tests.Models
 {

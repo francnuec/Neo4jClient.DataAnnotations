@@ -1,9 +1,5 @@
-﻿using Neo4jClient.Cypher;
-using System;
-using Neo4jClient.DataAnnotations.Utils;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Text;
+﻿using System.ComponentModel;
+using Neo4jClient.Cypher;
 
 namespace Neo4jClient.DataAnnotations.Cypher
 {

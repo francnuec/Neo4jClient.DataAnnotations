@@ -1,15 +1,15 @@
-﻿using Neo4j.Driver.V1;
-using Neo4jClient.DataAnnotations.Utils;
-using System;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Collections.Generic;
-using System.Text;
+using Neo4j.Driver;
+using Neo4jClient.DataAnnotations.Utils;
 
 namespace Neo4jClient.DataAnnotations.Extensions.Driver
 {
     public class RelationshipWrapper : BaseWrapper<IRelationship>, IRelationship
     {
-        public RelationshipWrapper(IRelationship relationship) : base(relationship) { }
+        public RelationshipWrapper(IRelationship relationship) : base(relationship)
+        {
+        }
 
         public object this[string key] => Properties[key];
 
@@ -21,7 +21,8 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
 
                 if (!props.ContainsKey(Defaults.BoltMetadataPropertyName))
                 {
-                    var propsDict = props as IDictionary<string, object> ?? props.ToDictionary(p => p.Key, p => p.Value);
+                    var propsDict = props as IDictionary<string, object> ??
+                                    props.ToDictionary(p => p.Key, p => p.Value);
                     //the following is required for proper deserialization
                     propsDict[Defaults.BoltMetadataPropertyName] = new
                     {

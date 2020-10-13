@@ -1,10 +1,5 @@
-﻿using Newtonsoft.Json;
-using System;
-using Neo4jClient.DataAnnotations.Utils;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
 
 namespace Neo4jClient.DataAnnotations.Tests.Models
 {
@@ -13,8 +8,7 @@ namespace Neo4jClient.DataAnnotations.Tests.Models
     {
         public string[] Roles { get; set; }
 
-        [NotMapped]
-        public int TestForeignKeyIdNotMapped { get; set; }
+        [NotMapped] public int TestForeignKeyIdNotMapped { get; set; }
 
         public int TestForeignKeyId { get; set; }
 
@@ -22,11 +16,11 @@ namespace Neo4jClient.DataAnnotations.Tests.Models
 
         public int TestMarkedFK { get; set; }
 
-        [ForeignKey("TestMarkedFK")]
-        public object TestMarkedForeignKey { get; set; }
+        [ForeignKey("TestMarkedFK")] public object TestMarkedForeignKey { get; set; }
 
         /// <summary>
-        /// This inverse property points to the <see cref="ActorNode"/> property on the <see cref="MovieActorRelationship"/> class, because the relationship information itself has been abstracted to that class.
+        ///     This inverse property points to the <see cref="ActorNode" /> property on the <see cref="MovieActorRelationship" />
+        ///     class, because the relationship information itself has been abstracted to that class.
         /// </summary>
         [InverseProperty("Actor")]
         public virtual ICollection<MovieActorRelationship> Movies { get; set; }
