@@ -106,6 +106,8 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
 
         public Bookmark LastBookmark => WrappedItem.LastBookmark;
 
+        public SessionConfig SessionConfig => WrappedItem.SessionConfig;
+
         protected internal static IResultCursor GetResultCursor(IResultCursor resultCursor)
         {
             if (resultCursor != null && !(resultCursor is ResultCursorWrapper))

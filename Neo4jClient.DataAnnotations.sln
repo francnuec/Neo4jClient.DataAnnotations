@@ -14,7 +14,6 @@ EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		..\Neo4jClient\Neo4jClient.Shared\Neo4jClient.Shared.projitems*{c5b928ca-3e8e-4181-bacd-48ced40cefde}*SharedItemsImports = 13
-		..\Neo4jClient\Neo4jClient.Shared\Neo4jClient.Shared.projitems*{e568b54b-f463-4346-818e-9ec8348c6470}*SharedItemsImports = 5
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

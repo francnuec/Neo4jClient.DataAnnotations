@@ -6,6 +6,8 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
 {
     public class AsyncTransactionWrapper : BaseWrapper<IAsyncTransaction>, IAsyncTransaction
     {
+        public TransactionConfig TransactionConfig => WrappedItem.TransactionConfig;
+
         public AsyncTransactionWrapper(IAsyncTransaction item) : base(item)
         {
         }
