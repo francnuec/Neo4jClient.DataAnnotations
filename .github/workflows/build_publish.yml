@@ -30,7 +30,7 @@ jobs:
         dotnet build ./Neo4jClient.DataAnnotations.Tests/Neo4jClient.DataAnnotations.Tests.csproj --configuration Release --no-restore
     
     - name: Test
-      run: dotnet test ./Neo4jClient.DataAnnotations.Tests/Neo4jClient.DataAnnotations.Tests.csproj --no-restore --verbosity normal
+      run: dotnet test ./Neo4jClient.DataAnnotations.Tests/Neo4jClient.DataAnnotations.Tests.csproj --configuration Release --no-build --no-restore --verbosity normal
       
     - name: Publish on Version Change
       id: publish_nuget
