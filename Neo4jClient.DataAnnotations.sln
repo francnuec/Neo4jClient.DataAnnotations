@@ -5,16 +5,11 @@ VisualStudioVersion = 16.0.29326.143
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo4jClient.DataAnnotations", "Neo4jClient.DataAnnotations\Neo4jClient.DataAnnotations.csproj", "{514B5EB2-2769-419C-A827-92FBCF09298D}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Neo4jClient.Shared", "..\Neo4jClient\Neo4jClient.Shared\Neo4jClient.Shared.shproj", "{C5B928CA-3E8E-4181-BACD-48CED40CEFDE}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo4jClient", "..\Neo4jClient\Neo4jClient\Neo4jClient.csproj", "{E568B54B-F463-4346-818E-9EC8348C6470}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo4jClient.DataAnnotations.Tests", "Neo4jClient.DataAnnotations.Tests\Neo4jClient.DataAnnotations.Tests.csproj", "{425D89C4-E8DC-4A07-B757-92DDF1DAE1FC}"
 EndProject
 Global
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		..\Neo4jClient\Neo4jClient.Shared\Neo4jClient.Shared.projitems*{c5b928ca-3e8e-4181-bacd-48ced40cefde}*SharedItemsImports = 13
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Full - Debug|Any CPU = Full - Debug|Any CPU
