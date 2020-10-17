@@ -86,7 +86,7 @@ namespace Neo4jClient.DataAnnotations //.Cypher
         public static ICypherFluentQuery Create(this ICypherFluentQuery query,
             params Expression<Func<IPathBuilder, IPathExtent>>[] patternDescriptions)
         {
-            return WithPattern(query, out var pattern, PropertiesBuildStrategy.WithParamsForValues, patternDescriptions)
+            return WithPattern(query, out var pattern, PropertiesBuildStrategy.WithParams, patternDescriptions)
                 .Create(pattern);
         }
 
@@ -515,7 +515,7 @@ namespace Neo4jClient.DataAnnotations //.Cypher
         public static ICypherFluentQuery Set(this ICypherFluentQuery query, string variable,
             Expression<Func<object>> properties, out string setParameter)
         {
-            return SharedSet(query, variable, properties, PropertiesBuildStrategy.WithParamsForValues, out setParameter,
+            return SharedSet(query, variable, properties, PropertiesBuildStrategy.WithParams, out setParameter,
                 false);
         }
 

@@ -184,7 +184,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 .QueryText;
 
             //This scenario is probably unlikely in a real neo4j situation, but for tests sakes.
-            var expected = "CREATE (greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
+            var expected = "CREATE (greysAnatomy:Series $greysAnatomy)" +
                            "<-[:STARRED_IN|ACTED_IN*1]-" +
                            "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
                            "-->(), (a)--(b)";
