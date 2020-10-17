@@ -9,6 +9,7 @@ using System.Linq;
 
 namespace Neo4jClient.DataAnnotations.Tests
 {
+#if DEBUG
     public class LiveTests
     {
         IGraphClient graphClient;
@@ -36,4 +37,5 @@ namespace Neo4jClient.DataAnnotations.Tests
             query.ExecuteWithoutResultsAsync().Wait();
         }
     }
+#endif
 }
