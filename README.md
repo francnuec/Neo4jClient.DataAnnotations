@@ -1,4 +1,6 @@
 # Neo4jClient.DataAnnotations #
+![build](https://github.com/francnuec/Neo4jClient.DataAnnotations/workflows/build/badge.svg?branch=master) ![Nuget](https://img.shields.io/nuget/v/Neo4jClient.DataAnnotations)
+
 Use POCO classes in the [Neo4jClient](https://github.com/Readify/Neo4jClient) library ORM style. Annotate with [`System.ComponentModel.DataAnnotations.Schema`](https://msdn.microsoft.com/en-us/library/system.componentmodel.dataannotations.schema) attributes. Supports Complex Types too.
 
 Get it on [Nuget](https://www.nuget.org/packages/Neo4jClient.DataAnnotations):

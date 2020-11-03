@@ -184,7 +184,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 .QueryText;
 
             //This scenario is probably unlikely in a real neo4j situation, but for tests sakes.
-            var expected = "CREATE (greysAnatomy:Series { Title: $greysAnatomy.Title, Year: $greysAnatomy.Year })" +
+            var expected = "CREATE (greysAnatomy:Series $greysAnatomy)" +
                            "<-[:STARRED_IN|ACTED_IN*1]-" +
                            "(ellenPompeo:Female:Actor:Person { Name: $ellenPompeo.Name, Born: shondaRhimes.Born, Roles: $ellenPompeo.Roles })" +
                            "-->(), (a)--(b)";
@@ -299,8 +299,7 @@ namespace Neo4jClient.DataAnnotations.Tests
                 Year = 2017
             }, out var setParam).Query.QueryText;
 
-            //var expected = $"SET movie = ${setParam}";
-            var expected = "SET movie = { Title: $" + setParam + ".Title, Year: $" + setParam + ".Year }";
+            var expected = $"SET movie = ${setParam}";
 
             Assert.Equal(expected, actual);
         }

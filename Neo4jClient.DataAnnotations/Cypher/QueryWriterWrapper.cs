@@ -26,9 +26,13 @@ namespace Neo4jClient.DataAnnotations.Cypher
         public virtual object GetTransformedParameterValue(object value)
         {
             if (IsBoltClient && value is JObject valueJObject)
-                //because bolt client uses the Neo4j driver directly, 
+            {
+                //because bolt client uses the underlying Neo4j driver directly, 
                 //we need to convert this to dictionary so it can be understood by the driver.
+                //otherwise, the driver would assume the JObject is a List,
+                //because JObject inherits from JContainer which in turn inherits from IList<JToken>.
                 value = valueJObject.ToObject<Dictionary<string, object>>();
+            }
 
             return value;
         }

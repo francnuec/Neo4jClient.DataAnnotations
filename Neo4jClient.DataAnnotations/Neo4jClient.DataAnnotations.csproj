@@ -12,22 +12,28 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageReleaseNotes>Visit project site for usage and instructions.
 
+*Neo4jClient 4.0.0 support.
+*Fixed bug that caused error on CREATE or SET with object parameters.
+*Bolt support.
+----------------
 *Lots of breaking changes.
 *Introduced support for dependency containers through the IAnnotationsContext and IEntityService interfaces.
-*Complete rewrite of EntityExpressionVisitor.
-*Now skips null_props metadata when a property's type matches its value's reflected type.
-*Added 'A' variable parameter to patterns described by expressions.
 *Now allows you to specify an already-bound variable in patterns.
-*Fixed a bug in pattern direction determination that took implicit foreign keys into account too early.
-*Fixed bug that permitted some properties marked with JsonIgnoreAttribute or NotMappedAttribute.
 *Harmonized EntityResolver and EntityConverter codes. In future releases, both might be deprecated in favour of a simpler API.
-*Now uses labels in Neo4j metadata response to select the right type in an inheritance heirarchy to deserialize into.
-*Bolt support.</PackageReleaseNotes>
-    <Version>2.2.0</Version>
-    <FileVersion>2.2.0.0</FileVersion>
-    <AssemblyVersion>2.2.0.0</AssemblyVersion>
+*Now uses labels in Neo4j metadata response to select the right type in an inheritance heirarchy to deserialize into.</PackageReleaseNotes>
+    <Version>2.2.1</Version>
+    <FileVersion>2.2.1.0</FileVersion>
+    <AssemblyVersion>2.2.1.0</AssemblyVersion>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+  </ItemGroup>
+
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>bin\Debug\netstandard1.4\Neo4jClient.DataAnnotations.xml</DocumentationFile>
@@ -39,7 +45,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.6" />
-    <PackageReference Include="Neo4jClient" Version="4.0.0.6-prerelease" />
+    <PackageReference Include="Neo4jClient" Version="4.0.0" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
   </ItemGroup>
 
