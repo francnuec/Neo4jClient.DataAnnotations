@@ -67,5 +67,15 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
         {
             return WrappedItem.RollbackAsync();
         }
+
+        public ValueTask DisposeAsync()
+        {
+            return WrappedItem.DisposeAsync();
+        }
+
+        public void Dispose()
+        {
+            WrappedItem.Dispose();
+        }
     }
 }

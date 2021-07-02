@@ -45,7 +45,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
-    <PackageReference Include="Neo4jClient" Version="4.1.2" />
+    <PackageReference Include="Neo4jClient" Version="4.1.14" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
   </ItemGroup>
 
