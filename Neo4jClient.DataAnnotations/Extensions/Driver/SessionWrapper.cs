@@ -123,5 +123,15 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
 
             return transaction;
         }
+
+        public ValueTask DisposeAsync()
+        {
+            return WrappedItem.DisposeAsync();
+        }
+
+        public void Dispose()
+        {
+            WrappedItem.Dispose();
+        }
     }
 }
