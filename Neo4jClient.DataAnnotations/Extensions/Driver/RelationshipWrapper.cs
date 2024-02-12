@@ -40,11 +40,15 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
         }
 
         public long Id => WrappedItem.Id;
+        public string ElementId => WrappedItem.ElementId;
 
         public string Type => WrappedItem.Type;
 
         public long StartNodeId => WrappedItem.StartNodeId;
 
         public long EndNodeId => WrappedItem.EndNodeId;
+        public string StartNodeElementId => WrappedItem.StartNodeElementId;
+
+        public string EndNodeElementId => WrappedItem.EndNodeElementId;
     }
 }

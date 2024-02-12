@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Neo4j.Driver;
 
 namespace Neo4jClient.DataAnnotations.Extensions.Driver
@@ -30,12 +32,18 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
         }
 
         public IRecord Current => GetRecord(WrappedItem.Current);
+        public bool IsOpen => WrappedItem.IsOpen;
 
         protected internal static IRecord GetRecord(IRecord record)
         {
             if (record != null && !(record is RecordWrapper)) return new RecordWrapper(record);
 
             return record;
+        }
+
+        public IAsyncEnumerator<IRecord> GetAsyncEnumerator(CancellationToken cancellationToken = new CancellationToken())
+        {
+            return WrappedItem.GetAsyncEnumerator(cancellationToken);
         }
     }
 }

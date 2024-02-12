@@ -41,5 +41,6 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
         }
 
         public long Id => WrappedItem.Id;
+        public string ElementId => WrappedItem.ElementId;
     }
 }
