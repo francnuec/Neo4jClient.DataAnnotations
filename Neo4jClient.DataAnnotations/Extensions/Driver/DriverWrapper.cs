@@ -25,6 +25,16 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
             return WrappedItem.CloseAsync();
         }
 
+        public Task<IServerInfo> GetServerInfoAsync()
+        {
+            return WrappedItem.GetServerInfoAsync();
+        }
+
+        public Task<bool> TryVerifyConnectivityAsync()
+        {
+            return WrappedItem.TryVerifyConnectivityAsync();
+        }
+
         public Task VerifyConnectivityAsync()
         {
             return WrappedItem.VerifyConnectivityAsync();
@@ -35,7 +45,23 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
             return WrappedItem.SupportsMultiDbAsync();
         }
 
+        public Task<bool> SupportsSessionAuthAsync()
+        {
+            return WrappedItem.SupportsSessionAuthAsync();
+        }
+
+        public IExecutableQuery<IRecord, IRecord> ExecutableQuery(string cypher)
+        {
+            return WrappedItem.ExecutableQuery(cypher);
+        }
+
+        public Task<bool> VerifyAuthenticationAsync(IAuthToken authToken)
+        {
+            return WrappedItem.VerifyAuthenticationAsync(authToken);
+        }
+
         public Config Config => WrappedItem.Config;
+        public bool Encrypted => WrappedItem.Encrypted;
 
         public void Dispose()
         {
@@ -47,6 +73,11 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
             if (session != null && !(session is SessionWrapper)) return new SessionWrapper(session);
 
             return session;
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            return WrappedItem.DisposeAsync();
         }
     }
 }

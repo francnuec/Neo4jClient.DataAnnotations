@@ -83,6 +83,26 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
             return WrappedItem.WriteTransactionAsync(tx => work(GetAsyncTransaction(tx)), action);
         }
 
+        public Task<TResult> ExecuteReadAsync<TResult>(Func<IAsyncQueryRunner, Task<TResult>> work, Action<TransactionConfigBuilder> action = null)
+        {
+            return WrappedItem.ExecuteReadAsync(work, action);
+        }
+
+        public Task ExecuteReadAsync(Func<IAsyncQueryRunner, Task> work, Action<TransactionConfigBuilder> action = null)
+        {
+            return WrappedItem.ExecuteReadAsync(work, action);
+        }
+
+        public Task<TResult> ExecuteWriteAsync<TResult>(Func<IAsyncQueryRunner, Task<TResult>> work, Action<TransactionConfigBuilder> action = null)
+        {
+            return WrappedItem.ExecuteWriteAsync(work, action);
+        }
+
+        public Task ExecuteWriteAsync(Func<IAsyncQueryRunner, Task> work, Action<TransactionConfigBuilder> action = null)
+        {
+            return WrappedItem.ExecuteWriteAsync(work, action);
+        }
+
         public Task CloseAsync()
         {
             return WrappedItem.CloseAsync();
@@ -105,6 +125,7 @@ namespace Neo4jClient.DataAnnotations.Extensions.Driver
         }
 
         public Bookmark LastBookmark => WrappedItem.LastBookmark;
+        public Bookmarks LastBookmarks => WrappedItem.LastBookmarks;
 
         public SessionConfig SessionConfig => WrappedItem.SessionConfig;
 
