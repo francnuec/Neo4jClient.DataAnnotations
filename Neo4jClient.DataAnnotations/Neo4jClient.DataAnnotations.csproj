@@ -21,9 +21,9 @@
 *Now allows you to specify an already-bound variable in patterns.
 *Harmonized EntityResolver and EntityConverter codes. In future releases, both might be deprecated in favour of a simpler API.
 *Now uses labels in Neo4j metadata response to select the right type in an inheritance heirarchy to deserialize into.</PackageReleaseNotes>
-    <Version>2.2.4</Version>
-    <FileVersion>2.2.4.0</FileVersion>
-    <AssemblyVersion>2.2.4.0</AssemblyVersion>
+    <Version>2.3.0</Version>
+    <FileVersion>2.3.0.0</FileVersion>
+    <AssemblyVersion>2.3.0.0</AssemblyVersion>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSymbols>true</IncludeSymbols>
